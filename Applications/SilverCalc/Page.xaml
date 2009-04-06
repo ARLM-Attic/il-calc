@@ -1,0 +1,281 @@
+﻿<UserControl  
+    x:Class="SilverCalc.Page"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:SilverCalc="clr-namespace:SilverCalc"
+    MinWidth="200" MinHeight="150">
+
+    <Grid x:Name="LayoutRoot">
+
+        <!-- Buttons Style -->
+        <Grid.Resources>
+            <Style TargetType="Button"
+                   x:Key="CalcButton">
+                <Setter Property="Opacity" Value="0.5"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="FontFamily" Value="Lucida Console Unicode"/>
+                <Setter Property="Margin" Value="3,0,0,0"/>
+                <Setter Property="Foreground" Value="Gray"/>
+            </Style>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition/>
+            <RowDefinition Height="34"/>
+        </Grid.RowDefinitions>
+
+        <!-- Upper panel -->
+        <Border Grid.Column="0" Grid.Row="0" Padding="4">
+            
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Color="#FFFFFF" Offset="0"/>
+                        <GradientStop Color="#CDCDCD" Offset="1"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="25"/>
+                    <ColumnDefinition Width="25"/>
+                    <ColumnDefinition Width="25"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Logo -->
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                       VerticalAlignment="Center"
+                       FontFamily="Lucida Console Unicode"
+                       FontSize="25"
+                       FontWeight="SemiBold"
+                       Margin="4,0,0,0">
+                    <TextBlock.Foreground>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <GradientStop Color="#FFFFFF" Offset="0.4"/>
+                            <GradientStop Color="#AAAAAA" Offset="1.6"/>
+                        </LinearGradientBrush>
+                    </TextBlock.Foreground>
+                    <TextBlock.Effect>
+                        <SilverCalc:DropShadowEffect BlurRadius="3"
+                                          Opacity="0.4"
+                                          ShadowDepth=".6"/>
+                    </TextBlock.Effect>
+
+                    SilverCalc
+                </TextBlock>
+                
+                <Button x:Name="listConstants"
+                        Click="listConstants_Click"
+                        Grid.Column="1" Grid.Row="0"
+                        Style="{StaticResource CalcButton}"
+                        ToolTipService.ToolTip="Available constants list">
+                    <TextBlock>C</TextBlock>
+                </Button>
+                
+                <Button x:Name="listFunctions"
+                        Click="listFunctions_Click"
+                        Grid.Column="2" Grid.Row="0"
+                        Style="{StaticResource CalcButton}"
+                        ToolTipService.ToolTip="Available functions list">
+                    <TextBlock>F</TextBlock>
+                </Button>
+
+                <Button x:Name="consoleClear"
+                        Click="consoleClear_Click"
+                        Grid.Column="3" Grid.Row="0"
+                        Style="{StaticResource CalcButton}"
+                        ToolTipService.ToolTip="Clear console window">
+                    <TextBlock>X</TextBlock>
+                </Button>
+
+            </Grid>
+
+        </Border>
+
+        <!-- Console -->
+        <TextBox x:Name="console"
+                 Grid.Column="0" Grid.Row="1"
+                 AcceptsReturn="True"
+                 HorizontalScrollBarVisibility="Disabled"
+                 VerticalScrollBarVisibility="Auto"
+                 BorderThickness="0" FontSize="14"
+                 FontFamily="Lucida Grande"
+                 IsReadOnly="True" Padding="4"
+                 Foreground="Gray" Opacity="0.5">
+
+            <TextBox.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Color="#707070" Offset="0"/>
+                        <GradientStop Color="#F4F4F4" Offset="0.04"/>
+                        <GradientStop Color="#B8B8B8" Offset="0.98"/>
+                        <GradientStop Color="#FFFFFF" Offset="1"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </TextBox.Background>
+
+        </TextBox>
+
+        <!-- Error panel -->
+        <Border x:Name="errorPanel"
+                Grid.Column="0" Grid.Row="1"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Stretch"
+                CornerRadius="3"
+                Margin="4,0,84,0"
+                Opacity="0.92" Padding="4"
+                Visibility="Collapsed"
+                BorderThickness="1"
+                BorderBrush="#AAAAAA">
+            
+            <Border.Resources>
+                <Storyboard x:Name="ShowError">
+                    <DoubleAnimation Duration="00:00:00.3"
+                                     From="0.00" To="0.92"
+                                     Storyboard.TargetName="errorPanel"
+                                     Storyboard.TargetProperty="Opacity"/>
+                </Storyboard>
+                <Storyboard x:Name="HideError">
+                    <DoubleAnimation Duration="00:00:00.80"
+                                     From="0.92" To="0.00"
+                                     Completed="errorPanelHideCompleted"
+                                     Storyboard.TargetName="errorPanel"
+                                     Storyboard.TargetProperty="Opacity"/>
+                </Storyboard>
+            </Border.Resources>
+            
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#FFFFFF" Offset="0"/>
+                    <GradientStop Color="#E0BBBB" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            
+            <TextBlock x:Name="errorText"
+                       TextWrapping="Wrap"
+                       FontFamily="Lucida Grande"
+                       FontSize="12"
+                       Foreground="Gray">
+            Syntax error message goes here
+            </TextBlock>
+        </Border>
+
+        <!-- Input panel -->
+        <Border x:Name="inputPanel"
+            Grid.Row="4" Grid.Column="0"
+            Padding="4">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Color="#eeeeee" Offset="0"/>
+                        <GradientStop Color="#909090" Offset="1"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Expression TextBox -->
+                <TextBox x:Name="expressionBox"
+                         KeyDown="expressionBox_KeyDown"
+                         Grid.Column="0" Grid.Row="0"
+                         Text="2sin(pi/6)+pi(3+4/3)"
+                         FontFamily="Lucida Console Unicode"
+                         FontSize="14" Foreground="Gray"
+                         >
+                    
+                    <ToolTipService.ToolTip>
+                        Expression string. Use up/down keys to list evaluated expressions.
+                    </ToolTipService.ToolTip>
+                    
+                    <TextBox.Background>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <LinearGradientBrush.GradientStops>
+                                <GradientStop Color="#66747474" Offset="0"/>
+                                <GradientStop Color="#66FFFFFF" Offset="0.10"/>
+                                <GradientStop Color="#66DDDDDD" Offset="0.90"/>
+                                <GradientStop Color="#88FFFFFF" Offset="1"/>
+                            </LinearGradientBrush.GradientStops>
+                        </LinearGradientBrush>
+                    </TextBox.Background>
+
+                </TextBox>
+
+                <!-- Evaluate button -->
+                <Button x:Name="launchEvaluate"
+                        Click="launchEvaluate_Click"
+                        Grid.Column="1" Grid.Row="0"
+                        Style="{StaticResource CalcButton}"
+                        ToolTipService.ToolTip="Launch the expression evaluation">
+                    <TextBlock >Evaluate</TextBlock>
+                </Button>
+
+            </Grid>
+
+        </Border>
+
+        <!-- Info panel -->
+        <Border x:Name="infoPanel"
+                Grid.Column="0" Grid.Row="1"
+                Margin="6,6,6,6"
+                CornerRadius="6"
+                BorderThickness="1"
+                BorderBrush="#BBBBBB"
+                Opacity=".2" Padding="6"
+                Visibility="Collapsed">
+            
+            <Border.Resources>
+                <Storyboard x:Name="ShowInfo">
+                    <DoubleAnimation Duration="00:00:00.5"
+                                     From="0.0" To="0.95"
+                                     Storyboard.TargetName="infoPanel"
+                                     Storyboard.TargetProperty="Opacity"/>
+                </Storyboard>
+                <Storyboard x:Name="HideInfo">
+                    <DoubleAnimation Duration="00:00:00.5"
+                                     From="0.95" To="0.0"
+                                     Completed="infoPanelHideCompleted"
+                                     Storyboard.TargetName="infoPanel"
+                                     Storyboard.TargetProperty="Opacity"/>
+                </Storyboard>
+            </Border.Resources>
+            
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8"
+                                  Opacity="0.5"
+                                  ShadowDepth="1"/>
+            </Border.Effect>
+            
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#F0F0F0" Offset="0" />
+                    <GradientStop Color="#BABABA" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            
+            <ScrollViewer BorderThickness="1" 
+                          BorderBrush="#A0A0A0"
+                          Foreground="Gray">
+                <ScrollViewer.Background>
+                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                        <GradientStop Color="#FFFFFF" Offset="0" />
+                        <GradientStop Color="#D0D0D0" Offset="1" />
+                    </LinearGradientBrush>
+                </ScrollViewer.Background>
+                
+                <TextBlock x:Name="lbInfoText" TextWrapping="Wrap"/>
+
+            </ScrollViewer>
+
+            
+        </Border>
+
+    </Grid>
+</UserControl>

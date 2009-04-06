@@ -1,0 +1,13 @@
+<Configuration>
+  <NamespaceFolders>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Collections</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Evaluators</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Misc</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Output/d:Compiler</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Output/d:Interpret</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Output/d:Optimizer</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Output/d:Specials</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Output</SkipFolder>
+    <SkipFolder>7C413C2E-73BA-40E2-9D01-68796471FE62/d:Parser</SkipFolder>
+  </NamespaceFolders>
+</Configuration>

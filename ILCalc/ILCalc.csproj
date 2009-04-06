@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7C413C2E-73BA-40E2-9D01-68796471FE62}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ILCalc</RootNamespace>
+    <AssemblyName>ILCalc</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>CalcKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;SERIALIZE NET20</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;SERIALIZE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\ILCalc.XML</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DynamicVisualizer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=9a0c861caf1989b5, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>DynVisualizer\DynamicVisualizer.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CalcContext.cs" />
+    <Compile Include="Collections\ArgumentCollection.cs" />
+    <Compile Include="Collections\ConstantCollection.cs" />
+    <Compile Include="Collections\FunctionCollection.cs" />
+    <Compile Include="Collections\MethodGroup.cs" />
+    <Compile Include="Collections\Validator.cs" />
+    <Compile Include="Collections\Validator.Functions.cs" />
+    <Compile Include="CompilerMethods.cs" />
+    <Compile Include="Evaluators\Evaluator.cs" />
+    <Compile Include="Evaluators\IEvaluator.cs" />
+    <Compile Include="Evaluators\Interpret.Serialize.cs" />
+    <Compile Include="Evaluators\Interpret.cs" />
+    <Compile Include="Evaluators\Tabulator.cs" />
+    <Compile Include="Misc\Codes.cs" />
+    <Compile Include="Misc\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Misc\TabRange.cs" />
+    <Compile Include="Misc\WrongRangeException.cs" />
+    <Compile Include="Output\Compiler\CompilerBase.cs" />
+    <Compile Include="Output\Compiler\EvaluatorCompiler.cs" />
+    <Compile Include="Output\Compiler\TabulatorCompiler.cs" />
+    <Compile Include="Output\IExpressionOutput.cs" />
+    <Compile Include="Output\Interpret\InterpCall.cs" />
+    <Compile Include="Output\Interpret\InterpCall.Serialize.cs" />
+    <Compile Include="Output\Interpret\InterpretCreator.cs" />
+    <Compile Include="Output\Interpret\QuickInterpret.cs" />
+    <Compile Include="Output\Optimizer\OptimizeModes.cs" />
+    <Compile Include="Output\Optimizer\OptimizeOutput.cs" />
+    <Compile Include="Output\Specials\BufferOutput.cs" />
+    <Compile Include="Output\Specials\NullOutput.cs" />
+    <Compile Include="Output\Specials\PostfixWriter.cs" />
+    <Compile Include="Parser\Parser.cs" />
+    <Compile Include="Parser\ParserMain.cs" />
+    <Compile Include="Parser\ScanIdentifier.cs" />
+    <Compile Include="Parser\ScanNumber.cs" />
+    <Compile Include="Parser\SyntaxException.cs" />
+    <Compile Include="Parser\ThrowHelpers.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CalcKey.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Misc\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Misc\Resources.ru.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

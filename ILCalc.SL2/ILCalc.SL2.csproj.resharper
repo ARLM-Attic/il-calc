@@ -1,0 +1,8 @@
+<Configuration>
+  <NamespaceFolders>
+    <SkipFolder>4EE713E2-1A59-45C3-AF13-29575D4C0D4B/d:Collections</SkipFolder>
+    <SkipFolder>4EE713E2-1A59-45C3-AF13-29575D4C0D4B/d:Evaluators</SkipFolder>
+    <SkipFolder>4EE713E2-1A59-45C3-AF13-29575D4C0D4B/d:Misc</SkipFolder>
+    <SkipFolder>4EE713E2-1A59-45C3-AF13-29575D4C0D4B/d:Parser</SkipFolder>
+  </NamespaceFolders>
+</Configuration>
