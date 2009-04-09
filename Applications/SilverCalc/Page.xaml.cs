@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -23,6 +22,9 @@ namespace SilverCalc
 			{
 			InitializeComponent( );
 
+			HideInfo .Completed += delegate {  infoPanel.Visibility = Visibility.Collapsed; };
+			HideError.Completed += delegate { errorPanel.Visibility = Visibility.Collapsed; };
+
 			_calc = new CalcContext();
 			_calc.Culture = CultureInfo.CurrentCulture;
 			_calc.Functions.ImportBuiltin( );
@@ -36,6 +38,7 @@ namespace SilverCalc
 			{
 			if( infoPanel.Visibility == Visibility.Visible )
 				{
+				console.IsEnabled = true;
 				HideInfo.Begin( );
 				}
 
@@ -104,20 +107,11 @@ namespace SilverCalc
 				}
 			}
 
-		private void errorPanelHideCompleted( object sender, EventArgs e )
-			{
-			errorPanel.Visibility = Visibility.Collapsed;
-			}
-
-		private void infoPanelHideCompleted( object sender, EventArgs e )
-			{
-			infoPanel.Visibility = Visibility.Collapsed;
-			}
-
 		private void consoleClear_Click( object sender, RoutedEventArgs e )
 			{
 			if( infoPanel.Visibility == Visibility.Visible )
 				{
+				console.IsEnabled = true;
 				HideInfo.Begin( );
 				}
 
@@ -157,6 +151,7 @@ namespace SilverCalc
 
 			if( infoPanel.Visibility == Visibility.Collapsed )
 				{
+				console.IsEnabled = false;
 				ShowInfo.Begin( );
 				infoPanel.Visibility = Visibility.Visible;
 				}
