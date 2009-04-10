@@ -6,6 +6,8 @@ using System.Reflection;
 
 namespace ILCalc
 	{
+	//TODO: replace key => name
+
 	using ConstPair = KeyValuePair< string, double >;
 	using State = DebuggerBrowsableState;
 
@@ -29,6 +31,7 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		private readonly List<double> _values;
 
+		//TODO: remove
 		[DebuggerBrowsable(State.Never)]
 		private const BindingFlags _flags = 
 			BindingFlags.Static |
@@ -40,8 +43,7 @@ namespace ILCalc
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ConstantCollection"/> class
-		/// that is empty and has the default initial capacity.
-		/// </summary>
+		/// that is empty and has the default initial capacity.</summary>
 		/// <overloads>
 		/// Initializes a new instance of the <see cref="ConstantCollection"/> class.
 		/// </overloads>
@@ -55,8 +57,7 @@ namespace ILCalc
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ConstantCollection"/>
 		/// class from the instance of <see cref="ICollection{T}"/> containing
-		/// pairs of constant names and values.
-		/// </summary>
+		/// pairs of constant names and values.</summary>
 		/// <param name="list"><see cref="ICollection"/> of the name/value pairs.</param>
 		/// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
 		/// <exception cref="ArgumentException">
@@ -79,8 +80,7 @@ namespace ILCalc
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ConstantCollection"/>
-		/// class from the other <see cref="ConstantCollection"/> instance.
-		/// </summary>
+		/// class from the other <see cref="ConstantCollection"/> instance.</summary>
 		/// <param name="list"><see cref="ConstantCollection"/> instance.</param>
 		/// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
 		[DebuggerHidden]
@@ -91,106 +91,6 @@ namespace ILCalc
 
 			_names  = new List<string>(list._names);
 			_values = new List<double>(list._values);
-			}
-
-		#endregion
-		#region Imports
-
-		/// <summary>
-		/// Imports standart builtin constants into 
-		/// this <see cref="ConstantCollection"/>.</summary>
-		/// <remarks>
-		/// Currently this method imports Pi, E, Inf and NaN constants.</remarks>
-		/// <exception cref="ArgumentException">
-		/// Some of names is already exist in the list.</exception>
-		public void ImportBuiltin( )
-			{
-			Add("E", Math.E);
-			Add("Pi", Math.PI);
-
-			Add("NaN", Double.NaN);
-			Add("Inf", Double.PositiveInfinity);
-			}
-
-		/// <overloads>
-		/// Imports static fields of the specified type(s)
-		/// into this <see cref="ConstantCollection"/>.
-		/// </overloads>
-		/// <summary>
-		/// Imports all public static fields of the specified type
-		/// into this <see cref="ConstantCollection"/>.</summary>
-		/// <param name="type">Type object.</param>
-		/// <exception cref="ArgumentNullException">
-		/// <paramref name="type"/> is null.</exception>
-		/// <exception cref="ArgumentException">
-		/// Some of names is already exist in the list.</exception>
-		public void Import( Type type )
-			{
-			if( type == null )
-				throw new ArgumentNullException("type");
-
-			InternalImport(type, _flags);
-			}
-
-		/// <summary>
-		/// Imports all public static fields of the specified type
-		/// into this <see cref="ConstantCollection"/>.</summary>
-		/// <param name="type">Type object.</param>
-		/// <param name="nonPublic">
-		/// Include non public member methods in search.</param>
-		/// <exception cref="ArgumentNullException">
-		/// <paramref name="type"/> is null.</exception>
-		/// <exception cref="ArgumentException">
-		/// Some of names is already exist in the list.</exception>
-		public void Import( Type type, bool nonPublic )
-			{
-			if( type == null )
-				throw new ArgumentNullException("type");
-
-			var flags = _flags;
-			
-			if( nonPublic ) 
-				flags |= BindingFlags.NonPublic;
-
-			InternalImport(type, flags);
-			}
-
-		/// <summary>
-		/// Imports all public static fields of the specified types
-		/// into this <see cref="ConstantCollection"/>.</summary>
-		/// <param name="types">
-		/// Params array of <see cref="Type"/> objects.</param>
-		/// <exception cref="ArgumentNullException">
-		/// <paramref name="types"/> is null.<br>-or-</br>
-		/// Some Type of <paramref name="types"/> is null.</exception>
-		/// <exception cref="ArgumentException">
-		/// Some of names is already exist in the list.</exception>
-		public void Import( params Type[] types )
-			{
-			if( types == null )
-				throw new ArgumentNullException("types");
-
-			foreach( Type type in types )
-				{
-				InternalImport(type, _flags);
-				}
-			}
-
-		private void InternalImport( Type type, BindingFlags flags )
-			{
-			if( type == null )
-				throw new ArgumentNullException("type");
-
-			foreach( FieldInfo field in type.GetFields(flags) )
-				{
-				// look for "const double" fields
-				if( field.IsLiteral &&
-					field.FieldType == Validator.T_type )
-					{
-					var value = ( double ) field.GetValue(null);
-					Add(field.Name, value);
-					}
-				}
 			}
 
 		#endregion
@@ -240,26 +140,42 @@ namespace ILCalc
 		public ICollection<string> Keys
 			{
 			[DebuggerHidden]
-			get {
-				return _names.AsReadOnly( );
-				}
+			get { return _names.AsReadOnly( ); }
 			}
 
 		/// <summary>
-		/// Removes the constant specified by name
-		/// from the <see cref="ConstantCollection"/>.</summary>
+		/// Gets a collection containing the values of the
+		/// <see cref="ConstantCollection"/>.</summary>
+		[DebuggerBrowsable(State.Never)]
+		public ICollection<double> Values
+			{
+			[DebuggerHidden]
+			get { return _values.AsReadOnly( ); }
+			}
+
+		/// <summary>
+		/// Removes the constant specified by name from
+		/// the <see cref="ConstantCollection"/>.</summary>
 		/// <param name="key">The function name to be removed.</param>
 		/// <returns>
 		/// <b>true</b> if constant is successfully removed;
 		/// otherwise, <b>false</b>.</returns>
-		[DebuggerHidden]
 		public bool Remove( string key )
 			{
-			return _names.Remove(key);
+			int index = _names.IndexOf(key);
+			if( index >= 0 )
+				{
+				_names .RemoveAt(index);
+				_values.RemoveAt(index);
+
+				return true;
+				}
+
+			return false;
 			}
 
 		/// <summary>
-		/// Gets the value of constant with the specified name.</summary>
+		/// Tries to get the value of constant with the specified name.</summary>
 		/// <param name="key">
 		/// The name of the constant, which value to get.</param>
 		/// <param name="value">
@@ -288,16 +204,6 @@ namespace ILCalc
 			return false;
 			}
 
-		/// <summary>
-		/// Gets a collection containing the values of the
-		/// <see cref="ConstantCollection"/>.</summary>
-		[DebuggerBrowsable( State.Never )]
-		public ICollection<double> Values
-			{
-			[DebuggerHidden]
-			get { return _values.AsReadOnly( ); }
-			}
-
 		/// <summary>Gets or sets the value associated
 		/// with the specified constant name.</summary>
 		/// <overloads>Gets or sets the value associated
@@ -310,7 +216,7 @@ namespace ILCalc
 		/// The property is setted and <paramref name="key"/>
 		/// is not valid identifier name.</exception>
 		/// <exception cref="ArgumentNullException">
-		/// The property is setted and<paramref name="key"/> is null.</exception>
+		/// The property is setted and <paramref name="key"/> is null.</exception>
 		/// <returns>
 		/// The value associated with the specified name. If the specified name is not found,
 		/// a get operation throws a <see cref="KeyNotFoundException"/>, and a set operation 
@@ -321,8 +227,11 @@ namespace ILCalc
 			[DebuggerHidden]
 			get
 				{
-				double value;
-				if(TryGetValue(key, out value)) return value;
+				if( key == null )
+					throw new ArgumentNullException("key");
+
+				int index = _names.IndexOf(key);
+				if( index >= 0 ) return _values[index];
 
 				throw new KeyNotFoundException(
 					string.Format(Resources.errConstantNotExist, key)
@@ -332,22 +241,15 @@ namespace ILCalc
 			set
 				{
 				int index = _names.IndexOf(key);
-				if( index >= 0 )
-					{
-					_values[index] = value;
-					}
-				else
-					{
-					_names.Add(key);
-					_values.Add(value);
-					}
+				if( index < 0 ) Add(key, value);
+				else _values[index] = value;
 				}
 			}
 
 		/// <summary>
 		/// Gets or sets the constant value at the specified index.</summary>
 		/// <param name="index">
-		/// The name of the constant, which value to get or set.</param>
+		/// The list index of the constant, which value to get or set.</param>
 		/// <exception cref="ArgumentOutOfRangeException">index is less than 0.<br/>-or-<br/>
 		/// index is equal to or greater than <see cref="Count"/></exception>
 		/// <returns>The constant value at the specified index.</returns>
@@ -433,7 +335,7 @@ namespace ILCalc
 		bool ICollection<ConstPair>.Remove( ConstPair item )
 			{
 			int index = _names.IndexOf(item.Key);
-			if( index >= 0 )
+			if( index >= 0 && _values[index] == item.Value )
 				{
 				_names.RemoveAt(index);
 				_values.RemoveAt(index);
@@ -469,10 +371,111 @@ namespace ILCalc
 			}
 
 		#endregion
+		#region Imports
+
+		/// <summary>
+		/// Imports standart builtin constants into 
+		/// this <see cref="ConstantCollection"/>.</summary>
+		/// <remarks>
+		/// Currently this method imports Pi, E, Inf and NaN constants.</remarks>
+		/// <exception cref="ArgumentException">
+		/// Some of names is already exist in the list.</exception>
+		public void ImportBuiltin( )
+			{
+			Add("E", Math.E);
+			Add("Pi", Math.PI);
+
+			Add("NaN", Double.NaN);
+			Add("Inf", Double.PositiveInfinity);
+			}
+
+		/// <overloads>
+		/// Imports static fields of the specified type(s)
+		/// into this <see cref="ConstantCollection"/>.
+		/// </overloads>
+		/// <summary>
+		/// Imports all public static fields of the specified type
+		/// into this <see cref="ConstantCollection"/>.</summary>
+		/// <param name="type">Type object.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="type"/> is null.</exception>
+		/// <exception cref="ArgumentException">
+		/// Some of names is already exist in the list.</exception>
+		public void Import( Type type )
+			{
+			if( type == null )
+				throw new ArgumentNullException("type");
+
+			InternalImport(type, _flags);
+			}
+
+		/// <summary>
+		/// Imports all public static fields of the specified type
+		/// into this <see cref="ConstantCollection"/>.</summary>
+		/// <param name="type">Type object.</param>
+		/// <param name="nonPublic">
+		/// Include non public member methods in search.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="type"/> is null.</exception>
+		/// <exception cref="ArgumentException">
+		/// Some of names is already exist in the list.</exception>
+		public void Import( Type type, bool nonPublic )
+			{
+			if( type == null )
+				throw new ArgumentNullException("type");
+
+			var flags = _flags;
+
+			if( nonPublic )
+				flags |= BindingFlags.NonPublic;
+
+			InternalImport(type, flags);
+			}
+
+		/// <summary>
+		/// Imports all public static fields of the specified types
+		/// into this <see cref="ConstantCollection"/>.</summary>
+		/// <param name="types">
+		/// Params array of <see cref="Type"/> objects.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="types"/> is null.<br>-or-</br>
+		/// Some Type of <paramref name="types"/> is null.</exception>
+		/// <exception cref="ArgumentException">
+		/// Some of names is already exist in the list.</exception>
+		public void Import( params Type[] types )
+			{
+			if( types == null )
+				throw new ArgumentNullException("types");
+
+			foreach( Type type in types )
+				{
+				InternalImport(type, _flags);
+				}
+			}
+
+		private void InternalImport( Type type, BindingFlags flags )
+			{
+			if( type == null )
+				throw new ArgumentNullException("type");
+
+			foreach( FieldInfo field in type.GetFields(flags) )
+				{
+				// look for "const double" fields
+				if( field.IsLiteral &&
+					field.FieldType == Validator.T_type )
+					{
+					var value = ( double ) field.GetValue(null);
+					Add(field.Name, value);
+					}
+				}
+			}
+
+		#endregion
 		}
 	
 	#region Debug View
 
+	//TODO: maybe merge with FunctionDebugView?
 	sealed class ConstantsDebugView
 		{
 		[DebuggerDisplay( "{value}", Name = "{name}" )]

@@ -241,20 +241,11 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to parameter #{0} is optional parameter. Optional parameters are not supported.
+        ///   Looks up a localized string similar to parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported.
         /// </summary>
-        internal static string errMethodParamOptional {
+        internal static string errMethodParamInvalid {
             get {
-                return ResourceManager.GetString("errMethodParamOptional", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to parameter #{0} is out parameter. Out parameters are not supported.
-        /// </summary>
-        internal static string errMethodParamOut {
-            get {
-                return ResourceManager.GetString("errMethodParamOut", resourceCulture);
+                return ResourceManager.GetString("errMethodParamInvalid", resourceCulture);
             }
         }
         

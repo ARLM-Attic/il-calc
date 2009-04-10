@@ -215,6 +215,7 @@ namespace ILCalc
 
 				// some kind of overload resolution :)
 				// TODO: completely rewrite here
+				// TODO: merge in FunctionGroup!
 
 				if( item.ArgCount > fixCount )
 					{

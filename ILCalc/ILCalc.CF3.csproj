@@ -1,17 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7C413C2E-73BA-40E2-9D01-68796471FE62}</ProjectGuid>
+    <ProjectGuid>{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ILCalc</RootNamespace>
-    <AssemblyName>ILCalc</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <RootNamespace>ILCalc.CF3</RootNamespace>
+    <AssemblyName>ILCalc.CF3</AssemblyName>
+    <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <PlatformFamilyName>PocketPC</PlatformFamilyName>
+    <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
+    <OSVersion>5.1</OSVersion>
+    <DeployDirSuffix>ILCalc.CF3</DeployDirSuffix>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <NativePlatformName>Windows Mobile 5.0 Pocket PC SDK</NativePlatformName>
+    <FormFactorID>
+    </FormFactorID>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>CalcKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -19,28 +25,34 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SERIALIZE NET20</DefineConstants>
+    <OutputPath>bin\Debug.CF3\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;PocketPC CF</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
+    <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;SERIALIZE</DefineConstants>
+    <OutputPath>bin\Release.CF3\</OutputPath>
+    <DefineConstants>TRACE;PocketPC CF</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
+    <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\ILCalc.XML</DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DocumentationFile>bin\Release.CF3\ILCalc.CF3.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DynamicVisualizer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=9a0c861caf1989b5, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>DynVisualizer\DynamicVisualizer.dll</HintPath>
-    </Reference>
+    <Reference Include="mscorlib" />
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -51,27 +63,19 @@
     <Compile Include="Collections\FunctionCollection.cs" />
     <Compile Include="Collections\MethodGroup.cs" />
     <Compile Include="Collections\Validator.cs" />
-    <Compile Include="Collections\Validator.Functions.cs" />
-    <Compile Include="CalcContext.Methods.cs" />
-    <Compile Include="Evaluators\Evaluator.cs" />
+    <Compile Include="Collections\Validator.Functions.CF.cs" />
+    <Compile Include="Compatibility.CF.cs" />
+    <Compile Include="Delegates.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
-    <Compile Include="Evaluators\Interpret.Serialize.cs" />
     <Compile Include="Evaluators\Interpret.cs" />
-    <Compile Include="Evaluators\Tabulator.cs" />
     <Compile Include="Misc\Codes.cs" />
     <Compile Include="Misc\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Misc\TabRange.cs" />
-    <Compile Include="Misc\WrongRangeException.cs" />
-    <Compile Include="Output\Compiler\CompilerBase.cs" />
-    <Compile Include="Output\Compiler\EvaluatorCompiler.cs" />
-    <Compile Include="Output\Compiler\TabulatorCompiler.cs" />
     <Compile Include="Output\IExpressionOutput.cs" />
     <Compile Include="Output\Interpret\InterpCall.cs" />
-    <Compile Include="Output\Interpret\InterpCall.Serialize.cs" />
     <Compile Include="Output\Interpret\InterpretCreator.cs" />
     <Compile Include="Output\Interpret\QuickInterpret.cs" />
     <Compile Include="Output\Optimizer\OptimizeModes.cs" />
@@ -100,7 +104,14 @@
       <CustomToolNamespace>ILCalc</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}">
+        <HostingProcess disable="1" />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

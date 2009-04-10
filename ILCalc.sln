@@ -12,9 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		TODO List.txt = TODO List.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.CF3", "ILCalc.CF3\ILCalc.CF3.csproj", "{1BD1928E-4EC8-4B0E-A5F6-375977213E27}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.SL2", "ILCalc.SL2\ILCalc.SL2.csproj", "{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.SL2", "ILCalc\ILCalc.SL2.csproj", "{1BD1928E-4EC8-4B0E-A5F6-375977213E27}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{68D87EC0-48ED-48FE-93F1-3D7FBBFF5EC4}"
 EndProject
@@ -25,6 +23,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverCalc", "Applications\SilverCalc\SilverCalc.csproj", "{DCCFFE67-E1F2-4615-B3A3-30EC6E9E3398}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests", "ILCalc.Tests\ILCalc.Tests.csproj", "{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.CF3", "ILCalc\ILCalc.CF3.csproj", "{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -43,10 +43,6 @@ Global
 		{1BD1928E-4EC8-4B0E-A5F6-375977213E27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BD1928E-4EC8-4B0E-A5F6-375977213E27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1BD1928E-4EC8-4B0E-A5F6-375977213E27}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A2DA0835-A2C5-45F0-8A5E-4A070B93FAAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A2DA0835-A2C5-45F0-8A5E-4A070B93FAAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2DA0835-A2C5-45F0-8A5E-4A070B93FAAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -63,6 +59,10 @@ Global
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

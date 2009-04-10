@@ -93,8 +93,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ILCalc.SL2\ILCalc.SL2.csproj">
-      <Project>{4EE713E2-1A59-45C3-AF13-29575D4C0D4B}</Project>
+    <ProjectReference Include="..\..\ILCalc\ILCalc.SL2.csproj">
+      <Project>{1BD1928E-4EC8-4B0E-A5F6-375977213E27}</Project>
       <Name>ILCalc.SL2</Name>
     </ProjectReference>
   </ItemGroup>

@@ -94,17 +94,10 @@ namespace ILCalc
 					return;
 					}
 
-				if( param.IsOut )
+				if( param.IsOut || param.IsOptional )
 					{
 					throw FuncError(name, func,
-						Resources.errMethodParamOut,
-						param.Position);
-					}
-
-				if( param.IsOptional )
-					{
-					throw FuncError(name, func,
-						Resources.errMethodParamOptional,
+						Resources.errMethodParamInvalid,
 						param.Position);
 					}
 				}

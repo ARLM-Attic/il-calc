@@ -177,11 +177,8 @@
   <data name="errMethodNotStatic" xml:space="preserve">
     <value>must be static</value>
   </data>
-  <data name="errMethodParamOptional" xml:space="preserve">
-    <value>parameter #{0} is optional parameter. Optional parameters are not supported</value>
-  </data>
-  <data name="errMethodParamOut" xml:space="preserve">
-    <value>parameter #{0} is out parameter. Out parameters are not supported</value>
+  <data name="errMethodParamInvalid" xml:space="preserve">
+    <value>parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported</value>
   </data>
   <data name="errMethodSameParams" xml:space="preserve">
     <value>with same parameters is already in the list</value>

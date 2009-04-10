@@ -9,8 +9,8 @@
 Imports System.Drawing.Imaging
 Imports System.Runtime.InteropServices
 Imports System.Globalization
-Imports ILCalc
 Imports System.Threading
+Imports ILCalc
 
 Public Class MainForm
 

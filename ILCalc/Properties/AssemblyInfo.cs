@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Resources;
 
 [assembly: AssemblyTitle("ILCalc")]
 [assembly: AssemblyDescription("Arithmetical expressions compiler and evaluator.")]
@@ -11,12 +10,16 @@ using System.Resources;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyFlags(AssemblyNameFlags.EnableJITcompileOptimizer)]
-
 [assembly: ComVisible(false)]
-
-[assembly: AssemblyVersion("0.9.1.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: System.CLSCompliant(true)]
 
-[assembly: NeutralResourcesLanguage("en", UltimateResourceFallbackLocation.MainAssembly)]
+[assembly: AssemblyVersion("0.9.1.5")]
+#if !CF
+
+[assembly: AssemblyFileVersion("0.9.1.5")]
+[assembly: AssemblyFlags(AssemblyNameFlags.EnableJITcompileOptimizer)]
+
+[assembly: System.Resources.NeutralResourcesLanguage
+	("en", System.Resources.UltimateResourceFallbackLocation.MainAssembly)]
+
+#endif

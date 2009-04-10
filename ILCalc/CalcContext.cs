@@ -6,7 +6,8 @@ namespace ILCalc
 	{
 	using State = DebuggerBrowsableState;
 
-	// TODO: Postfix writer for DEBUG
+	// TODO: region Members => Methods
+	// TODO: delete IndexOutOfRangeException usage
 
 	/// <summary>
 	/// Represents the expression context (arguments, constants and functions
@@ -19,6 +20,8 @@ namespace ILCalc
 	public sealed partial class CalcContext
 		{
 		#region Fields
+
+		//TODO: no internals here?
 
 		[DebuggerBrowsable(State.Never)] internal ArgumentCollection _args;
 		[DebuggerBrowsable(State.Never)] internal ConstantCollection _consts;
