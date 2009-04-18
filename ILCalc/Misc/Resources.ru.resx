@@ -124,13 +124,19 @@
     <value>Аргумент "{0}" уже содержится в списке.</value>
   </data>
   <data name="errConstantExist" xml:space="preserve">
-    <value>Константа "{0}" уже содержится в списке.</value>
+    <value>Константа "{0}" уже содержится в коллекции.</value>
   </data>
   <data name="errConstantNotExist" xml:space="preserve">
-    <value>Константы с именем "{0}" не существует в списке.</value>
+    <value>Константы с именем "{0}" не существует коллекции.</value>
   </data>
   <data name="errCultureExtract" xml:space="preserve">
     <value>Невозможно извлечь специфичные для культуры символы-разделители.</value>
+  </data>
+  <data name="errDelegateInvCount" xml:space="preserve">
+    <value>Делегат должен указывать только на один метод.</value>
+  </data>
+  <data name="errDelegateWithTarget" xml:space="preserve">
+    <value>Делегаты, указывающие на методы экземпляров, не поддерживаются (может быть из-за замыкания на контекст).</value>
   </data>
   <data name="errDisbalanceClose" xml:space="preserve">
     <value>Скобки не сбалансированы (не все закрыты).</value>
@@ -147,8 +153,14 @@
   <data name="errFunctionNoBrace" xml:space="preserve">
     <value>Открывающая скобка должна следовать после имени функции</value>
   </data>
+  <data name="errFunctionNotExist" xml:space="preserve">
+    <value>Функции с именем "{0}" не существует в коллекции.</value>
+  </data>
   <data name="errIdentifierEmpty" xml:space="preserve">
     <value>Имя идентфикатора пустое или null.</value>
+  </data>
+  <data name="errIdentifierFromLambda" xml:space="preserve">
+    <value>Может быть импортируется лямбда-функция без указания имени?</value>
   </data>
   <data name="errIdentifierStartsWith" xml:space="preserve">
     <value>Некорректное имя идентификатора: "{0}". Имя должно начинаться с буквы или символа подчёркивания.</value>
@@ -163,25 +175,25 @@
     <value>Некорректное использование разделителя аргументов.</value>
   </data>
   <data name="errMethodBadParam" xml:space="preserve">
-    <value>обладает параметром #{0} типа '{1}'. Все параметры должны быть типа '{2}'</value>
+    <value>имеет параметр #{0} типа '{1}'. Все параметры должны быть типа '{2}'.</value>
   </data>
   <data name="errMethodBadReturn" xml:space="preserve">
-    <value>возвращает значение типа '{0}'. Тип возвращаемого значения должен быть '{1}'</value>
+    <value>возвращает значение типа '{0}'. Тип возвращаемого значения должен быть '{1}'.</value>
+  </data>
+  <data name="errMethodImportFailed" xml:space="preserve">
+    <value>Импорт невозможен: метод</value>
   </data>
   <data name="errMethodNotFounded" xml:space="preserve">
-    <value>Метод с именем "{0}" не может быть найден (метод не в публичном доступе?).</value>
+    <value>Метод с именем "{0}" не может быть найден (не в публичном доступе или не статический?).</value>
   </data>
   <data name="errMethodNotRuntimeMethod" xml:space="preserve">
-    <value>должна быть стандартным методом (DynamicMethod не поддерживается).</value>
+    <value>должен быть стандартным методом (DynamicMethod не поддерживается).</value>
   </data>
   <data name="errMethodNotStatic" xml:space="preserve">
-    <value>должна быть статической</value>
+    <value>должен быть статическим.</value>
   </data>
   <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>обладает Out- или Optional-параметром #{0}'. Такие типы параметров не поддерживаются</value>
-  </data>
-  <data name="errMethodSameParams" xml:space="preserve">
-    <value>с таким же кол-вом аргументов уже содержится в списке</value>
+    <value>имеет Out- или Optional-параметр #{0}'. Такие типы параметров не поддерживаются.</value>
   </data>
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Культура '{0}' - нейтральная культура. Она не может быть использована для форматирования и разбора выражения.</value>
@@ -192,11 +204,11 @@
   <data name="errNumberOverflow" xml:space="preserve">
     <value>Переполнение числовой константы:</value>
   </data>
+  <data name="errOverloadImpossible" xml:space="preserve">
+    <value>Функция с таким же кол-вом аргументов ({0}) уже содержится в списке (перегрузка невозможна).</value>
+  </data>
   <data name="errRangeNotFinite" xml:space="preserve">
     <value>Некорректный промежуток: значение Begin, End или Step не является конечным числом (Inf / NaN).</value>
-  </data>
-  <data name="errTabulatorNotImpl" xml:space="preserve">
-    <value>Tabulator не реализован для указанного кол-ва промежутков ({0}).</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
     <value>Tabulator может быть скомпилирован только для выражения с одним или двумя аргументами.</value>

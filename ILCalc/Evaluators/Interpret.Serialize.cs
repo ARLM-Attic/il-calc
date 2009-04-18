@@ -2,16 +2,13 @@
 
 namespace ILCalc
 	{
-	public sealed partial class Interpret : IDeserializationCallback
+	public sealed partial class Interpret : IEvaluator, IDeserializationCallback
 		{
-		#region IDeserialization
-
 		void IDeserializationCallback.OnDeserialization( object sender )
 			{
-			_stack = new double[_stackMax];
-			_param = new double[_argCount];
+			stackArray = new double[stackMax];
+			paramArray = new double[argsCount];
+			syncRoot = new object( );
 			}
-
-		#endregion
 		}
 	}

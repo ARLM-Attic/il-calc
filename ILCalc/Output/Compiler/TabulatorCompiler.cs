@@ -8,166 +8,166 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private readonly bool _oneArg;
+		private readonly bool hasOneArg;
 
-		private readonly LocalBuilder _idxLocal;
-		private readonly LocalBuilder _idxLocal2;
-		private readonly LocalBuilder _resLocal;
-		private readonly LocalBuilder _beginLocal;
-		private readonly LocalBuilder _arrayLocal;
+		private readonly LocalBuilder indexLocal;
+		private readonly LocalBuilder indexLocal2;
+		private readonly LocalBuilder resultLocal;
+		private readonly LocalBuilder beginLocal;
+		private readonly LocalBuilder arrayLocal;
 		
-		private readonly Label _condLabel,  _beginLabel;
-		private readonly Label _condLabel2, _beginLabel2;
+		private readonly Label condLabel,  beginLabel;
+		private readonly Label condLabel2, beginLabel2;
 
 		#endregion
-		#region Members
+		#region Methods
 
 		public TabulatorCompiler( bool oneArg, bool check )
 			: base(	RetTypes(oneArg),
 					ArgTypes(oneArg), check )
 			{
-			_oneArg = oneArg;
+			hasOneArg = oneArg;
 
-			_condLabel  = _body.DefineLabel( );
-			_beginLabel = _body.DefineLabel( );
+			condLabel  = body.DefineLabel( );
+			beginLabel = body.DefineLabel( );
 
-			_idxLocal = _body.DeclareLocal(_indexType);
+			indexLocal = body.DeclareLocal(indexType);
 			
 			if(oneArg)
 				{
-				_resLocal = _body.DeclareLocal(_arrType);
+				resultLocal = body.DeclareLocal(arrayType);
 				
 				// res = new double[count];
-				_body.Emit(OpCodes.Ldarg_1);
-				_body.Emit(OpCodes.Newarr, _valType);
-				_body.Emit(OpCodes.Stloc, _resLocal);
+				body.Emit(OpCodes.Ldarg_1);
+				body.Emit(OpCodes.Newarr, valueType);
+				body.Emit(OpCodes.Stloc, resultLocal);
 
 				// int i = 0;
-				_body.Emit(OpCodes.Ldc_I4_0);
-				_body.Emit(OpCodes.Stloc, _idxLocal);
+				body.Emit(OpCodes.Ldc_I4_0);
+				body.Emit(OpCodes.Stloc, indexLocal);
 
 				// jump to condition
-				_body.Emit(OpCodes.Br, _condLabel);
+				body.Emit(OpCodes.Br, condLabel);
 				
 				// res[i] = 
-				_body.MarkLabel(_beginLabel);
-				_body.Emit(OpCodes.Ldloc, _resLocal);
-				_body.Emit(OpCodes.Ldloc, _idxLocal);
+				body.MarkLabel(beginLabel);
+				body.Emit(OpCodes.Ldloc, resultLocal);
+				body.Emit(OpCodes.Ldloc, indexLocal);
 				}
 			else
 				{
-				_resLocal   = _body.DeclareLocal(_arrArrType);
-				_idxLocal2  = _body.DeclareLocal(_indexType);
-				_beginLocal = _body.DeclareLocal(_valType);
-				_arrayLocal = _body.DeclareLocal(_arrType);
+				resultLocal   = body.DeclareLocal(arrArrType);
+				indexLocal2  = body.DeclareLocal(indexType);
+				beginLocal = body.DeclareLocal(valueType);
+				arrayLocal = body.DeclareLocal(arrayType);
 				
-				_condLabel2  = _body.DefineLabel();
-				_beginLabel2 = _body.DefineLabel();
+				condLabel2  = body.DefineLabel();
+				beginLabel2 = body.DefineLabel();
 				
 				// res = new double[count1][];
-				_body.Emit(OpCodes.Ldarg_1);
-				_body.Emit(OpCodes.Newarr, _arrType);
-				_body.Emit(OpCodes.Stloc, _resLocal);
+				body.Emit(OpCodes.Ldarg_1);
+				body.Emit(OpCodes.Newarr, arrayType);
+				body.Emit(OpCodes.Stloc, resultLocal);
 				
 				// begin = y
-				_body.Emit(OpCodes.Ldarg_2);
-				_body.Emit(OpCodes.Stloc, _beginLocal);
+				body.Emit(OpCodes.Ldarg_2);
+				body.Emit(OpCodes.Stloc, beginLocal);
 
 				// int i = 0;
-				_body.Emit(OpCodes.Ldc_I4_0);
-				_body.Emit(OpCodes.Stloc, _idxLocal);
+				body.Emit(OpCodes.Ldc_I4_0);
+				body.Emit(OpCodes.Stloc, indexLocal);
 
 				// jump to condition
-				_body.Emit(OpCodes.Br, _condLabel);
+				body.Emit(OpCodes.Br, condLabel);
 
 				// arr = new double[count2];
-				_body.MarkLabel(_beginLabel);
-				_body.Emit(OpCodes.Ldarg_3);
-				_body.Emit(OpCodes.Newarr, _valType);
-				_body.Emit(OpCodes.Stloc, _arrayLocal);
+				body.MarkLabel(beginLabel);
+				body.Emit(OpCodes.Ldarg_3);
+				body.Emit(OpCodes.Newarr, valueType);
+				body.Emit(OpCodes.Stloc, arrayLocal);
 
 				// j = 0;
-				_body.Emit(OpCodes.Ldc_I4_0);
-				_body.Emit(OpCodes.Stloc, _idxLocal2);
+				body.Emit(OpCodes.Ldc_I4_0);
+				body.Emit(OpCodes.Stloc, indexLocal2);
 
 				// jump to condition
-				_body.Emit(OpCodes.Br, _condLabel2);
+				body.Emit(OpCodes.Br, condLabel2);
 
 				// arr[j] =
-				_body.MarkLabel(_beginLabel2);
-				_body.Emit(OpCodes.Ldloc, _arrayLocal);
-				_body.Emit(OpCodes.Ldloc, _idxLocal2);
+				body.MarkLabel(beginLabel2);
+				body.Emit(OpCodes.Ldloc, arrayLocal);
+				body.Emit(OpCodes.Ldloc, indexLocal2);
 				}
 			}
 
 		public Tabulator CreateTabulator( string expr )
 			{
-			_body.Emit(_saveElem);
+			body.Emit(opSaveElem);
 
-			if(!_oneArg)
+			if(!hasOneArg)
 				{
 				// y += step2;
-				_body.Emit(OpCodes.Ldarg_2);
-				_body.Emit(OpCodes.Ldarg_S, (byte)5);
-				_body.Emit(OpCodes.Add);
-				_body.Emit(OpCodes.Starg_S, (byte)2);
+				body.Emit(OpCodes.Ldarg_2);
+				body.Emit(OpCodes.Ldarg_S, (byte)5);
+				body.Emit(OpCodes.Add);
+				body.Emit(OpCodes.Starg_S, (byte)2);
 
 				// j++;
-				_body.Emit(OpCodes.Ldloc, _idxLocal2);
-				_body.Emit(OpCodes.Ldc_I4_1);
-				_body.Emit(OpCodes.Add);
-				_body.Emit(OpCodes.Stloc, _idxLocal2);
+				body.Emit(OpCodes.Ldloc, indexLocal2);
+				body.Emit(OpCodes.Ldc_I4_1);
+				body.Emit(OpCodes.Add);
+				body.Emit(OpCodes.Stloc, indexLocal2);
 
 				// while(j < count2)
-				_body.MarkLabel(_condLabel2);
-				_body.Emit(OpCodes.Ldloc, _idxLocal2);
-				_body.Emit(OpCodes.Ldarg_3);
-				_body.Emit(OpCodes.Blt, _beginLabel2);
+				body.MarkLabel(condLabel2);
+				body.Emit(OpCodes.Ldloc, indexLocal2);
+				body.Emit(OpCodes.Ldarg_3);
+				body.Emit(OpCodes.Blt, beginLabel2);
 
 				// res[i] = arr;
-				_body.Emit(OpCodes.Ldloc, _resLocal);
-				_body.Emit(OpCodes.Ldloc, _idxLocal);
-				_body.Emit(OpCodes.Ldloc, _arrayLocal);
-				_body.Emit(OpCodes.Stelem_Ref);
+				body.Emit(OpCodes.Ldloc, resultLocal);
+				body.Emit(OpCodes.Ldloc, indexLocal);
+				body.Emit(OpCodes.Ldloc, arrayLocal);
+				body.Emit(OpCodes.Stelem_Ref);
 
 				// y = begin
-				_body.Emit(OpCodes.Ldloc, _beginLocal);
-				_body.Emit(OpCodes.Starg_S, (byte)2);
+				body.Emit(OpCodes.Ldloc, beginLocal);
+				body.Emit(OpCodes.Starg_S, (byte)2);
 				}
 
 			// x += step
-			_body.Emit(OpCodes.Ldarg_0);
+			body.Emit(OpCodes.Ldarg_0);
 			
-			if(_oneArg)
-				 _body.Emit(OpCodes.Ldarg_2);
-			else _body.Emit(OpCodes.Ldarg_S, (byte)4);
+			if(hasOneArg)
+				 body.Emit(OpCodes.Ldarg_2);
+			else body.Emit(OpCodes.Ldarg_S, (byte)4);
 
-			_body.Emit(OpCodes.Add);
-			_body.Emit(OpCodes.Starg_S, (byte)0);
+			body.Emit(OpCodes.Add);
+			body.Emit(OpCodes.Starg_S, (byte)0);
 			
 			// i++;
-			_body.Emit(OpCodes.Ldloc, _idxLocal);
-			_body.Emit(OpCodes.Ldc_I4_1);
-			_body.Emit(OpCodes.Add);
-			_body.Emit(OpCodes.Stloc, _idxLocal);
+			body.Emit(OpCodes.Ldloc, indexLocal);
+			body.Emit(OpCodes.Ldc_I4_1);
+			body.Emit(OpCodes.Add);
+			body.Emit(OpCodes.Stloc, indexLocal);
 
 			// while(i < count)
-			_body.MarkLabel(_condLabel);
-			_body.Emit(OpCodes.Ldloc, _idxLocal);
-			_body.Emit(OpCodes.Ldarg_1);
-			_body.Emit(OpCodes.Blt, _beginLabel);
+			body.MarkLabel(condLabel);
+			body.Emit(OpCodes.Ldloc, indexLocal);
+			body.Emit(OpCodes.Ldarg_1);
+			body.Emit(OpCodes.Blt, beginLabel);
 
 			// return res
-			_body.Emit(OpCodes.Ldloc, _resLocal);
-			_body.Emit(OpCodes.Ret);
+			body.Emit(OpCodes.Ldloc, resultLocal);
+			body.Emit(OpCodes.Ret);
 
 			#if VISUALIZE
 			DynamicMethodVisualizer.Visualizer.Show(_eval);
 			#endif
 
-			Delegate method = _eval.CreateDelegate(_oneArg? _tabType1: _tabType2);
+			Delegate method = dynMethod.CreateDelegate(hasOneArg? tabType1: tabType2);
 
-			return new Tabulator(expr, method, _oneArg);
+			return new Tabulator(expr, method, hasOneArg);
 			}
 
 		#endregion
@@ -176,8 +176,8 @@ namespace ILCalc
 		public void PutArgument( int id )
 			{
 			if(id == 0)
-				 _body.Emit(OpCodes.Ldarg_0);
-			else _body.Emit(OpCodes.Ldarg_2);
+				 body.Emit(OpCodes.Ldarg_0);
+			else body.Emit(OpCodes.Ldarg_2);
 			}
 
 		#endregion
@@ -185,37 +185,37 @@ namespace ILCalc
 
 		// Helpers ================================================
 
-		public static Type RetTypes( bool oneArg )
+		private static Type RetTypes( bool oneArg )
 			{
-			return oneArg ? _arrType : _arrArrType;
+			return oneArg ? arrayType : arrArrType;
 			}
 
-		public static Type[] ArgTypes( bool oneArg )
+		private static Type[] ArgTypes( bool oneArg )
 			{
-			return oneArg ? _argsTypes1 : _argsTypes2;
+			return oneArg ? argsTypes1 : argsTypes2;
 			}
 
 		// Types ==================================================
 
-		private static readonly Type _indexType = typeof( int );
+		private static readonly Type indexType = typeof( int );
 
-		private static readonly Type _arrArrType = typeof( double[][] );
+		private static readonly Type arrArrType = typeof( double[][] );
 
-		private static readonly Type _tabType1 = typeof( Tabulator.TabFunc1 );
-		private static readonly Type _tabType2 = typeof( Tabulator.TabFunc2 );
+		private static readonly Type tabType1 = typeof( Tabulator.TabFunc1 );
+		private static readonly Type tabType2 = typeof( Tabulator.TabFunc2 );
 		
-		private static readonly Type[] _argsTypes1 = new[]
+		private static readonly Type[] argsTypes1 = new[]
 			{
-				_valType,
-				_indexType,
-				_valType
+				valueType,
+				indexType,
+				valueType
 			};
 
-		private static readonly Type[] _argsTypes2 = new[]
+		private static readonly Type[] argsTypes2 = new[]
 			{
-				_valType, _indexType,
-				_valType, _indexType,
-				_valType, _valType
+				valueType, indexType,
+				valueType, indexType,
+				valueType, valueType
 			};
 
 		#endregion

@@ -8,38 +8,38 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private readonly CalcContext _context;
-		private IExpressionOutput _output;
+		private readonly CalcContext context;
+		private IExpressionOutput output;
 
-		private string _expr;
-		private int _len;
+		private string expr;
+		private int exprLen;
 
-		private char _dot;
-		private char _sep;
+		private char dotSymbol;
+		private char sepSymbol;
 
-		private IEnumerable<SearchItem> _idens;
-		private NumberFormatInfo _numf;
+		private IEnumerable<SearchItem> idenList;
+		private NumberFormatInfo numFormat;
 		
 		#endregion
-		#region Members
+		#region Methods
 
 		public Parser( CalcContext context )
 			{
-			_context = context;
+			this.context = context;
 			
 			InitCulture( );
 			InitIdens( );
 			}
 
-		public void Parse( string expr, IExpressionOutput output )
+		public void Parse( string expression, IExpressionOutput exprOutput )
 			{
-			_output = output;
+			output = exprOutput;
+			
+			expr = expression;
+			exprLen = expression.Length;
 
-			_expr = expr;
-			_len  = expr.Length;
-
-			_prePos = 0;
-			_depth = 0;
+			prePos = 0;
+			exprDepth = 0;
 
 			int i = 0;
 			Parse(ref i, false);
@@ -47,56 +47,60 @@ namespace ILCalc
 
 		public void InitCulture( )
 			{
-			CultureInfo culture = _context._culture;
-			if( culture != null )
+			CultureInfo culture = context.parseCulture;
+			if( culture == null )
 				{
-				try {
-					_dot = culture.NumberFormat.NumberDecimalSeparator[0];
-					_sep = culture.TextInfo.ListSeparator[0];
+				dotSymbol = '.';
+				sepSymbol = ',';
+				numFormat = new NumberFormatInfo( );
+				}
+			else
+				{
+				try
+					{
+					dotSymbol = culture.NumberFormat.NumberDecimalSeparator[0];
+					sepSymbol = culture.TextInfo.ListSeparator[0];
 					}
 				catch( IndexOutOfRangeException )
 					{
 					throw new ArgumentException(Resources.errCultureExtract);
 					}
 
-				_numf = culture.NumberFormat;
-				}
-			else
-				{
-				_dot = '.';
-				_sep = ',';
-				_numf = new NumberFormatInfo();
+				numFormat = culture.NumberFormat;
 				}
 			}
 
 		public void InitIdens( )
 			{
-			var list = new List< SearchItem >(4);
+			var list = new List<SearchItem>(2);
 			
-			if(_context._args != null)
+			if(context.argsList != null)
 				{
-				list.Add(new SearchItem(Iden.Argument, _context._args));
+				list.Add(new SearchItem(IdenType.Argument,
+					context.argsList));
 				}
 
-			if(_context._consts != null)
+			if(context.constDict != null)
 				{
-				list.Add(new SearchItem(Iden.Constant, _context._consts.Keys));
+				list.Add(new SearchItem(IdenType.Constant,
+					context.constDict.Keys));
 				}
 
-			if(_context._funcs != null)
+			if(context.funcsDict != null)
 				{
-				list.Add(new SearchItem(Iden.Function, _context._funcs));
+				list.Add(new SearchItem(IdenType.Function,
+					context.funcsDict.Keys));
 				}
 
-			_idens = list;
+			idenList = list;
 			}
 
 		#endregion
 		#region Static Data
 
-		// WARNING:
-		// parser depends on the position
-		// of the enumeration elements:
+		/////////////////////////////////////////
+		// WARNING: do not modify items order! //
+		/////////////////////////////////////////
 		private enum Item
 			{
 			Operator	= 0,
@@ -107,9 +111,9 @@ namespace ILCalc
 			Identifier	= 5
 			}
 		
-		const string _operators = "-+*/%^";
+		const string operators = "-+*/%^";
 
-		static readonly int[] _prior = { 0, 0, 1, 1, 1, 3, 2 };
+		static readonly int[] opPriority = { 0, 0, 1, 1, 1, 3, 2 };
 
 		#endregion
 		}

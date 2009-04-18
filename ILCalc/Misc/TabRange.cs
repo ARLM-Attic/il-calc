@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
@@ -8,20 +10,28 @@ namespace ILCalc
 
 	/// <summary>
 	/// Defines a set of (begin, end, step) values,
-	/// that represents the range of values.
-	/// </summary>
+	/// that represents the range of values.</summary>
 	/// <remarks>
 	/// Not available in the .NET CF / Silverlight versions.
 	/// </remarks>
+	/// <threadsafety instance="false"/>
+	
 	[DebuggerDisplay("[{Begin} - {End}] step {Step}")]
-	public struct TabRange : IEquatable<TabRange>
+	[Serializable]
+
+	public struct TabRange : IEquatable<TabRange>,
+							 IEnumerable<double>
 		{
 		#region Fields
 
-		[DebuggerBrowsable(State.Never)] private double _begin;
-		[DebuggerBrowsable(State.Never)] private double _step;
-		[DebuggerBrowsable(State.Never)] private double _end;
-		[DebuggerBrowsable(State.Never)] private bool _checked;
+		// range values:
+		[DebuggerBrowsable(State.Never)] private double begin;
+		[DebuggerBrowsable(State.Never)] private double step;
+		[DebuggerBrowsable(State.Never)] private double end;
+
+		// cached info:
+		[DebuggerBrowsable(State.Never)] private bool isChecked;
+		[DebuggerBrowsable(State.Never)] private int count;
 		
 		#endregion
 		#region Properties
@@ -29,169 +39,67 @@ namespace ILCalc
 		/// <summary>Gets or sets the begining value of the range.</summary>
 		public double Begin
 			{
-			[DebuggerHidden] get { return  _begin; }
-			[DebuggerHidden]
-			set
-				{
-				_begin = value;
-				_checked = false;
-				}
+			[DebuggerHidden] get { return begin; }
+			[DebuggerHidden] set { begin = value; OnChange( ); }
 			}
 
 		/// <summary>Gets or sets the ending value of the range.</summary>
 		public double End
 			{
-			[DebuggerHidden] get { return  _end; }
-			[DebuggerHidden]
-			set
-				{
-				_end = value;
-				_checked = false;
-				}
+			[DebuggerHidden] get { return end; }
+			[DebuggerHidden] set { end = value; OnChange( ); }
 			}
 
 		/// <summary>Gets or sets the step value of the range.</summary>
 		public double Step
 			{
-			[DebuggerHidden] get { return  _step; }
-			[DebuggerHidden]
-			set
-				{
-				_step = value;
-				_checked = false;
-				}
+			[DebuggerHidden] get { return step; }
+			[DebuggerHidden] set { step = value; OnChange( ); }
 			}
 
-		/// <summary>Calculates the lenght of the range.</summary>
-		public double Length
-			{
-			[DebuggerHidden]
-			get
-				{
-				return _end - _begin;
-				}
-			}
-
-		/// <summary>Gets or sets the count of the steps, that would
+		/// <summary>
+		/// Gets or sets the count of the steps, that would
 		/// be taken while iteration over the range.</summary>
 		/// <remarks>
 		/// Is not guaranteed that by setting this property you
-		/// will get range with <see cref="Count"/> iterations.
-		/// Because of floating-point numbers precision, range
-		/// step cannot be rightly evaluated for any 
-		/// <see cref="Count"/> value.
+		/// will get range with <see cref="Count"/> iterations.<br/>
+		/// Because of floating-point numbers precision, range step
+		/// cannot be rightly evaluated for any <see cref="Count"/> value.
 		/// </remarks>
 		public int Count
 			{
-			get 
+			get
 				{
-				if( _begin > _end != _step < 0.0 ) return 0;
-
-				double len = _end - _begin;
-				double dCount = len /_step;
-				
-				// too long range iterations count
-				if( dCount >= int.MaxValue ) return int.MaxValue;
-				
-				int count = (int) dCount;
-
-				if( len % _step == 0 ) count++;
-				return count;
+				if( count > 0 ) return count;
+				return IsValid( )? InternalGetCount( ): 0;
 				}
 			set
 				{
-				_step = (_end - _begin) / value;
-				_checked = false;
+				InternalSetCount(value);
+				OnChange( );
 				}
 			}
 
 		#endregion
-		#region Members
+		#region Methods
 
 		/// <summary>
-		/// Returns the expression string, that this <see cref="Tabulator"/> represents.
-		/// </summary>
+		/// Converts the values of this range
+		/// to its equivalent string representation.</summary>
 		/// <returns>Expression string.</returns>
 		public override string ToString( )
 			{
 			var buf = new StringBuilder( );
-			buf.Append(_begin); buf.Append(" - ");
-			buf.Append(_end);   buf.Append(" : ");
-			buf.Append(_step);
+			buf.Append(begin); buf.Append(" - ");
+			buf.Append(end);   buf.Append(" : ");
+			buf.Append(step);
 			return buf.ToString( );
 			}
 
-		/// <summary>Throws an <see cref="InvalidRangeException"/> if this
-		/// range instance is not valid for iteration over it.</summary>
-		/// <exception cref="InvalidRangeException">
-		/// Range is not valid for iteration over it.
-		/// </exception>
-		public void Validate()
-			{
-			if( _checked ) return;
+		private void OnChange( ) { isChecked = false; count = 0; }
 
-			string msg = string.Empty;
-			InvalidateReason reason = InternalValidate( );
-
-			switch( reason )
-				{
-				case InvalidateReason.None: return;
-
-				case InvalidateReason.NotFiniteRange:
-					msg = Resources.errRangeNotFinite; break;
-
-				case InvalidateReason.EndlessRange:
-					msg = Resources.errEndlessLoop; break;
-
-				case InvalidateReason.WrongStepSign:
-					msg = Resources.errWrongStepSign; break;
-
-				case InvalidateReason.RangeTooLoong:
-					msg = Resources.errTooLongRange; break;
-				}
-
-			throw new InvalidRangeException(msg);
-			}
-
-		/// <summary>Returns <c>true</c> if this range instance
-		/// is valid for iteration over it.</summary>
-		/// <returns><b>true</b> if range is valid,
-		/// otherwise <b>false</b></returns>
-		public bool IsValid()
-			{
-			return _checked
-				|| InternalValidate( ) == InvalidateReason.None;
-			}
-
-		private InvalidateReason InternalValidate( )
-			{
-			_checked = false;
-
-			if(	double.IsInfinity(_begin)	|| double.IsNaN(_begin)
-			||	double.IsInfinity(_step)	|| double.IsNaN(_step)
-			||	double.IsInfinity(_end)		|| double.IsNaN(_end) )
-				{
-				return InvalidateReason.NotFiniteRange;
-				}
-
-			if( _begin + _step == _begin )
-				{
-				return InvalidateReason.EndlessRange;
-				}
-
-			if( _begin > _end != _step < 0 )
-				{
-				return InvalidateReason.WrongStepSign;
-				}
-
-			if( (_end - _begin) / _step >= int.MaxValue )
-				{
-				return InvalidateReason.RangeTooLoong;
-				}
-
-			_checked = true;
-			return InvalidateReason.None;
-			}
+		#endregion
+		#region Validate
 
 		private enum InvalidateReason
 			{
@@ -202,25 +110,93 @@ namespace ILCalc
 			RangeTooLoong
 			}
 
-		#endregion
-		#region Constructor
+		/// <summary>
+		/// Throws an <see cref="InvalidRangeException"/> if this
+		/// range instance is not valid for iteration over it.</summary>
+		/// <exception cref="InvalidRangeException">
+		/// Range is not valid for iteration over it.
+		/// </exception>
+		public void Validate()
+			{
+			if( isChecked ) return;
 
-		// NOTE: constructor without step?
-		// new TabRange(1, 10) { Count = 100 };
+			string msg = string.Empty;
+			InvalidateReason reason = InternalValidate( );
+
+			switch( reason )
+				{
+				case InvalidateReason.None: return;
+
+				case InvalidateReason.NotFiniteRange:	msg = Resources.errRangeNotFinite;	break;
+				case InvalidateReason.EndlessRange:		msg = Resources.errEndlessLoop;		break;
+				case InvalidateReason.WrongStepSign:	msg = Resources.errWrongStepSign;	break;
+				case InvalidateReason.RangeTooLoong:	msg = Resources.errTooLongRange;	break;
+				}
+
+			throw new InvalidRangeException(msg);
+			}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="TabRange"/>
-		/// structure with the specified begin, end and step values.
-		/// </summary>
-		/// <param name="begin">Range begin value.</param>
-		/// <param name="end">Range end value.</param>
-		/// <param name="step">Range step value.</param>
-		public TabRange( double begin, double end, double step )
+		/// Returns <c>true</c> if this range instance
+		/// is valid for iteration over it.</summary>
+		/// <returns><b>true</b> if range is valid,
+		/// otherwise <b>false</b></returns>
+		public bool IsValid()
 			{
-			_checked = false;
-			_begin = begin;
-			_step = step;
-			_end = end;
+			return isChecked
+				|| InternalValidate( ) == InvalidateReason.None;
+			}
+
+		private InvalidateReason InternalValidate( )
+			{
+			isChecked = false;
+
+			if(	double.IsInfinity(begin)	|| double.IsNaN(begin)
+			||	double.IsInfinity(step)		|| double.IsNaN(step)
+			||	double.IsInfinity(end)		|| double.IsNaN(end) )
+				{
+				return InvalidateReason.NotFiniteRange;
+				}
+
+			if( begin + step == begin )
+				return InvalidateReason.EndlessRange;
+
+			if( begin > end != step < 0 )
+				return InvalidateReason.WrongStepSign;
+
+			if( (end - begin) / step >= int.MaxValue )
+				return InvalidateReason.RangeTooLoong;
+
+			isChecked = true;
+			return InvalidateReason.None;
+			}
+
+		#endregion
+		#region Internals
+
+		private bool MoveNext( ref double value )
+			{
+			if( value < end )
+				{
+				value += step;
+				return true;
+				}
+
+			return false;
+			}
+
+		private void InternalSetCount( int value )
+			{
+			step = (end - begin) / value;
+			}
+
+		private int InternalGetCount( )
+			{
+			double len = end - begin;
+			var iCount = (int) (len / step);
+
+			if( len % step == 0 ) iCount++;
+			return iCount;
 			}
 
 		#endregion
@@ -230,37 +206,35 @@ namespace ILCalc
 		/// <returns>A 32-bit signed integer hash code.</returns>
 		public override int GetHashCode()
 			{
-			return	_begin.GetHashCode( ) ^
-					  _end.GetHashCode( ) ^
-					 _step.GetHashCode( );
+			return	begin.GetHashCode( ) ^
+					  end.GetHashCode( ) ^
+					 step.GetHashCode( );
 			}
 
-		/// <summary>Indicates whether the current <see cref="TabRange"/>
-		/// is equal to another <see cref="TabRange"/> structure.</summary>
-		/// <overloads>Returns a value indicating whether two instances
-		/// of <see cref="TabRange"/> is equal.</overloads>
+		/// <summary>
+		/// Indicates whether the current <see cref="TabRange"/> is
+		/// equal to another <see cref="TabRange"/> structure.</summary>
+		/// <overloads>
+		/// Returns a value indicating whether two instances of
+		/// <see cref="TabRange"/> is equal.</overloads>
 		/// <param name="other">An another <see cref="TabRange"/>
 		/// to compare with.</param>
-		/// <returns><b>true</b> if the current <see cref="TabRange"/>
-		/// is equal to the other <see cref="TabRange"/>;
-		/// otherwise, <b>false</b>.</returns>
+		/// <returns><b>true</b> if the current <see cref="TabRange"/> is equal to
+		/// the other <see cref="TabRange"/>; otherwise, <b>false</b>.</returns>
 		public bool Equals( TabRange other )
 			{
-			return	_begin.Equals(other._begin)
-				&&	_step.Equals(other._step)
-				&&	_end.Equals(other._end);
+			return	begin.Equals(other.begin)
+				&&	step.Equals(other.step)
+				&&	end.Equals(other.end);
 			}
 
 		/// <summary>
 		/// Indicates whether the current <see cref="TabRange"/>
-		/// is equal to another object.
-		/// </summary>
-		/// <param name="obj">An another <see cref="object"/> to compare with.</param>
-		/// <returns>
-		/// <b>true</b> if the current <see cref="TabRange"/> is equal 
-		/// to the other <see cref="TabRange"/>;
-		/// otherwise, <b>false</b>.
-		/// </returns>
+		/// is equal to another object.</summary>
+		/// <param name="obj">
+		/// An another <see cref="object"/> to compare with.</param>
+		/// <returns><b>true</b> if the current <see cref="TabRange"/> is equal to
+		/// the other <see cref="TabRange"/>; otherwise, <b>false</b>.</returns>
 		public override bool Equals( object obj )
 			{
 			return obj is TabRange
@@ -274,30 +248,116 @@ namespace ILCalc
 		/// Returns a value indicating whether two instances
 		/// of <see cref="TabRange"/> are equal.
 		/// </summary>
-		/// <param name="r1">A <see cref="TabRange"/></param>
-		/// <param name="r2">A <see cref="TabRange"/></param>
-		/// <returns>
-		/// <b>true</b> if <paramref name="r1"/> and <paramref name="r2"/> are equal;
-		/// otherwise, <b>false</b>.
-		/// </returns>
-		public static bool operator==( TabRange r1, TabRange r2 )
+		/// <param name="a">A <see cref="TabRange"/></param>
+		/// <param name="b">A <see cref="TabRange"/></param>
+		/// <returns><b>true</b> if <paramref name="a"/> and <paramref name="b"/>
+		/// are equal; otherwise, <b>false</b>.</returns>
+		public static bool operator==( TabRange a, TabRange b )
 			{
-			return r1.Equals(r2);
+			return a.Equals(b);
 			}
 
 		/// <summary>
 		/// Returns a value indicating whether two instances
 		/// of <see cref="TabRange"/> are not equal.
 		/// </summary>
-		/// <param name="r1">A <see cref="TabRange"/></param>
-		/// <param name="r2">A <see cref="TabRange"/></param>
-		/// <returns>
-		/// <b>true</b> if <paramref name="r1"/> and <paramref name="r2"/> are not equal;
-		/// otherwise, <b>false</b>.
-		/// </returns>
-		public static bool operator!=( TabRange r1, TabRange r2 )
+		/// <param name="a">A <see cref="TabRange"/></param>
+		/// <param name="b">A <see cref="TabRange"/></param>
+		/// <returns><b>true</b> if <paramref name="a"/> and  <paramref name="b"/>
+		/// are not equal; otherwise, <b>false</b>.</returns>
+		public static bool operator!=( TabRange a, TabRange b )
 			{
-			return !r1.Equals(r2);
+			return !a.Equals(b);
+			}
+
+		#endregion
+		#region Enumerator
+
+		
+		/// <summary>
+		/// Enumerates all values that will be taken while iterating
+		/// over numeric range that this <see cref="TabRange"/> represents.
+		/// </summary>
+		public struct Enumerator : IEnumerator<double>
+			{
+			#region Members
+
+			private readonly TabRange range;
+			private double current;
+
+			/// <summary>Gets the value at the current position of the enumerator.</summary>
+			public double Current		{ get { return current; } }
+			object IEnumerator.Current	{ get { return current; } }
+
+			/// <summary>Advances the enumerator to the next element of the range.</summary>
+			/// <returns><b>true</b> if the enumerator was successfully advanced to the next value;
+			/// <b>false</b> if the enumerator has passed the end of the range.</returns>
+			public bool MoveNext( )	{ return range.MoveNext(ref current); }
+
+			/// <summary>Sets the enumerator to begin position of the range.</summary>
+			public void Reset( )	{ current = range.Begin; }
+
+			/// <summary>Releases all resources
+			/// used by the <see cref="TabRange.Enumerator"/>.</summary>
+			public void Dispose( )	{ }
+
+			#endregion
+			#region Constructor
+
+			internal Enumerator( TabRange range )
+				{
+				range.Validate( );
+				this.range = range;
+				current = range.Begin;
+				}
+
+			#endregion
+			}
+
+		#endregion
+		#region IEnumerable<>
+
+		/// <summary>
+		/// Returns an enumerator that iterates through the values
+		/// that will be taken while iterating over numeric range that
+		/// this <see cref="TabRange"/> represents.</summary>
+		/// <returns>An enumerator for values of the numeric range
+		/// from this <see cref="TabRange"/>.</returns>
+		public Enumerator GetEnumerator( )
+			{
+			Validate( );
+			return new Enumerator(this);
+			}
+
+		IEnumerator<double> IEnumerable<double>.GetEnumerator( )
+			{
+			Validate( );
+			return new Enumerator(this);
+			}
+
+		IEnumerator IEnumerable.GetEnumerator( )
+			{
+			throw new NotImplementedException( );
+			}
+
+		#endregion
+		#region Constructor
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TabRange"/>
+		/// structure with the specified begin, end and step values.
+		/// </summary>
+		/// <param name="begin">Range begin value.</param>
+		/// <param name="end">Range end value.</param>
+		/// <param name="step">Range step value.</param>
+		public TabRange( double begin, double end, double step )
+			{
+			this.begin = begin;
+			this.step = step;
+			this.end = end;
+
+			isChecked = false;
+			count = 0;
 			}
 
 		#endregion

@@ -9,18 +9,16 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private readonly StringBuilder _buf;
-		private readonly IList<string> _args;
-
-		private const string _ops = "-+*/%^¬";
+		private readonly StringBuilder buffer;
+		private readonly IList<string> argList;
 
 		#endregion
 		#region Constructor
 
 		public PostfixWriter( IList<string> argsList )
 			{
-			_buf  = new StringBuilder();
-			_args = argsList;
+			buffer = new StringBuilder();
+			argList = argsList;
 			}
 
 		#endregion
@@ -28,57 +26,49 @@ namespace ILCalc
 
 		public void PutNumber( double value )
 			{
-			_buf.Append(value);
-			_buf.Append(' ');
-			}
-
-		public void PutFunction( MethodInfo func )
-			{
-			_buf.Append(") ");
-			_buf.Append(func.Name);
-			_buf.Append(' ');
+			buffer.Append(value);
+			buffer.Append(' ');
 			}
 
 		public void PutOperator( int oper )
 			{
-			_buf.Append(_ops[oper]);
-			_buf.Append(' ');
+			buffer.Append("-+*/%^¬"[oper]);
+			buffer.Append(' ');
 			}
 
 		public void PutArgument( int id )
 			{
-			_buf.Append(_args[id]);
-			_buf.Append(' ');
+			buffer.Append(argList[id]);
+			buffer.Append(' ');
 			}
 
-		public void PutSeparator( )
+		public void PutSeparator( ) { buffer.Append("; "); }
+		public void PutBeginCall( ) { buffer.Append("( "); }
+
+		public void PutBeginParams( int fixCount, int varCount )
 			{
-			_buf.Append("; ");
+			buffer.Append("( ");
 			}
 
-		public void BeginCall( int fixCount, int varCount )
+		public void PutMethod( MethodInfo method, int argsCount )
 			{
-			_buf.Append("( ");
+			buffer.Append(") ");
+			buffer.Append(method.Name);
+			buffer.Append(' ');
 			}
 
-		public void PutExprEnd( )
-			{
-//			int index = _buf.Length - 1;
-//			_buf.Remove(index, 1);
-			_buf.Append(';');
-			}
+		public void PutExprEnd( ) { buffer.Append(';'); }
 
 		#endregion
-		#region Members
+		#region Methods
 
 		public override string ToString( )
 			{
-			return _buf.ToString( );
+			return buffer.ToString( );
 			}
 
 		#endregion
 		}
-
 	}
 
 #endif

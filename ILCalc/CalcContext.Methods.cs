@@ -21,11 +21,11 @@ namespace ILCalc
 			if( expression == null )
 				throw new ArgumentNullException("expression");
 
-			int argCount = (_args != null) ? _args.Count : 0;
-			var compiler = new EvaluatorCompiler(argCount, _checked);
+			int argCount = (argsList != null) ? argsList.Count : 0;
+			var compiler = new EvaluatorCompiler(argCount, checkedMode);
 
-			if( _parser == null )
-				_parser = new Parser(this);
+			if( parser == null )
+				parser = new Parser(this);
 
 			ExecuteParse(expression, compiler);
 
@@ -40,10 +40,10 @@ namespace ILCalc
 		/// <exception cref="SyntaxException">
 		/// <paramref name="expression"/> contains syntax error(s) and can't be compiled.</exception>
 		/// <exception cref="ArgumentNullException">
-		/// <paramref name="expression"/> is null.<br/>-or-<br/>
+		/// <paramref name="expression"/> is null.</exception>
 		/// <exception cref="ArgumentException">
-		/// The espression's <see cref="Arguments"/> count is not supported (only one or two arguments allowed).</exception>
-		/// </exception>
+		/// Current expression's arguments <see cref="Arguments">count</see>
+		/// is not supported (only 1 or 2 arguments supported by now).</exception>
 		/// <remarks>Not available in the .NET CF / Silverlight versions.</remarks>
 		/// <returns><see cref="Tabulator"/> object for evaluating expression.</returns>
 		public Tabulator CreateTabulator( string expression )
@@ -51,21 +51,40 @@ namespace ILCalc
 			if( expression == null )
 				throw new ArgumentNullException("expression");
 
-			if( _args == null || _args.Count < 1 || _args.Count > 2 )
+			if( argsList == null || argsList.Count < 1 || argsList.Count > 2 )
 				{
 				throw new ArgumentException(
 					Resources.errTabulatorWrongArgs
 					);
 				}
 
-			var compiler = new TabulatorCompiler((_args.Count == 1), _checked);
+			var compiler = new TabulatorCompiler((argsList.Count == 1), checkedMode);
 
-			if( _parser == null )
-				_parser = new Parser(this);
+			if( parser == null )
+				parser = new Parser(this);
 
 			ExecuteParse(expression, compiler);
 
 			return compiler.CreateTabulator(expression);
 			}
+
+#if DEBUG
+
+		public string PostfixForm( string expression )
+			{
+			if( expression == null )
+				throw new ArgumentNullException("expression");
+
+			var postfix = new PostfixWriter(argsList);
+
+			if( parser == null )
+				parser = new Parser(this);
+
+			ExecuteParse(expression, postfix);
+
+			return postfix.ToString( );
+			}
+
+#endif
 		}
 	}

@@ -9,22 +9,22 @@ namespace ILCalc
 		{
 		#region Fields
 
-		protected readonly DynamicMethod _eval;
-		protected readonly ILGenerator _body;
-		protected readonly bool _checkOvf;
-
-		private readonly Stack<CallInfo> _calls;
-		private bool _useParams;
+		protected readonly DynamicMethod dynMethod;
+		protected readonly ILGenerator body;
+		
+		private readonly bool checkedMode;
+		private readonly Stack<CallInfo> callsStack;
+		private bool useParams;
 
 		#endregion
 		#region Constructor
 
 		protected CompilerBase( Type returnType, Type[] paramTypes, bool check )
 			{
-			_checkOvf = check;
-			_calls = new Stack<CallInfo>(4);
-			_eval = new DynamicMethod("ilcalc", returnType, paramTypes, _valType, true);
-			_body = _eval.GetILGenerator( );
+			checkedMode = check;
+			callsStack = new Stack<CallInfo>(4);
+			dynMethod = new DynamicMethod("ilcalc", returnType, paramTypes, valueType, true);
+			body = dynMethod.GetILGenerator( );
 			}
 
 		#endregion
@@ -32,88 +32,92 @@ namespace ILCalc
 
 		public void PutNumber( double value )
 			{
-			_body.Emit(OpCodes.Ldc_R8, value);
+			body.Emit(OpCodes.Ldc_R8, value);
 			}
 
 		public void PutOperator( int oper )
 			{
 			if( oper != Code.Pow )
-				 _body.Emit(_stdOps[oper]);
-			else _body.Emit(OpCodes.Call, _powMethod);
+				 body.Emit(opOperators[oper]);
+			else body.Emit(OpCodes.Call, powMethod);
 			}
 
 		public void PutSeparator( )
 			{
-			if( !_useParams ) return;
+			if( !useParams ) return;
 
-			CallInfo c = _calls.Peek( );
+			var c = callsStack.Peek( );
 			if( c.NextIsLastFixed( ) )
 				{
-				EmitParamArr(c.ParamsCount, c.Local);
+				body_EmitParamArr(c.VarCount, c.Local);
 				}
 			else if( c.Current > 0 )
 				{
-				_body.Emit(_saveElem);
-				_body.Emit(OpCodes.Ldloc, c.Local);
-				_body_EmitLoadI4(c.Current);
+				body.Emit(opSaveElem);
+				body.Emit(OpCodes.Ldloc, c.Local);
+				body_EmitLoadI4(c.Current);
 				}
 			}
 
-		public void PutFunction( MethodInfo func )
+		public void PutBeginCall( )
 			{
-			CallInfo c = _calls.Pop( );
-			if( c != null )
+			callsStack.Push(null);
+			useParams = false;
+			}
+
+		public void PutBeginParams( int fixCount, int varCount )
+			{
+			LocalBuilder local = (varCount > 0)?
+				body.DeclareLocal(arrayType): null;
+
+			var c = new CallInfo(fixCount, varCount, local);
+			callsStack.Push(c);
+
+			if( fixCount == 0 && varCount > 0 )
 				{
-				if( c.ParamsCount > 0 )
+				body_EmitParamArr(varCount, local);
+				}
+
+			useParams = true;
+			}
+
+		public void PutMethod( MethodInfo method, int argsCount )
+			{
+			if( argsCount < 0 )
+				{
+				var c = callsStack.Pop( );
+				if( c.VarCount > 0 )
 					{
-					_body.Emit(_saveElem);
-					_body.Emit(OpCodes.Ldloc, c.Local);
+					body.Emit(opSaveElem);
+					body.Emit(OpCodes.Ldloc, c.Local);
 					}
 				else
 					{
-					_body_EmitLoadI4(0);
-					_body.Emit(OpCodes.Newarr, _valType);
+					body_EmitLoadI4(0);
+					body.Emit(OpCodes.Newarr, valueType);
 					}
 				}
+			else
+				callsStack.Pop( );
 
-			_body.Emit(OpCodes.Call, func);
+			body.Emit(OpCodes.Call, method);
 
-			if( _calls.Count > 0 )
+			if( callsStack.Count > 0 )
 				{
-				_useParams = (_calls.Peek( ) != null);
+				useParams = (callsStack.Peek( ) != null);
 				}
-			}
-
-		public void BeginCall( int fixCount, int varCount )
-			{
-			_useParams = (fixCount >= 0);
-			if(_useParams)
-				{
-				LocalBuilder local = (varCount > 0) ?
-					_body.DeclareLocal(_arrType) : null;
-
-				_calls.Push(
-					new CallInfo(fixCount, varCount, local)
-					);
-
-				if( fixCount == 0 && varCount > 0 )
-					{
-					EmitParamArr(varCount, local);
-					}
-				}
-			else _calls.Push(null);
 			}
 
 		public void PutExprEnd( )
 			{
-			//TODO: убрать
-			//_body.Emit(OpCodes.Call, typeof( System.Diagnostics.Debugger ).GetMethod("Break"));
+//			body.Emit(OpCodes.Call,
+//				typeof(System.Diagnostics.Debugger)
+//				.GetMethod("Break")
+//				);
 
-			//System.Diagnostics.Debugger.Break( );
-
-			if( _checkOvf )
+			if( checkedMode )
 				{
-				_body.Emit(OpCodes.Ckfinite);
+				body.Emit(OpCodes.Ckfinite);
 				}
 			}
 
@@ -122,55 +126,60 @@ namespace ILCalc
 
 		private sealed class CallInfo
 			{
-			#region Properties
+			#region Members
+
+			private readonly LocalBuilder local;
+			private readonly int varCount;
+			private int current;
+
+			public LocalBuilder Local { get { return local;  } }
+			public int VarCount	{ get { return varCount; } }
+			public int Current	{ get { return current;  } }
 
 			public bool NextIsLastFixed( )
 				{
-				return ++Current == 0;
+				return ++current == 0;
 				}
-
-			public LocalBuilder Local { get; private set; }
-			public int ParamsCount { get; private set; }
-			public int Current { get; private set; }
 
 			#endregion
 			#region Constructor
 
 			public CallInfo( int fixCount, int varCount, LocalBuilder local )
 				{
-				ParamsCount = varCount;
-				Current = -fixCount;
-				Local = local;
+				this.varCount = varCount;
+				this.local = local;
+
+				current = -fixCount;
 				}
 
 			#endregion
 			}
 
-		private void EmitParamArr( int size, LocalBuilder local )
+		private void body_EmitParamArr( int size, LocalBuilder local )
 			{
-			_body_EmitLoadI4(size);
-			_body.Emit(OpCodes.Newarr, _valType);
-			_body.Emit(OpCodes.Stloc, local);
-			_body.Emit(OpCodes.Ldloc, local);
-			_body_EmitLoadI4(0);
+			body_EmitLoadI4(size);
+			body.Emit(OpCodes.Newarr, valueType);
+			body.Emit(OpCodes.Stloc, local);
+			body.Emit(OpCodes.Ldloc, local);
+			body_EmitLoadI4(0);
 			}
 
-		protected void _body_EmitLoadI4( int value )
+		protected void body_EmitLoadI4( int value )
 			{
 			if( value < sbyte.MinValue ||
 				value > sbyte.MaxValue )
 				{
-				_body.Emit(OpCodes.Ldc_I4, value);
+				body.Emit(OpCodes.Ldc_I4, value);
 				}
 
 			else if( value < -1 || value > 8 )
 				{
-				_body.Emit(OpCodes.Ldc_I4_S, ( byte ) value);
+				body.Emit(OpCodes.Ldc_I4_S, ( byte ) value);
 				}
 
 			else if( value == -1 )
-				 _body.Emit(OpCodes.Ldc_I4_M1);
-			else _body.Emit(_loadConst[value]);
+				 body.Emit(OpCodes.Ldc_I4_M1);
+			else body.Emit(opLoadConst[value]);
 			}
 
 		#endregion
@@ -178,12 +187,12 @@ namespace ILCalc
 
 		// Types ==================================================
 
-		protected static readonly Type _valType = typeof( double );
-		protected static readonly Type _arrType = typeof( double[] );
+		protected static readonly Type valueType = typeof( double );
+		protected static readonly Type arrayType = typeof( double[] );
 
 		// OpCodes ================================================
 
-		private static readonly OpCode[] _loadConst =
+		private static readonly OpCode[] opLoadConst =
 			{
 				OpCodes.Ldc_I4_0,
 				OpCodes.Ldc_I4_1,
@@ -196,10 +205,10 @@ namespace ILCalc
 				OpCodes.Ldc_I4_8
 			};
 
-		protected static readonly OpCode _loadElem = OpCodes.Ldelem_R8;
-		protected static readonly OpCode _saveElem = OpCodes.Stelem_R8;
+		protected static readonly OpCode opLoadElem = OpCodes.Ldelem_R8;
+		protected static readonly OpCode opSaveElem = OpCodes.Stelem_R8;
 
-		private static readonly OpCode[] _stdOps =
+		private static readonly OpCode[] opOperators =
 			{
 				OpCodes.Sub,
 				OpCodes.Add,
@@ -210,7 +219,7 @@ namespace ILCalc
 				OpCodes.Neg
 			};
 
-		private static readonly MethodInfo _powMethod 
+		private static readonly MethodInfo powMethod
 			= typeof( Math ).GetMethod("Pow");
 
 		#endregion

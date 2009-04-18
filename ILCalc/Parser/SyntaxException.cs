@@ -15,12 +15,9 @@ namespace ILCalc
 		{
 		#region Fields
 		
-		[DebuggerBrowsable(State.Never)]
-		private readonly string _expr;
-		[DebuggerBrowsable(State.Never)]
-		private readonly int _pos;
-		[DebuggerBrowsable(State.Never)]
-		private readonly int _len;
+		[DebuggerBrowsable(State.Never)] private readonly string exprString;
+		[DebuggerBrowsable(State.Never)] private readonly int pos;
+		[DebuggerBrowsable(State.Never)] private readonly int len;
 
 		#endregion
 		#region Properties
@@ -31,7 +28,7 @@ namespace ILCalc
 		/// </summary>
 		public int Position
 			{
-			get { return _pos; }
+			get { return pos; }
 			}
 
 		/// <summary>
@@ -39,7 +36,7 @@ namespace ILCalc
 		/// </summary>
 		public int Length
 			{
-			get { return _len; }
+			get { return len; }
 			}
 
 		/// <summary>
@@ -47,7 +44,7 @@ namespace ILCalc
 		/// </summary>
 		public string Expression
 			{
-			get { return _expr; }
+			get { return exprString; }
 			}
 
 		/// <summary>
@@ -55,7 +52,7 @@ namespace ILCalc
 		/// </summary>
 		public string Substring
 			{
-			get { return _expr.Substring(_pos, _len); }
+			get { return exprString.Substring(pos, len); }
 			}
 
 		#endregion
@@ -67,7 +64,7 @@ namespace ILCalc
 		/// <see cref="SyntaxException"/> class.</overloads>
 		public SyntaxException( )
 			{
-			_expr = string.Empty;
+			exprString = string.Empty;
 			}
 
 		/// <summary>
@@ -77,7 +74,7 @@ namespace ILCalc
 		/// <param name="message">The message that describes the error.</param>
 		public SyntaxException( string message ) : base(message)
 			{
-			_expr = string.Empty;
+			exprString = string.Empty;
 			}
 
 		/// <summary>
@@ -94,7 +91,7 @@ namespace ILCalc
 								Exception innerException )
 			: base(message, innerException)
 			{
-			_expr = string.Empty;
+			exprString = string.Empty;
 			}
 
 		/// <summary>
@@ -111,9 +108,9 @@ namespace ILCalc
 								  int pos, int len )
 			: base(message)
 			{
-			_expr = expression;
-			_pos = pos;
-			_len = len;
+			exprString = expression;
+			this.pos = pos;
+			this.len = len;
 			}
 
 		/// <summary>
@@ -136,9 +133,9 @@ namespace ILCalc
 								  Exception innerException )
 			: base(message, innerException)
 			{
-			_expr = expression;
-			_pos = pos;
-			_len = len;
+			exprString = expression;
+			this.pos = pos;
+			this.len = len;
 			}
 
 #if SERIALIZE

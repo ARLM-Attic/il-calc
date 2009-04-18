@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ILCalc
 	{
@@ -9,42 +9,38 @@ namespace ILCalc
 
 	/// <summary>
 	/// Represents the object for evaluating expression by interpreter.<br/>
-	/// Instance of this class can be get from the <see cref="CalcContext.CreateInterpret"/> method.<br/>
+	/// Instance of this class can be get from
+	/// the <see cref="CalcContext.CreateInterpret"/> method.<br/>
 	/// This class cannot be inherited.
 	/// </summary>
-	/// <remarks>
-	/// This class absolutely atomic from parent <see cref="CalcContext"/> class.
-	/// </remarks>
-	/// <threadsafety instance="false"/>
+	/// <threadsafety>
+	/// Instance <see cref="Evaluate()"/> methods are not thread-safe.
+	/// Use the <see cref="EvaluateSync()"/> method group instead.
+	/// </threadsafety>
 	
 	[DebuggerDisplay("{ToString()} ({ArgumentsCount} argument(s))")]
 	[Serializable]
 
-	public sealed partial class Interpret : IEvaluator
+	public sealed partial class Interpret
 		{
 		#region Fields
 
-		// expression info
-		[Browsable(State.Never)] private readonly string _exprText;
-		[Browsable(State.Never)] private readonly int _argCount;
+		// expression info:
+		[Browsable(State.Never)] private readonly string exprString;
+		[Browsable(State.Never)] private readonly int argsCount;
 
-		// interpretation data
-		[Browsable(State.Never)] private readonly List<int> _code;
-		[Browsable(State.Never)] private readonly List<double> _numbers;
-		[Browsable(State.Never)] private readonly List<InterpCall> _funcs;
-		[Browsable(State.Never)] private readonly List<Delegate> _delegates;
+		// interpretation data:
+		[Browsable(State.Never)] private readonly int[] code;
+		[Browsable(State.Never)] private readonly double[] numbers;
+		[Browsable(State.Never)] private readonly FuncCall[] funcs;
+		[Browsable(State.Never)] private readonly Delegate[] delegates;
+		[Browsable(State.Never)] private readonly int stackMax;
+		[Browsable(State.Never)] private readonly bool checkedMode;
 
-		// mutable fields
-		[Browsable(State.Never)] private readonly int _stackMax;
-		[Browsable(State.Never)] private bool _checkOvf;
-
-		// evaluation stack
-		[NonSerialized]
-		[Browsable(State.Never)] private double[] _stack;
-
-		// arguments array
-		[NonSerialized]
-		[Browsable(State.Never)] private double[] _param;
+		// pre-allocated stack & params arrays, sync object:
+		[NonSerialized, Browsable(State.Never)] private double[] stackArray;
+		[NonSerialized, Browsable(State.Never)] private double[] paramArray;
+		[NonSerialized, Browsable(State.Never)] private object syncRoot;
 
 		#endregion
 		#region Properties
@@ -56,7 +52,7 @@ namespace ILCalc
 		/// <returns>Expression string.</returns>
 		public override string ToString( )
 			{
-			return _exprText;
+			return exprString;
 			}
 
 		/// <summary>
@@ -65,202 +61,306 @@ namespace ILCalc
 		/// </summary>
 		public int ArgumentsCount
 			{
-			[DebuggerHidden] get { return _argCount; }
+			[DebuggerHidden] get { return argsCount; }
 			}
 
-		/// <summary>Gets or sets checking mode for the expression evaluation.</summary>
-		/// <remarks>Using this option will reduce perfomance of evaluation.</remarks>
-		/// <value>
-		/// Inherited from <see cref="CalcContext.OverflowCheck"/> property value.
-		/// </value>
+		/// <summary>Gets the checking mode for the expression evaluation.</summary>
+		/// <value>Inherited from <see cref="CalcContext.OverflowCheck"/>
+		/// property of parent context value.</value>
 		public bool OverflowCheck
 			{
-			[DebuggerHidden] get { return _checkOvf; }
-			[DebuggerHidden] set { _checkOvf = value; }
+			[DebuggerHidden] get { return checkedMode; }
 			}
 
 		#endregion
 		#region Constructor
 
-		internal Interpret(string expr, int args, bool check,
-						   InterpretCreator creator )
+		internal Interpret( string expr, int args, bool check,
+							InterpretCreator creator )
 			{
-			_exprText = expr;
-			_argCount = args;
-			_checkOvf = check;
+			exprString = expr;
+			argsCount = args;
 
-			_code = creator._code;
-			_funcs = creator._funcs;
-			_numbers = creator._numbers;
-			_delegates = creator._delegates;
+			code = creator.code.ToArray( );
+			funcs = creator.funcs.ToArray( );
+			numbers = creator.numbers.ToArray( );
+			delegates = creator.delegates.ToArray( );
 
-			_stackMax = creator._stackMax;
+			stackMax = creator.stMax;
+			checkedMode = check;
 
-			_stack = new double[_stackMax];
-			_param = new double[_argCount];
+			stackArray = new double[stackMax];
+			paramArray = new double[argsCount];
+
+			syncRoot = new object( );
 			}
 
 		#endregion
 		#region Evaluate
 
 		/// <summary>
-		/// Invokes the expression interpreter with giving no arguments.
-		/// </summary>
+		/// Invokes the expression interpreter
+		/// with giving no arguments.</summary>
 		/// <overloads>Invokes the expression interpreter.</overloads>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="InvalidOperationException">
 		/// <see cref="Interpret"/> can't be evaluated by 
-		/// <see cref="Interpret.Evaluate()"/> method with no arguments.
-		/// </exception>
+		/// <see cref="Interpret.Evaluate()"/> method
+		/// with no arguments.</exception>
 		/// <exception cref="ArithmeticException">
 		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
 		/// </exception>
 		[DebuggerHidden]
 		public double Evaluate( )
 			{
-			if(_argCount != 0)
-				{
-				throw new InvalidOperationException(
-					string.Format(Resources.errWrongArgsCount, 0, _argCount)
-					);
-				}
+			if( argsCount != 0 )
+				throw WrongArgsCount(0);
 
-			return RunInterp(_param);
+			return RunInterp(stackArray, paramArray);
 			}
 		
 		/// <summary>
-		/// Invokes the expression interpreter with giving one argument.
-		/// </summary>
+		/// Invokes the expression interpreter
+		/// with giving one argument.</summary>
 		/// <param name="arg">Expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="InvalidOperationException">
 		/// <see cref="Interpret"/> can't be evaluated by 
-		/// <see cref="Interpret.Evaluate(double)"/> method with one argument.
-		/// </exception>
+		/// <see cref="Interpret.Evaluate(double)"/> method
+		/// with one argument.</exception>
 		/// <exception cref="ArithmeticException">
 		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
 		/// </exception>
 		[DebuggerHidden]
 		public double Evaluate( double arg )
 			{
-			if(_argCount != 1)
-				{
-				throw new InvalidOperationException(
-					string.Format(Resources.errWrongArgsCount, 1, _argCount)
-					);
-				}
+			if( argsCount != 1 ) 
+				throw WrongArgsCount(1);
 
-			_param[0] = arg;
+			paramArray[0] = arg;
 
-			return RunInterp(_param);
+			return RunInterp(stackArray, paramArray);
 			}
 
 		/// <summary>
-		/// Invokes the expression interpreter with giving two arguments.
-		/// </summary>
+		/// Invokes the expression interpreter
+		/// with giving two arguments.</summary>
 		/// <param name="arg1">First expression argument.</param>
 		/// <param name="arg2">Second expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="InvalidOperationException">
 		/// <see cref="Interpret"/> can't be evaluated by 
-		/// <see cref="Interpret.Evaluate(double, double)"/> method with two arguments.
-		/// </exception>
+		/// <see cref="Interpret.Evaluate(double, double)"/>
+		/// method with two arguments.</exception>
 		/// <exception cref="ArithmeticException">
 		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
 		/// </exception>
 		[DebuggerHidden]
 		public double Evaluate( double arg1, double arg2 )
 			{
-			if(_argCount != 2)
-				{
-				throw new InvalidOperationException(
-					string.Format(Resources.errWrongArgsCount, 2, _argCount)
-					);
-				}
+			if( argsCount != 2 )
+				throw WrongArgsCount(2);
 
-			_param[0] = arg1;
-			_param[1] = arg2;
+			paramArray[0] = arg1;
+			paramArray[1] = arg2;
 
-			return RunInterp(_param);
+			return RunInterp(stackArray, paramArray);
 			}
-		
+
 		// TODO: Evaluate(,,)
 		// TODO: Evaluate(,,,)
 
 		/// <summary>
-		/// Invokes the expression interpreter with giving three or more arguments.
-		/// </summary>
+		/// Invokes the expression interpreter.</summary>
 		/// <param name="args">Expression arguments.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="ArgumentException">
-		/// <paramref name="args"/> doesn't specify needed
-		/// <see cref="ArgumentsCount">arguments count</see>.
-		/// </exception>
+		/// <exception cref="ArgumentException"><paramref name="args"/> doesn't
+		/// specify needed <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">
 		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
 		/// </exception>
 		[DebuggerHidden]
 		public double Evaluate( params double[] args )
 			{
-			if( _argCount != args.Length )
-				{
-				throw new ArgumentException(
-					string.Format(Resources.errWrongArgsCount,
-								  args.Length, _argCount)
-					);
-				}
+			if( argsCount != args.Length )
+				throw WrongArgsCount(args.Length);
 
-			return RunInterp(args);
+			return RunInterp(stackArray, args);
 			}
 
 		#endregion
-		#region Members
+		#region EvaluateSync
 
-		private double RunInterp( params double[] args )
+		/// <summary>
+		/// Synchronously invokes the expression interpreter
+		/// with giving no arguments.</summary>
+		/// <overloads>Synchronously invokes
+		/// the expression interpreter.</overloads>
+		/// <returns>Evaluated value.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// <see cref="Interpret"/> can't be evaluated by 
+		/// <see cref="Interpret.Evaluate()"/> method
+		/// with no arguments.</exception>
+		/// <exception cref="ArithmeticException">
+		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
+		/// </exception>
+		[DebuggerHidden]
+		public double EvaluateSync( )
+			{
+			if( argsCount != 0 )
+				throw WrongArgsCount(0);
+
+			if( Monitor.TryEnter(syncRoot) )
+				{
+				try		{ return RunInterp(stackArray, paramArray); }
+				finally	{ Monitor.Exit(syncRoot); }
+				}
+
+			// no need for allocate zero-lenght array
+			return RunInterp(new double[stackMax], paramArray);
+			}
+
+		/// <summary>
+		/// Synchronously invokes the expression interpreter
+		/// with giving one argument.</summary>
+		/// <param name="arg">Expression argument.</param>
+		/// <returns>Evaluated value.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// <see cref="Interpret"/> can't be evaluated by 
+		/// <see cref="Interpret.Evaluate(double)"/> method
+		/// with one argument.</exception>
+		/// <exception cref="ArithmeticException">
+		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
+		/// </exception>
+		[DebuggerHidden]
+		public double EvaluateSync( double arg )
+			{
+			if( argsCount != 1 )
+				throw WrongArgsCount(1);
+
+			if( Monitor.TryEnter(syncRoot) )
+				{
+				paramArray[0] = arg;
+
+				try		{ return RunInterp(stackArray, paramArray); }
+				finally	{ Monitor.Exit(syncRoot); }
+				}
+
+			return RunInterp(new double[stackMax], new[] { arg });
+			}
+
+		/// <summary>
+		/// Synchronously invokes the expression interpreter
+		/// with giving two arguments.</summary>
+		/// <param name="arg1">First expression argument.</param>
+		/// <param name="arg2">Second expression argument.</param>
+		/// <returns>Evaluated value.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// <see cref="Interpret"/> can't be evaluated by 
+		/// <see cref="Interpret.Evaluate(double, double)"/>
+		/// method with two arguments.</exception>
+		/// <exception cref="ArithmeticException">
+		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
+		/// </exception>
+		//[DebuggerHidden]
+		public double EvaluateSync( double arg1, double arg2 )
+			{
+			if( argsCount != 2 )
+				throw WrongArgsCount(2);
+
+			if( Monitor.TryEnter(syncRoot) )
+				{
+				paramArray[0] = arg1;
+				paramArray[1] = arg2;
+
+				try		{ return RunInterp(stackArray, paramArray); }
+				finally	{ Monitor.Exit(syncRoot); }
+				}
+
+			return RunInterp(new double[stackMax], new[] { arg1, arg2 });
+			}
+
+		/// <summary>
+		/// Synchronously invokes the expression interpreter.</summary>
+		/// <param name="args">Expression arguments.</param>
+		/// <returns>Evaluated value.</returns>
+		/// <exception cref="ArgumentException"><paramref name="args"/> doesn't
+		/// specify needed <see cref="ArgumentsCount">arguments count</see>.</exception>
+		/// <exception cref="ArithmeticException">
+		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
+		/// </exception>
+		[DebuggerHidden]
+		public double EvaluateSync( params double[] args )
+			{
+			if( argsCount != args.Length )
+				throw WrongArgsCount(args.Length);
+			
+			if( Monitor.TryEnter(syncRoot) )
+				{
+				try		{ return RunInterp(stackArray, args); }
+				finally	{ Monitor.Exit(syncRoot); }
+				}
+
+			return RunInterp(new double[stackMax], args);
+			}
+
+		#endregion
+		#region Helpers
+
+		private Exception WrongArgsCount( int actual )
+			{
+			return new InvalidOperationException(
+				string.Format(Resources.errWrongArgsCount, actual, argsCount)
+				);
+			}
+
+		#endregion
+		#region Methods
+
+		private double RunInterp( double[] stackArr, double[] args )
 			{
 			int cPos = 0, // code position
-				nPos = 0; // number position
+			    nPos = 0; // number position
 
-			double[] stack = _stack; // prepared stack array
+			double[] stack = stackArr; // prepared stack array
 			int pos = -1;
 
-			while(true)
+			while( true )
 				{
-				int code = _code[cPos++];
+				int op = code[cPos++];
 
-				if( Code.IsOperator(code) ) //////////////////////// OPERATORS //
+				if( Code.IsOperator(op) ) //////////////////////// OPERATORS //
 					{
 					double value = stack[pos--];
-					if(code != Code.Neg)
+					if( op != Code.Neg )
 						{
-						if( code == Code.Add ) stack[pos] += value; else
-						if( code == Code.Mul ) stack[pos] *= value; else
-						if( code == Code.Sub ) stack[pos] -= value; else
-						if( code == Code.Div ) stack[pos] /= value; else
-						if( code == Code.Rem ) stack[pos] %= value;
-						else stack[pos] = Math.Pow(stack[pos], value);
+						if( op == Code.Add ) stack[pos] += value; else
+						if( op == Code.Mul ) stack[pos] *= value; else
+						if( op == Code.Sub ) stack[pos] -= value; else
+						if( op == Code.Div ) stack[pos] /= value; else
+						if( op == Code.Rem ) stack[pos] %= value; else
+							stack[pos] = Math.Pow(stack[pos], value);
 						}
 					else stack[++pos] = -value;
 					}
 
-				else if( code == Code.Number ) /////////////////////// NUMBERS //
+				else if( op == Code.Number ) /////////////////////// NUMBERS //
 					{
-					stack[++pos] = _numbers[nPos++];
+					stack[++pos] = numbers[nPos++];
 					}
 
-				else ////////////////////////////////////////////////// OTHERS //
+				else //////////////////////////////////////////////// OTHERS //
 					{
-					int id = _code[cPos++];
+					int id = code[cPos++];
 
-					if     ( code == Code.Argument  ) stack[++pos] = args[id];
-					else if( code == Code.Delegate0 ) stack[++pos] = ((EvalFunc0)_delegates[id])( );
-					else if( code == Code.Delegate1 ) stack[  pos] = ((EvalFunc1)_delegates[id])(stack[pos]);
-					else if( code == Code.Delegate2 ) stack[--pos] = ((EvalFunc2)_delegates[id])(stack[pos], stack[pos+1]);
-					else if( code == Code.Function  ) _funcs[id].InvokeFunc(stack, ref pos);
+					if( op == Code.Argument  ) stack[++pos] = args[id]; else
+					if( op == Code.Delegate0 ) stack[++pos] = ((EvalFunc0) delegates[id])( ); else
+					if( op == Code.Delegate1 ) stack[  pos] = ((EvalFunc1) delegates[id])(stack[pos]); else
+					if( op == Code.Delegate2 ) stack[--pos] = ((EvalFunc2) delegates[id])(stack[pos], stack[pos+1]); else
+					if( op == Code.Function  ) funcs[id].Invoke(stack, ref pos);
 					else
 						{
-						if(_checkOvf) Check(stack[0]);
-
+						if( checkedMode ) Check(stack[0]);
 						return stack[0];
 						}
 					}
@@ -269,9 +369,10 @@ namespace ILCalc
 
 		private static void Check( double res )
 			{
-			if(double.IsInfinity(res) || double.IsNaN(res))
+			if( double.IsInfinity(res)
+			 || double.IsNaN(res) )
 				{
-				throw new NotFiniteNumberException(res.ToString());
+				throw new NotFiniteNumberException(res.ToString( ));
 				}
 			}
 

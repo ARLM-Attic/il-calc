@@ -3,7 +3,7 @@ using System;
 namespace ILCalc
 	{
 	// NOTE: enum for extended info?
-	// NOTE: override Message!!!
+	// NOTE: override Message?
 
 	/// <summary>
 	/// The exception that is thrown when the <see cref="TabRange"/>

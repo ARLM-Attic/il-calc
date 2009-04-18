@@ -8,29 +8,29 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private readonly bool _paramsArgs;
-		private readonly int _argCount;
+		private readonly bool paramsArgs;
+		private readonly int argsCount;
 		
 		#endregion
-		#region Members
+		#region Methods
 
 		public EvaluatorCompiler( int argCount, bool check )
-			: base(	_valType, ArgTypes(argCount), check )
+			: base(	valueType, ArgTypes(argCount), check )
 			{
-			_argCount = argCount;
-			_paramsArgs = argCount > 2;
+			argsCount = argCount;
+			paramsArgs = argCount > 2;
 			}
 
 		public Evaluator CreateEvaluator( string expr )
 			{
-			_body.Emit(OpCodes.Ret);
+			body.Emit(OpCodes.Ret);
 
 			#if VISUALIZE
 			DynamicMethodVisualizer.Visualizer.Show(_eval);
 			#endif
 
-			Delegate method = _eval.CreateDelegate(EvalTypes(_argCount));
-			return new Evaluator( expr, method, _argCount );
+			Delegate method = dynMethod.CreateDelegate(EvalTypes(argsCount));
+			return new Evaluator( expr, method, argsCount );
 			}
 
 		#endregion
@@ -38,13 +38,13 @@ namespace ILCalc
 
 		public void PutArgument( int id )
 			{
-			if(_paramsArgs) 
+			if(paramsArgs) 
 				{
-				_body.Emit(OpCodes.Ldarg_0);
-				_body_EmitLoadI4(id);
-				_body.Emit(_loadElem);
+				body.Emit(OpCodes.Ldarg_0);
+				body_EmitLoadI4(id);
+				body.Emit(opLoadElem);
 				}
-			else _body.Emit(_argsLoad[id]);
+			else body.Emit(opArgsLoad[id]);
 			}
 
 		#endregion
@@ -55,26 +55,26 @@ namespace ILCalc
 		private static Type[] ArgTypes( int count )
 			{
 			if( count > 3 ) count = 3;
-			return _argsTypes[count];
+			return argsTypes[count];
 			}
 
 		private static Type EvalTypes( int count )
 			{
 			if( count > 3 ) count = 3;
-			return _evalTypes[count];
+			return evalTypes[count];
 			}
 
 		// Types ==================================================
 
-		private static readonly Type[][] _argsTypes =
+		private static readonly Type[][] argsTypes =
 			{
 				null,
-				new[] { _valType },
-				new[] { _valType, _valType },
-				new[] { _arrType }
+				new[] { valueType },
+				new[] { valueType, valueType },
+				new[] { arrayType }
 			};
 
-		private static readonly Type[] _evalTypes = 
+		private static readonly Type[] evalTypes = 
 			{
 				typeof( EvalFunc0 ),
 				typeof( EvalFunc1 ),
@@ -84,7 +84,7 @@ namespace ILCalc
 
 		// OpCodes ================================================
 
-		private static readonly OpCode[] _argsLoad =
+		private static readonly OpCode[] opArgsLoad =
 			{
 				OpCodes.Ldarg_0,
 				OpCodes.Ldarg_1,

@@ -5,39 +5,9 @@ namespace ILCalc
 	{
 	using State = DebuggerBrowsableState;
 
-	//TODO: Owner or Target property
-
-	#region Delegates
-
-	/// <summary>
-	/// Represents the compiled expression with no arguments.
-	/// </summary>
-	/// <returns>Evaluated value.</returns>
-	public delegate double EvalFunc0( );
-
-	/// <summary>
-	/// Represents the compiled expression with one argument.
-	/// </summary>
-	/// <param name="arg">Expression argument.</param>
-	/// <returns>Evaluated value.</returns>
-	public delegate double EvalFunc1( double arg );
-
-	/// <summary>
-	/// Represents the compiled expression with two arguments.
-	/// </summary>
-	/// <param name="arg1">First expression argument.</param>
-	/// <param name="arg2">Second expression argument.</param>
-	/// <returns>Evaluated value.</returns>
-	public delegate double EvalFunc2( double arg1, double arg2 );
-
-	/// <summary>
-	/// Represents the compiled expression with three or more arguments.
-	/// </summary>
-	/// <param name="args">Expression arguments.</param>
-	/// <returns>Evaluated value.</returns>
-	public delegate double EvalFuncN( params double[] args );
-
-	#endregion
+	// TODO: Serialization!
+	// bool IsSerializible { get; }
+	// BufferWriter data;
 
 	/// <summary>
 	/// Represents the object for the compiled expression evaluation.<br/>
@@ -47,20 +17,18 @@ namespace ILCalc
 	/// <remarks>
 	/// Instance contains read-only fields with delegates for slightly
 	/// more performance invokation of the compiled methods.<br/>
-	/// This class absolutely atomic from parent <see cref="CalcContext"/> class.<br/>
 	/// Not available in the .NET CF / Silverlight versions.
 	/// </remarks>
 	/// <threadsafety instance="true"/>
 	
 	[DebuggerDisplay("{ToString()} ({ArgumentsCount} argument(s))")]
+
 	public sealed class Evaluator : IEvaluator
 		{
 		#region Fields
 
-		[DebuggerBrowsable(State.Never)]
-		private readonly string _exprText;
-		[DebuggerBrowsable(State.Never)]
-		private readonly int _argCount;
+		[DebuggerBrowsable(State.Never)] private readonly string exprString;
+		[DebuggerBrowsable(State.Never)] private readonly int argsCount;
 
 		/// <summary>
 		/// Directly invokes the compiled expression with giving no arguments.
@@ -83,6 +51,7 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public readonly EvalFunc2 Evaluate2;
 
+		// NOTE: fix summary if impl redirect
 		/// <summary>
 		/// Directly invokes the compiled expression with giving three or more arguments.
 		/// This field is readonly.
@@ -94,38 +63,34 @@ namespace ILCalc
 		#region Properties
 
 		/// <summary>
-		/// Returns the expression string, that this Evaluator represents.
-		/// </summary>
+		/// Returns the expression string,
+		/// that this <see cref="Evaluator"/> represents.</summary>
 		/// <returns>Expression string.</returns>
 		public override string ToString( )
 			{
-			return _exprText;
+			return exprString;
 			}
 
 		/// <summary>
-		/// Gets the arguments count, that this Evaluator implemented for.
-		/// </summary>
+		/// Gets the arguments count, that this
+		/// <see cref="Evaluator"/> implemented for.</summary>
 		[DebuggerBrowsable(State.Never)]
 		public int ArgumentsCount
 			{
-			[DebuggerHidden]
-			get { return _argCount; }
+			[DebuggerHidden] get { return argsCount; }
 			} 
 		
 		#endregion
 		#region Evaluate
 
 		/// <summary>
-		/// Invokes the compiled expression with giving no arguments.
-		/// </summary>
+		/// Invokes the compiled expression with giving no arguments.</summary>
 		/// <overloads>Invokes the compiled expression.</overloads>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException">
-		/// <see cref="Evaluator"/> with no arguments is not compiled.
-		/// </exception>
-		/// <exception cref="ArithmeticException">
-		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
-		/// </exception>
+		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
+		/// with no arguments is not compiled.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		[DebuggerHidden]
 		public double Evaluate( )
 			{
@@ -133,16 +98,13 @@ namespace ILCalc
 			}
 
 		/// <summary>
-		/// Invokes the compiled expression with giving one argument.
-		/// </summary>
+		/// Invokes the compiled expression with giving one argument.</summary>
 		/// <param name="arg">Expression argument.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException">
-		/// <see cref="Evaluator"/> with one argument is not compiled.
-		/// </exception>
-		/// <exception cref="ArithmeticException">
-		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
-		/// </exception>
+		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
+		/// with one argument is not compiled.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		[DebuggerHidden]
 		public double Evaluate( double arg )
 			{
@@ -150,99 +112,96 @@ namespace ILCalc
 			}
 
 		/// <summary>
-		/// Invokes the compiled expression with giving two arguments.
-		/// </summary>
+		/// Invokes the compiled expression with giving two arguments.</summary>
 		/// <param name="arg1">First expression argument.</param>
 		/// <param name="arg2">Second expression argument.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException">
-		/// <see cref="Evaluator"/> with two arguments is not compiled.
-		/// </exception>
-		/// <exception cref="ArithmeticException">
-		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
-		/// </exception>
+		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
+		/// with two arguments is not compiled.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		[DebuggerHidden]
 		public double Evaluate( double arg1, double arg2 )
 			{
 			return Evaluate2(arg1, arg2);
 			}
-		
+
+		// NOTE: fix summary if impl redirect
 		/// <summary>
-		/// Invokes the compiled expression with giving three or more arguments.
-		/// </summary>
+		/// Invokes the compiled expression with giving
+		/// three or more arguments.</summary>
 		/// <param name="args">Expression arguments.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException">
-		/// <see cref="Evaluator"/> with three or more arguments is not compiled.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		/// <paramref name="args"/> doesn't specify needed 
-		/// <see cref="ArgumentsCount">arguments count</see>.
-		/// </exception>
-		/// <exception cref="ArithmeticException">
-		/// Expression evaluation thrown the <see cref="ArithmeticException"/>.
-		/// </exception>
+		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
+		/// with three or more arguments is not compiled.</exception>
+		/// <exception cref="ArgumentException"><paramref name="args"/> doesn't specify
+		/// needed arguments <see cref="ArgumentsCount">count</see>.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		[DebuggerHidden]
 		public double Evaluate( params double[] args )
 			{
-			if(args.Length != _argCount)
+			if( args.Length != argsCount )
 				{
 				throw new ArgumentException(
 					string.Format(Resources.errWrongArgsCount,
-								  args.Length, _argCount)
+								  args.Length, argsCount)
 					);
 				}
 
 			return EvaluateN(args);
 			}
 
+		// TODO: redirect call?
+		// TODO: Evaluate(1,2...) => Evaluate(1,2)
+
 		#endregion
 		#region Constructor
 
 		internal Evaluator( string expr, Delegate method, int args )
 			{
-			Evaluate0 = (args == 0) ? (EvalFunc0) method : ThrowFunc0;
-			Evaluate1 = (args == 1) ? (EvalFunc1) method : ThrowFunc1;
-			Evaluate2 = (args == 2) ? (EvalFunc2) method : ThrowFunc2;
-			EvaluateN = (args >= 3) ? (EvalFuncN) method : ThrowFuncN;
+			Evaluate0 = (args == 0) ? (EvalFunc0) method : ThrowMethod0;
+			Evaluate1 = (args == 1) ? (EvalFunc1) method : ThrowMethod1;
+			Evaluate2 = (args == 2) ? (EvalFunc2) method : ThrowMethod2;
+			EvaluateN = (args >= 3) ? (EvalFuncN) method : ThrowMethodN;
 		  
-			_exprText = expr;
-			_argCount = args;
+			exprString = expr;
+			argsCount = args;
 			}
 
 		#endregion
-		#region Throw Functions
+		#region Throw Methods
 
 		[DebuggerHidden]
-		private double ThrowFunc0( )
+		private double ThrowMethod0( )
 			{
 			throw new InvalidOperationException(
-				string.Format(Resources.errWrongArgsCount, 0, _argCount)
+				string.Format(Resources.errWrongArgsCount, 0, argsCount)
 				);
 			}
 
 		[DebuggerHidden]
-		private double ThrowFunc1( double arg )
+		private double ThrowMethod1( double arg )
 			{
 			throw new InvalidOperationException(
-				string.Format(Resources.errWrongArgsCount, 1, _argCount)
+				string.Format(Resources.errWrongArgsCount, 1, argsCount)
 				);
 			}
 
 		[DebuggerHidden]
-		private double ThrowFunc2( double arg1, double arg2 )
+		private double ThrowMethod2( double arg1, double arg2 )
 			{
 			throw new InvalidOperationException(
-				string.Format(Resources.errWrongArgsCount, 2, _argCount)
+				string.Format(Resources.errWrongArgsCount, 2, argsCount)
 				);
 			}
 
 		[DebuggerHidden]
-		private double ThrowFuncN( double[] args )
+		private double ThrowMethodN( double[] args )
 			{
 			throw new InvalidOperationException(
 				string.Format(Resources.errWrongArgsCount,
-							  args.Length, _argCount)
+							  args.Length, argsCount)
 				);
 			}
 

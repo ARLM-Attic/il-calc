@@ -3,38 +3,35 @@ using System.Reflection;
 
 namespace ILCalc
 	{
-	//TODO: use less memory for standart calls?
-
 	sealed class QuickInterpret : IExpressionOutput
 		{
 		#region Fields
 
-		private readonly double[] _args;
-		private readonly bool _check;
+		private readonly double[] argList;
+		private readonly bool checkedMode;
 
-		private double[] _stack = new double[4];
-		private int[] _calls = new int[6];
-		private int _pos = -1;
-		private int _cpos = 0;
+		private double[] stack = new double[4];
+		private int[] calls = new int[6];
+		private int cpos, pos = -1;
 		
 		#endregion
-		#region Members
+		#region Methods
 
 		public double Result
 			{
-			get { return _stack[0]; }
+			get { return stack[0]; }
 			}
 
 		public void Clear( )
 			{
-			_pos = -1;
-			_cpos = 0;
+			pos = -1;
+			cpos = 0;
 			}
 
-		public QuickInterpret( double[] args, bool check )
+		public QuickInterpret( double[] arguments, bool check )
 			{
-			_check = check;
-			_args = args;
+			checkedMode = check;
+			argList = arguments;
 			}
 
 		#endregion
@@ -42,106 +39,104 @@ namespace ILCalc
 
 		public void PutNumber( double value )
 			{
-			if(++_pos == _stack.Length)
+			if( ++pos == stack.Length )
 				{
-				var dest = new double[_pos * 2];
-				Array.Copy(_stack, 0, dest, 0, _pos);
-				_stack = dest;
+				var newStack = new double[pos * 2];
+				Array.Copy(stack, 0, newStack, 0, pos);
+				stack = newStack;
 				}
 
-			_stack[_pos] = value;
+			stack[pos] = value;
 			}
 
 		public void PutArgument( int id )
 			{
-			if(++_pos == _stack.Length)
+			if( ++pos == stack.Length )
 				{
-				var dest = new double[_pos * 2];
-				Array.Copy(_stack, 0, dest, 0, _pos);
-				_stack = dest;
+				var newStack = new double[pos * 2];
+				Array.Copy(stack, 0, newStack, 0, pos);
+				stack = newStack;
 				}
 
-			_stack[_pos] = _args[id];
+			stack[pos] = argList[id];
 			}
 
 		public void PutSeparator( ) { }
 
-		public void PutFunction( MethodInfo func )
+		public void PutOperator( int oper )
 			{
-			int argc = _calls[--_cpos];
-			int argv = _calls[--_cpos];
-
-			object[] stdArgs; // args array
-
-			if(argc >= 0) // params call
+			double value = stack[pos--];
+			if( oper != Code.Neg )
 				{
-				var varArgs = new double[argv];
+				if( oper == Code.Add ) stack[pos] += value; else
+				if( oper == Code.Mul ) stack[pos] *= value; else
+				if( oper == Code.Sub ) stack[pos] -= value; else
+				if( oper == Code.Div ) stack[pos] /= value; else
+				if( oper == Code.Rem ) stack[pos] %= value; else
+					stack[pos] = Math.Pow(stack[pos], value);
+				}
+			else stack[++pos] = -value;
+			}
+
+		public void PutBeginCall( ) { }
+
+		public void PutBeginParams( int fixCount, int varCount )
+			{
+			if( cpos == calls.Length )
+				{
+				var newCalls = new int[cpos * 2];
+				Array.Copy(calls, 0, newCalls, 0, cpos);
+				calls = newCalls;
+				}
+
+			calls[cpos++] = varCount;
+			calls[cpos++] = fixCount;
+			}
+
+		public void PutMethod( MethodInfo method, int fixCount )
+			{
+			object[] fixArgs;
+
+			if( fixCount < 0 ) // params call
+				{
+				fixCount = calls[--cpos];
+				
+				int varCount = calls[--cpos];
+				var varArgs = new double[varCount];
 
 				// fill params args array
-				for(int i = argv - 1; i >= 0; i--)
+				for( int i = varCount - 1; i >= 0; i-- )
 					{
-					varArgs[i] = _stack[_pos--];
+					varArgs[i] = stack[pos--];
 					}
 
-				stdArgs = new object[argc + 1];
-				stdArgs[argc] = varArgs;
+				fixArgs = new object[fixCount + 1];
+				fixArgs[fixCount] = varArgs;
 				}
-			else // std call
-				{
-				argc = func.GetParameters( ).Length; // bad
-				stdArgs = new object[argc];
-				}
+			else
+				fixArgs = new object[fixCount];
 
 			// fill std args array
-			for(int i = argc - 1; i >= 0; i--)
+			for( int i = fixCount - 1; i >= 0; i-- )
 				{
-				stdArgs[i] = _stack[_pos--];
+				fixArgs[i] = stack[pos--];
 				}
 
 			// invoke via reflection
-			_stack[++_pos] = (double) func.Invoke(null, stdArgs);
-			}
-
-		public void PutOperator( int oper )
-			{
-			double value = _stack[_pos--];
-			if( oper != Code.Neg )
-				{
-				if( oper == Code.Add ) _stack[_pos] += value; else
-				if( oper == Code.Mul ) _stack[_pos] *= value; else
-				if( oper == Code.Sub ) _stack[_pos] -= value; else
-				if( oper == Code.Div ) _stack[_pos] /= value; else
-				if( oper == Code.Rem ) _stack[_pos] %= value; else
-					_stack[_pos] = Math.Pow(_stack[_pos], value);
-				}
-			else _stack[++_pos] = -value;
-			}
-
-		public void BeginCall( int fixCount, int varCount )
-			{
-			if(_cpos == _calls.Length)
-				{
-				var dest = new int[_cpos * 2];
-				Array.Copy(_calls, 0, dest, 0, _cpos);
-				_calls = dest;
-				}
-
-			_calls[_cpos++] = varCount;
-			_calls[_cpos++] = fixCount;
+			PutNumber(( double ) method.Invoke(null, fixArgs));
 			}
 
 		public void PutExprEnd( )
 			{
-			if( !_check ) return;
+			if( !checkedMode ) return;
 
-			double res = _stack[0];
+			double res = stack[0];
 
 			if(	double.IsInfinity(res)
 			||	double.IsNaN(res) )
 				{
 				throw new NotFiniteNumberException(res.ToString());
 				}
-
 			}
 
 		#endregion

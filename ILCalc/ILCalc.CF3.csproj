@@ -59,14 +59,14 @@
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
-    <Compile Include="Collections\ConstantCollection.cs" />
-    <Compile Include="Collections\FunctionCollection.cs" />
-    <Compile Include="Collections\MethodGroup.cs" />
-    <Compile Include="Collections\Validator.cs" />
-    <Compile Include="Collections\Validator.Functions.CF.cs" />
-    <Compile Include="Compatibility.CF.cs" />
-    <Compile Include="Delegates.cs" />
-    <Compile Include="Evaluators\IEvaluator.cs" />
+    <Compile Include="Collections\ConstantDictionary.cs" />
+    <Compile Include="Collections\Function.cs" />
+    <Compile Include="Collections\FunctionDictionary.cs" />
+    <Compile Include="Collections\FunctionFactory.cs" />
+    <Compile Include="Collections\FunctionGroup.cs" />
+    <Compile Include="Collections\Validate.cs" />
+    <Compile Include="Misc\Compatibility.CF.cs" />
+    <Compile Include="Misc\Delegates.cs" />
     <Compile Include="Evaluators\Interpret.cs" />
     <Compile Include="Misc\Codes.cs" />
     <Compile Include="Misc\Resources.Designer.cs">
@@ -75,7 +75,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Output\IExpressionOutput.cs" />
-    <Compile Include="Output\Interpret\InterpCall.cs" />
+    <Compile Include="Output\Interpret\FuncCall.cs" />
     <Compile Include="Output\Interpret\InterpretCreator.cs" />
     <Compile Include="Output\Interpret\QuickInterpret.cs" />
     <Compile Include="Output\Optimizer\OptimizeModes.cs" />

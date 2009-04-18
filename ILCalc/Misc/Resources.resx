@@ -132,6 +132,12 @@
   <data name="errCultureExtract" xml:space="preserve">
     <value>Can't extract culture-specified separators chars.</value>
   </data>
+  <data name="errDelegateInvCount" xml:space="preserve">
+    <value>Delegate's invocation list count should be equal one.</value>
+  </data>
+  <data name="errDelegateWithTarget" xml:space="preserve">
+    <value>Delegates with target is not supported (maybe because of closure).</value>
+  </data>
   <data name="errDisbalanceClose" xml:space="preserve">
     <value>Brace disbalance (not closed).</value>
   </data>
@@ -147,8 +153,14 @@
   <data name="errFunctionNoBrace" xml:space="preserve">
     <value>Opening brace should be after function name</value>
   </data>
+  <data name="errFunctionNotExist" xml:space="preserve">
+    <value>Function "{0}" does not exist in the collection.</value>
+  </data>
   <data name="errIdentifierEmpty" xml:space="preserve">
     <value>Empty or null identifier name.</value>
+  </data>
+  <data name="errIdentifierFromLambda" xml:space="preserve">
+    <value>Maybe trying to import lambda without specifing the name?</value>
   </data>
   <data name="errIdentifierStartsWith" xml:space="preserve">
     <value>Incorrect identifier name: "{0}". Name should begin with a letter or underscore.</value>
@@ -163,25 +175,25 @@
     <value>Invalid (separator) usage.</value>
   </data>
   <data name="errMethodBadParam" xml:space="preserve">
-    <value>parameter #{0} of '{1}' type. All parameters should be of '{2}' type</value>
+    <value>parameter #{0} of '{1}' type. All parameters should be of '{2}' type.</value>
   </data>
   <data name="errMethodBadReturn" xml:space="preserve">
-    <value>returns value of '{0}' type. Function should return '{1}' type</value>
+    <value>returns value of '{0}' type. Function should return '{1}' type.</value>
+  </data>
+  <data name="errMethodImportFailed" xml:space="preserve">
+    <value>Import failed: method</value>
   </data>
   <data name="errMethodNotFounded" xml:space="preserve">
-    <value>Method "{0}" cannot be founded (method non public?).</value>
+    <value>Method "{0}" cannot be founded (non public / not static?).</value>
   </data>
   <data name="errMethodNotRuntimeMethod" xml:space="preserve">
     <value>should be standard runtime method (DynamicMethod is not supported).</value>
   </data>
   <data name="errMethodNotStatic" xml:space="preserve">
-    <value>must be static</value>
+    <value>must be static.</value>
   </data>
   <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported</value>
-  </data>
-  <data name="errMethodSameParams" xml:space="preserve">
-    <value>with same parameters is already in the list</value>
+    <value>parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported.</value>
   </data>
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Culture '{0}' is neutral culture. It cannot be used for parse and formatting .</value>
@@ -191,6 +203,9 @@
   </data>
   <data name="errNumberOverflow" xml:space="preserve">
     <value>Number constant overflow:</value>
+  </data>
+  <data name="errOverloadImpossible" xml:space="preserve">
+    <value>Function with same parameters ({0}) is already in the list (overload impossible).</value>
   </data>
   <data name="errRangeNotFinite" xml:space="preserve">
     <value>Wrong range: Begin, End or Step is not finite value.</value>

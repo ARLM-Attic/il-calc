@@ -34,6 +34,7 @@
 		/// <returns>Evaluated value.</returns>
 		double Evaluate( double arg1, double arg2 );
 
+		//TODO: fix summary?
 		/// <summary>
 		/// Invokes the expression evaluation with giving three or more arguments.
 		/// </summary>

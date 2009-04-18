@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SERIALIZE NET20</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERIALIZE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -47,31 +47,33 @@
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
-    <Compile Include="Collections\ConstantCollection.cs" />
-    <Compile Include="Collections\FunctionCollection.cs" />
-    <Compile Include="Collections\MethodGroup.cs" />
-    <Compile Include="Collections\Validator.cs" />
-    <Compile Include="Collections\Validator.Functions.cs" />
+    <Compile Include="Collections\ConstantDictionary.cs" />
     <Compile Include="CalcContext.Methods.cs" />
+    <Compile Include="Collections\Function.cs" />
+    <Compile Include="Collections\FunctionDictionary.cs" />
+    <Compile Include="Collections\FunctionFactory.cs" />
+    <Compile Include="Collections\FunctionGroup.cs" />
+    <Compile Include="Collections\Validate.cs" />
     <Compile Include="Evaluators\Evaluator.cs" />
     <Compile Include="Evaluators\IEvaluator.cs" />
     <Compile Include="Evaluators\Interpret.Serialize.cs" />
     <Compile Include="Evaluators\Interpret.cs" />
     <Compile Include="Evaluators\Tabulator.cs" />
     <Compile Include="Misc\Codes.cs" />
+    <Compile Include="Misc\Delegates.cs" />
     <Compile Include="Misc\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Misc\TabRange.cs" />
-    <Compile Include="Misc\WrongRangeException.cs" />
+    <Compile Include="Misc\TabRange.Exception.cs" />
     <Compile Include="Output\Compiler\CompilerBase.cs" />
     <Compile Include="Output\Compiler\EvaluatorCompiler.cs" />
     <Compile Include="Output\Compiler\TabulatorCompiler.cs" />
     <Compile Include="Output\IExpressionOutput.cs" />
-    <Compile Include="Output\Interpret\InterpCall.cs" />
-    <Compile Include="Output\Interpret\InterpCall.Serialize.cs" />
+    <Compile Include="Output\Interpret\FuncCall.cs" />
+    <Compile Include="Output\Interpret\FuncCall.Serialize.cs" />
     <Compile Include="Output\Interpret\InterpretCreator.cs" />
     <Compile Include="Output\Interpret\QuickInterpret.cs" />
     <Compile Include="Output\Optimizer\OptimizeModes.cs" />
@@ -89,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CalcKey.snk" />
+    <None Include="UserClasses.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Misc\Resources.resx">
@@ -108,4 +111,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PostBuildEvent>ngen $(TargetPath)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

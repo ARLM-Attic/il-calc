@@ -3,45 +3,46 @@ using System.Reflection;
 
 namespace ILCalc
 	{
-	//TODO: x ^  0 => 1
-	//TODO: x ^ -2 => 1 x x * /
+	//TODO: feature x ^  0		=> 1
+	//TODO: feature x ^ -2		=> 1 x x * /
+	//TODO: feature x *  0		=> 0
+	//TODO: feature 2 + x + 2	=> 4 x +
 
 	sealed class OptimizeOutput : BufferOutput, IExpressionOutput
 		{
 		#region Fields
 
-		private readonly IExpressionOutput _output;
-		private readonly QuickInterpret _interp;
-
-		private readonly OptimizeModes _mode;
+		private readonly IExpressionOutput output;
+		private readonly QuickInterpret interp;
+		private readonly OptimizeModes mode;
 
 		#endregion
 		#region Constructor
 
 		public OptimizeOutput( IExpressionOutput output, OptimizeModes mode )
 			{
-			_output = output;
-			_mode = mode;
+			this.output = output;
+			this.mode = mode;
 
-			_interp = new QuickInterpret(null, false);
+			interp = new QuickInterpret(null, false);
 			}
 
 		#endregion
-		#region Members
+		#region Properties
 
 		private bool ConstantFolding
 			{
-			get { return (_mode & OptimizeModes.ConstantFolding) != 0; }
+			get { return (mode & OptimizeModes.ConstantFolding) != 0; }
 			}
 
 		private bool FuncionFolding
 			{
-			get { return (_mode & OptimizeModes.FunctionFolding) != 0; }
+			get { return (mode & OptimizeModes.FunctionFolding) != 0; }
 			}
 
 		private bool PowOptimize
 			{
-			get { return (_mode & OptimizeModes.PowOptimize) != 0; }
+			get { return (mode & OptimizeModes.PowOptimize) != 0; }
 			}
 
 		#endregion
@@ -67,27 +68,27 @@ namespace ILCalc
 
 		private bool IsLastKnown( )
 			{
-			return _code[_code.Count - 1] == Code.Number;
+			return code[code.Count - 1] == Code.Number;
 			}
 
 		private bool IsLastTwoKnown( )
 			{
-			int index = _code.Count;
-			return _code[index - 1] == Code.Number
-				&& _code[index - 2] == Code.Number;
+			int index = code.Count;
+			return code[index - 1] == Code.Number
+				&& code[index - 2] == Code.Number;
 			}
 
 		private double LastNumber
 			{
-			get { return _nums[_nums.Count - 1];  }
-			set { _nums[_nums.Count - 1] = value; }
+			get { return nums[nums.Count - 1];  }
+			set { nums[nums.Count - 1] = value; }
 			}
 
 		private bool IsCallBegin( int pos )
 			{
-			int code = _code[pos];
-			return code == Code.ParamCall
-				|| code == Code.BeginCall;
+			int op = code[pos];
+			return op == Code.ParamCall
+				|| op == Code.BeginCall;
 			}
 
 		#endregion
@@ -114,8 +115,8 @@ namespace ILCalc
 				// Power operator optimize ======================
 				if( oper == Code.Pow
 				&&	PowOptimize
-				&&	LastValue(_code, 1) == Code.Number
-				&&	LastValue(_code, 2) == Code.Argument )
+				&&	LastValue(code, 1) == Code.Number
+				&&	LastValue(code, 2) == Code.Argument )
 					{
 					int val = GetIntegerValue(LastNumber);
 					if( val > 0 && val < 16 )
@@ -126,21 +127,21 @@ namespace ILCalc
 					}
 				}
 
-			_code.Add(oper);
+			code.Add(oper);
 			}
 
-		public new void PutFunction( MethodInfo func )
+		public new void PutMethod( MethodInfo method, int argsCount )
 			{
 			if( FuncionFolding )
 				{
-				int pos = _code.Count - 1;
+				int pos = code.Count - 1;
 				bool argsKnown = true;
 
 				while( !IsCallBegin(pos) )
 					{
-					if( _code[pos--] == Code.Number )
+					if( code[pos--] == Code.Number )
 						{
-						if( _code[pos] == Code.Separator ) pos--;
+						if( code[pos] == Code.Separator ) pos--;
 						}
 					else
 						{
@@ -151,18 +152,18 @@ namespace ILCalc
 
 				if( argsKnown )
 					{
-					OptimizeFunc(func, pos);
+					OptimizeFunc(pos, method, argsCount);
 					return;
 					}
 				}
 
-			base.PutFunction(func);
+			base.PutMethod(method, argsCount);
 			}
 
 		public new void PutExprEnd( )
 			{
-			WriteTo(_output);
-			_output.PutExprEnd( );
+			WriteTo(output);
+			output.PutExprEnd( );
 			}
 
 		#endregion
@@ -170,62 +171,64 @@ namespace ILCalc
 
 		private void OptimizeNegate( )
 			{
-			_interp.PutNumber(LastNumber);
-			_interp.PutOperator(Code.Neg);
+			interp.PutNumber(LastNumber);
+			interp.PutOperator(Code.Neg);
 
-			LastNumber = _interp.Result;
+			LastNumber = interp.Result;
 
-			_interp.Clear( );
+			interp.Clear( );
 			}
 
 		private void OptimizeBinaryOp( int oper )
 			{
-			_interp.PutNumber(LastValue(_nums, 2));
-			_interp.PutNumber(LastValue(_nums, 1));
-			_interp.PutOperator(oper);
+			interp.PutNumber(LastValue(nums, 2));
+			interp.PutNumber(LastValue(nums, 1));
+			interp.PutOperator(oper);
 
-			RemoveLast(_nums);
-			RemoveLast(_code);
+			RemoveLast(nums);
+			RemoveLast(code);
 
-			LastNumber = _interp.Result;
+			LastNumber = interp.Result;
 
-			_interp.Clear( );
+			interp.Clear( );
 			}
 
-		private void OptimizeFunc( MethodInfo func, int start )
+		private void OptimizeFunc( int start, MethodInfo func, int argsCount )
 			{
 			int numIdx = CountNumberShift(start);
 			int numStart = numIdx;
 
-			if( _code[start] == Code.ParamCall )
+			if( code[start] == Code.ParamCall )
 				{
-				int varCount = PopLast(_data);
-				int fixCount = PopLast(_data);
-				_interp.BeginCall(fixCount, varCount);
-				}
-			else _interp.BeginCall(-1, 0);
+				int varCount = PopLast(data);
+				int fixCount = PopLast(data);
 
-			for( int i = start + 1; i < _code.Count; i++ )
+				interp.PutBeginParams(fixCount, varCount);
+				}
+			else
+				interp.PutBeginCall( );
+
+			for( int i = start + 1; i < code.Count; i++ )
 				{
-				if( _code[i] == Code.Separator )
-					 _interp.PutSeparator( );
-				else _interp.PutNumber(_nums[numIdx++]);
+				if( code[i] == Code.Separator )
+					 interp.PutSeparator( );
+				else interp.PutNumber(nums[numIdx++]);
 				}
 
-			_interp.PutFunction(func);
+			interp.PutMethod(func, argsCount);
 
-			_nums.RemoveRange(numStart, numIdx - numStart);
-			_code.RemoveRange(start, _code.Count - start);
+			nums.RemoveRange(numStart, numIdx - numStart);
+			code.RemoveRange(start, code.Count - start);
 
-			PutNumber(_interp.Result);
-			_interp.Clear( );
+			PutNumber(interp.Result);
+			interp.Clear( );
 			}
 
 		private void OptimizePow( int val )
 			{
-			RemoveLast(_nums);
-			RemoveLast(_code);
-			int argId = LastValue(_data, 1);
+			RemoveLast(nums);
+			RemoveLast(code);
+			int argId = LastValue(data, 1);
 
 			for( int i = 1; i < val; i++ )
 				{
@@ -239,7 +242,7 @@ namespace ILCalc
 			int count = 0;
 			for( int i = 0; i < pos; i++ )
 				{
-				if( _code[i] == Code.Number ) count++;
+				if( code[i] == Code.Number ) count++;
 				}
 
 			return count;

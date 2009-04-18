@@ -7,10 +7,10 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private int _depth;
-		private int _curPos;
-		private int _prePos;
-		private int _nextOp;
+		private int exprDepth;
+		private int curPos;
+		private int prePos;
+		private int nextOp;
 
 		#endregion
 
@@ -20,16 +20,17 @@ namespace ILCalc
 			int separators = 0;
 			var ops = new Stack<int>( );
 
-			while( i < _len )
+			while( i < exprLen )
 				{
-				char c = _expr[i];
+				char c = expr[i];
+
 				// NOTE: maybe put in last else?
 				if( Char.IsWhiteSpace(c) ) { i++; continue; }
 
-				_curPos = i++;
+				curPos = i++;
 
 				//============================================= NUMBER ==
-				if( (c <= '9' && '0' <= c) || c == _dot )
+				if( (c <= '9' && '0' <= c) || c == dotSymbol )
 					{
 					// [ )123 ], [ 123 456 ] or [ pi123 ]
 					if( prev >= Item.Number )
@@ -38,41 +39,42 @@ namespace ILCalc
 						throw IncorrectConstr(prev, Item.Number, i);
 						}
 
-					_output.PutNumber(ScanNumber(c, ref i));
+					output.PutNumber(ScanNumber(c, ref i));
 
 					prev = Item.Number;
 					}
 
 				//=========================================== OPERATOR ==
-				else if( (_nextOp = _operators.IndexOf(c)) != -1 )
+				else if( (nextOp = operators.IndexOf(c)) != -1 )
 					{
 					// BINARY ============
 					// [ )+ ], [ 123+ ] or [ pi+ ]
 					if( prev >= Item.Number )
 						{
-						Flush(ops, _prior[_nextOp]);
-						ops.Push(_nextOp);
+						Flush(ops, opPriority[nextOp]);
+						ops.Push(nextOp);
 						}
 
 					// UNARY [-] =========
-					else if( _nextOp == Code.Sub )
+					else if( nextOp == Code.Sub )
 						{
 						// prev == [+-], [,] or [(]
 						ops.Push(Code.Neg);
 						}
 					
 					// UNARY [+] =========
-					else 
+					else
+						{
 						throw IncorrectConstr(prev, Item.Operator, i);
+						}
 
 					prev = Item.Operator;
 					}
 
 				//========================================== SEPARATOR ==
-				else if( c == _sep )
+				else if( c == sepSymbol )
 					{
-					if( !func ) 
-						throw InvalidSeparator( );
+					if( !func ) throw InvalidSeparator( );
 
 					// [ (, ], [ +, ] or [ ,, ]
 					if( prev <= Item.Begin )
@@ -82,7 +84,7 @@ namespace ILCalc
 
 					Flush(ops);
 					separators++;
-					_output.PutSeparator( );
+					output.PutSeparator( );
 
 					prev = Item.Separator;
 					}
@@ -112,9 +114,9 @@ namespace ILCalc
 						}
 
 					Flush(ops);
-					if( _depth == 0 )
+					if( exprDepth == 0 )
 						{
-						throw BraceDisbalance(_curPos, true);
+						throw BraceDisbalance(curPos, true);
 						}
 
 					if( prev != Item.Begin ) separators++;
@@ -142,10 +144,10 @@ namespace ILCalc
 				//========================================= UNRESOLVED ==
 				else
 					{
-					throw UnresolvedSymbol(_curPos);
+					throw UnresolvedSymbol(curPos);
 					}
 
-				_prePos = _curPos;
+				prePos = curPos;
 				}
 
 			//====================================== END OF EXPRESSION ==
@@ -157,7 +159,7 @@ namespace ILCalc
 
 			Flush(ops);
 
-			_output.PutExprEnd( );
+			output.PutExprEnd( );
 			return -1;
 			}
 
@@ -167,7 +169,7 @@ namespace ILCalc
 			{
 			while( stack.Count > 0 )
 				{
-				_output.PutOperator(stack.Pop( ));
+				output.PutOperator(stack.Pop( ));
 				}
 			}
 
@@ -175,9 +177,9 @@ namespace ILCalc
 			{
 			while( stack.Count > 0 )
 				{
-				if( priority <= _prior[stack.Peek( )] )
+				if( priority <= opPriority[stack.Peek( )] )
 					{
-					_output.PutOperator(stack.Pop( ));
+					output.PutOperator(stack.Pop( ));
 					}
 				else break;
 				}

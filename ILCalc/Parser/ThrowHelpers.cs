@@ -10,16 +10,16 @@ namespace ILCalc
 		[DebuggerHidden]
 		private SyntaxException IncorrectConstr( Item prev, Item next, int i )
 			{
-			int len = i - _prePos;
+			int len = i - prePos;
 			var buf = new StringBuilder(Resources.errIncorrectConstr);
 
 			buf.Append(" ("); buf.Append(prev.ToString( ).ToLowerInvariant( ));
 			buf.Append(")("); buf.Append(next.ToString( ).ToLowerInvariant( ));
 			buf.Append("): \"");
-			buf.Append(_expr, _prePos, len);
+			buf.Append(expr, prePos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString( ), _expr, _prePos, len);
+			return new SyntaxException(buf.ToString( ), expr, prePos, len);
 			}
 
 		[DebuggerHidden]
@@ -28,15 +28,15 @@ namespace ILCalc
 			return new SyntaxException(mode?
 				Resources.errDisbalanceOpen:
 				Resources.errDisbalanceClose,
-				_expr, pos, 1);
+				expr, pos, 1);
 			}
 
 		[DebuggerHidden]
 		private SyntaxException IncorrectIden( int i )
 			{
-			for(i++; i < _len; i++)
+			for(i++; i < exprLen; i++)
 				{
-				char c = _expr[i];
+				char c = expr[i];
 				if(!Char.IsLetterOrDigit(c) && c != '_') break;
 				}
 
@@ -54,7 +54,7 @@ namespace ILCalc
 
 			return new SyntaxException(
 				buf.ToString( ),
-				_expr, _curPos, str.Length, inner
+				expr, curPos, str.Length, inner
 				);
 			}
 
@@ -69,7 +69,7 @@ namespace ILCalc
 
 			return new SyntaxException(
 				buf.ToString( ),
-				_expr, _curPos, str.Length, inner
+				expr, curPos, str.Length, inner
 				);
 			}
 
@@ -79,10 +79,10 @@ namespace ILCalc
 			var buf = new StringBuilder(Resources.errFunctionNoBrace);
 
 			buf.Append(" \"");
-			buf.Append(_expr, pos, len);
+			buf.Append(expr, pos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString(), _expr, pos, len);
+			return new SyntaxException(buf.ToString(), expr, pos, len);
 			}
 
 		[DebuggerHidden]
@@ -90,27 +90,27 @@ namespace ILCalc
 			{
 			return new SyntaxException(
 				Resources.errInvalidSeparator,
-				_expr, _curPos, 1);
+				expr, curPos, 1);
 			}
 
 		[DebuggerHidden]
 		private SyntaxException UnresolvedIdentifier( int shift )
 			{
-			int end = _curPos;
-			for(end += shift; end < _len; end++)
+			int end = curPos;
+			for(end += shift; end < exprLen; end++)
 				{
-				char c = _expr[end];
+				char c = expr[end];
 				if(!Char.IsLetterOrDigit(c) && c != '_') break;
 				}
 
 			var buf = new StringBuilder(Resources.errUnresolvedIdentifier);
-			int len = end - _curPos;
+			int len = end - curPos;
 				
 			buf.Append(" \"");
-			buf.Append(_expr, _curPos, len);
+			buf.Append(expr, curPos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString(), _expr, _curPos, len);
+			return new SyntaxException(buf.ToString(), expr, curPos, len);
 			}
 
 		[DebuggerHidden]
@@ -119,35 +119,37 @@ namespace ILCalc
 			var buf = new StringBuilder(Resources.errUnresolvedSymbol);
 
 			buf.Append(" '");
-			buf.Append(_expr[i]);
+			buf.Append(expr[i]);
 			buf.Append("'.");
 
-			return new SyntaxException(buf.ToString( ), _expr, i, 1);
+			return new SyntaxException(buf.ToString( ), expr, i, 1);
 			}
 
 		[DebuggerHidden]
-		private SyntaxException WrongArgsCount( int args, int pos, int len,
-												MethodGroup method )
+		private SyntaxException WrongArgsCount( int pos, int len, int args,
+												FunctionGroup method )
 			{
 			var buf = new StringBuilder(Resources.sFunction);
 
 			buf.Append(" \"");
-			buf.Append(_expr, pos, len);
+			buf.Append(expr, pos, len);
 			buf.Append("\" ");
 
 			buf.AppendFormat(Resources.errWrongOverload, args);
-			
-			//TODO: always false?
+
+			//NOTE: improve this?
+			//TODO: may be emty FunctionGroup! Show actual message
+
 			if( method != null )
 				{
 				buf.Append(' ');
 				buf.AppendFormat(
 					Resources.errExistOverload,
-					method.OverloadsList( )
+					method.MakeMethodsArgsList( )
 					);
 				}
 
-			return new SyntaxException(buf.ToString(), _expr, pos, len);
+			return new SyntaxException(buf.ToString(), expr, pos, len);
 			}
 
 		[DebuggerHidden]
@@ -156,7 +158,7 @@ namespace ILCalc
 			var names = new List<string>(matches.Count);
 
 			foreach( Capture match in matches )
-			foreach( SearchItem list in _idens )
+			foreach( SearchItem list in idenList )
 				{
 				if( list.Type != match.Type ) continue;
 
@@ -179,9 +181,9 @@ namespace ILCalc
 				string type = String.Empty;
 				switch( match.Type )
 					{
-					case Iden.Argument: type = Resources.sArgument; break;
-					case Iden.Constant: type = Resources.sConstant; break;
-					case Iden.Function: type = Resources.sFunction; break;
+					case IdenType.Argument: type = Resources.sArgument; break;
+					case IdenType.Constant: type = Resources.sConstant; break;
+					case IdenType.Function: type = Resources.sFunction; break;
 					}
 
 				buf.Append(' ');
@@ -199,7 +201,7 @@ namespace ILCalc
 				}
 
 			int len = names[0].Length;
-			return new SyntaxException(buf.ToString(), _expr, pos, len);
+			return new SyntaxException(buf.ToString(), expr, pos, len);
 			}
 		}
 	}

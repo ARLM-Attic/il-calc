@@ -6,14 +6,15 @@ namespace ILCalc
 	{
 	using State = DebuggerBrowsableState;
 
-	// TODO: region Members => Methods
-	// TODO: delete IndexOutOfRangeException usage
+	//TODO: ImportBuiltIn( ) => FunctionDictionary.GetBuiltIn( )
+	//TODO: Syncronize Create methods (parser sync)?
 
 	/// <summary>
 	/// Represents the expression context (arguments, constants and functions
 	/// available to use in expression, parsing settings) and provides methods
 	/// to compile, evaluate and validate expressions in runtime.<br/>
-	/// This class cannot be inherited.</summary>
+	/// This class cannot be inherited.
+	/// </summary>
 	/// <threadsafety instance="false"/>
 	
 	[Serializable]
@@ -21,17 +22,16 @@ namespace ILCalc
 		{
 		#region Fields
 
-		//TODO: no internals here?
+		[DebuggerBrowsable(State.Never)] internal ArgumentCollection argsList;
+		[DebuggerBrowsable(State.Never)] internal ConstantDictionary constDict;
+		[DebuggerBrowsable(State.Never)] internal FunctionDictionary funcsDict;
+		[DebuggerBrowsable(State.Never)] internal CultureInfo parseCulture;
+		[DebuggerBrowsable(State.Never)] internal bool ignoreCase = true;
 
-		[DebuggerBrowsable(State.Never)] internal ArgumentCollection _args;
-		[DebuggerBrowsable(State.Never)] internal ConstantCollection _consts;
-		[DebuggerBrowsable(State.Never)] internal FunctionCollection _funcs;
-		[DebuggerBrowsable(State.Never)] internal CultureInfo _culture;
-		[DebuggerBrowsable(State.Never)] internal OptimizeModes _optimize;
-		[DebuggerBrowsable(State.Never)] internal bool _ignoreCase = true;
-		[DebuggerBrowsable(State.Never)] internal bool _checked;
+		[DebuggerBrowsable(State.Never)] private OptimizeModes optimizeMode;
+		[DebuggerBrowsable(State.Never)] private bool checkedMode;
 		[DebuggerBrowsable(State.Never), NonSerialized]
-		private Parser _parser;
+		private Parser parser;
 
 		#endregion
 		#region Properties
@@ -42,78 +42,74 @@ namespace ILCalc
 			{
 			[DebuggerHidden]
 			get	{
-				if(_args == null) _args = new ArgumentCollection();
-				return _args;
+				if( argsList == null ) argsList = new ArgumentCollection( );
+				return argsList;
 				}
 			[DebuggerHidden]
 			set {
-				_args = value;
-				if(_parser != null)
-					{
-					_parser.InitIdens();
-					}
+				argsList = value;
+				if( parser != null ) parser.InitIdens( );
 				}
 			}
 
-		/// <summary>Gets or sets <see cref="ConstantCollection"/> available
+		/// <summary>Gets or sets <see cref="ConstantDictionary"/> available
 		/// for use in the expression.</summary>
-		public ConstantCollection Constants
+		public ConstantDictionary Constants
 			{
 			[DebuggerHidden]
 			get	{
-				if(_consts == null) _consts = new ConstantCollection();
-				return _consts;
+				if( constDict == null ) constDict = new ConstantDictionary( );
+				return constDict;
 				}
 			[DebuggerHidden]
 			set {
-				_consts = value;
-				if(_parser != null) _parser.InitIdens();
+				constDict = value;
+				if( parser != null ) parser.InitIdens( );
 				}
 			}
 
-		/// <summary>Gets or sets <see cref="FunctionCollection"/> available
+		/// <summary>Gets or sets <see cref="FunctionDictionary"/> available
 		/// for use in the expression.</summary>
-		public FunctionCollection Functions
+		public FunctionDictionary Functions
 			{
 			[DebuggerHidden]
 			get	{
-				if(_funcs == null) _funcs = new FunctionCollection();
-				return _funcs;
+				if( funcsDict == null ) funcsDict = new FunctionDictionary( );
+				return funcsDict;
 				}
 			[DebuggerHidden]
 			set {
-				_funcs = value;
-				if(_parser != null) _parser.InitIdens();
+				funcsDict = value;
+				if( parser != null ) parser.InitIdens( );
 				}
 			}
 
-		/// <summary>Gets or sets <see cref="CultureInfo"/> instance
-		/// used for expression parsing. Can be <c>null</c> for ignoring
-		/// culture-sensitive characters and using ordinal compare for strings.
-		/// </summary>
-		/// <exception cref="NotSupportedException">
-		/// <paramref name="value"/> is neutral culture,
-		/// that can't be used as parse culture.</exception>
-		// TODO: fix debugger view
-		[DebuggerDisplay("{(Сulture != null? Culture.DisplayName : \"Ordinal (null)\")}")]
+		/// <summary>
+		/// Gets or sets <see cref="CultureInfo"/> instance
+		/// used for expression parsing.</summary>
+		/// <exception cref="NotSupportedException"><paramref name="value"/>
+		/// is neutral culture, that can't be used as parse culture.</exception>
+		/// <remarks>
+		/// Can be <c>null</c> for ignoring culture-sensitive
+		/// characters and using ordinal compare for strings.</remarks>
 		public CultureInfo Culture
 			{
-			[DebuggerHidden] get { return _culture; }
+			[DebuggerHidden] get { return parseCulture; }
 			[DebuggerHidden]
 			set {
-				if(value != null) CheckNeutral(value);
-				_culture = value;
-				if(_parser != null) _parser.InitCulture();
+				if( value != null ) CheckNeutral(value);
+				parseCulture = value;
+				if( parser != null ) parser.InitCulture();
 				}
 			}
 
-		/// <summary>Gets or sets ignore case mode
-		/// for identifiers names in the expresion.</summary>
+		/// <summary>Gets or sets ignore case mode for
+		/// identifiers names in the expresion.</summary>
 		/// <value><b>true</b> by default.</value>
 		public bool IgnoreCase
 			{
-			[DebuggerHidden] get { return _ignoreCase; }
-			[DebuggerHidden] set { _ignoreCase = value; }
+			[DebuggerHidden] get { return ignoreCase; }
+			[DebuggerHidden] set { ignoreCase = value; }
 			}
 		
 		/// <summary>Gets or sets checking mode for the expression evaluation.</summary>
@@ -121,18 +117,18 @@ namespace ILCalc
 		/// <value><b>false</b> by default.</value>
 		public bool OverflowCheck
 			{
-			[DebuggerHidden] get { return _checked; }
-			[DebuggerHidden] set { _checked = value; }
+			[DebuggerHidden] get { return checkedMode; }
+			[DebuggerHidden] set { checkedMode = value; }
 			}
 
-		/// <summary>Gets or sets a bitwise OR combination of <see cref="OptimizeModes"/>
-		/// enumeration values that specify optimization modes for expression.</summary>
-		/// <remarks>Using this option will reduce perfomance of compilation.</remarks>
+		/// <summary>Gets or sets a bitwise OR combination
+		/// of <see cref="OptimizeModes"/> enumeration values
+		/// that specify optimization modes for expression.</summary>
 		/// <value><see cref="OptimizeModes.None"/> by default.</value>
 		public OptimizeModes Optimization
 			{
-			[DebuggerHidden] get { return _optimize; }
-			[DebuggerHidden] set { _optimize = value; }
+			[DebuggerHidden] get { return optimizeMode; }
+			[DebuggerHidden] set { optimizeMode = value; }
 			}
 
 		#endregion
@@ -141,7 +137,7 @@ namespace ILCalc
 		[DebuggerHidden]
 		private static void CheckNeutral( CultureInfo culture )
 			{
-			if(culture.IsNeutralCulture)
+			if( culture.IsNeutralCulture )
 				{
 				throw new NotSupportedException(
 					string.Format(Resources.errNeutralCulture, culture.Name)
@@ -149,16 +145,23 @@ namespace ILCalc
 				}
 			}
 
+		private static ArgumentException WrongArgsCount( int actual, int expected )
+			{
+			return new ArgumentException(
+				string.Format(Resources.errWrongArgsCount, actual, expected)
+				);
+			}
+
 		private void ExecuteParse( string expression, IExpressionOutput output )
 			{
-			if( _optimize == OptimizeModes.None )
+			if( optimizeMode == OptimizeModes.None )
 				{
-				_parser.Parse(expression, output);
+				parser.Parse(expression, output);
 				}
 			else
 				{
-				var optimizer = new OptimizeOutput(output, _optimize);
-				_parser.Parse(expression, optimizer);
+				var optimizer = new OptimizeOutput(output, optimizeMode);
+				parser.Parse(expression, optimizer);
 				}
 			}
 
@@ -176,36 +179,34 @@ namespace ILCalc
 		/// <paramref name="expression"/> is null.<br/>-or-<br/>
 		/// <paramref name="arguments"/> is null.</exception>
 		/// <exception cref="ArgumentException">Wrong arguments count was
-		/// specified by <paramref name="arguments"/> parameter.</exception>
+		/// specified by the <paramref name="arguments"/> parameter.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>Evaluated value.</returns>
 		public double Evaluate( string expression, params double[] arguments )
 			{
-			if( expression == null ) throw new ArgumentNullException("expression");
-			if( arguments  == null ) throw new ArgumentNullException("arguments");
+			if( expression == null )
+				throw new ArgumentNullException("expression");
 
-			int argCount = (_args == null)? 0: _args.Count;
-			
+			if( arguments == null )
+				throw new ArgumentNullException("arguments");
+
+			int argCount = (argsList == null)? 0: argsList.Count;
 			if( arguments.Length != argCount )
 				{
-				throw new ArgumentException(
-					string.Format(
-						Resources.errWrongArgsCount,
-						arguments.Length, argCount )
-					);
+				throw WrongArgsCount(arguments.Length, argCount);
 				}
 			
-			var intr = new QuickInterpret(arguments, _checked);
+			var intr = new QuickInterpret(arguments, checkedMode);
 
-			if( _parser == null )
-				_parser = new Parser(this);
+			if( parser == null )
+				parser = new Parser(this);
 
-			_parser.Parse(expression, intr);
+			parser.Parse(expression, intr);
 			
 			return intr.Result;
 			}
-		
+
 		/// <summary>Generates the <see cref="Interpret"/> object
 		/// for evaluating the specified <paramref name="expression"/>.</summary>
 		/// <param name="expression">
@@ -221,22 +222,22 @@ namespace ILCalc
 			if( expression == null )
 				throw new ArgumentNullException("expression");
 
-			int argCount = (_args == null) ? 0 : _args.Count;
+			int argCount = (argsList == null)? 0: argsList.Count;
 
 			var inter = new InterpretCreator( );
 
-			if(	_parser == null )
-				_parser = new Parser(this);
+			if(	parser == null )
+				parser = new Parser(this);
 
 			ExecuteParse(expression, inter);
 			
-			return new Interpret(expression, argCount, _checked, inter);
+			return new Interpret(expression, argCount, checkedMode, inter);
 			}
 
 		/// <summary>Validates the specified <paramref name="expression"/>.</summary>
 		/// <param name="expression">Expression to validate.</param>
-		/// <exception cref="SyntaxException"><paramref name="expression"/> contains
-		/// syntax error(s) and can't be compiled.</exception>
+		/// <exception cref="SyntaxException">
+		/// <paramref name="expression"/> contains syntax error(s)</exception>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="expression"/> is null.</exception>
 		public void Validate( string expression )
@@ -246,41 +247,27 @@ namespace ILCalc
 
 			var nil = new NullWriter();
 
-			if( _parser == null )
-				_parser = new Parser(this);
+			if( parser == null )
+				parser = new Parser(this);
 
-			_parser.Parse(expression, nil);
+			parser.Parse(expression, nil);
 			}
-
-#if DEBUG && NET20
-
-		public string PostfixForm( string expression )
-			{
-			if( expression == null )
-				throw new ArgumentNullException("expression");
-
-			var postfix = new PostfixWriter(_args);
-
-			if(	_parser == null )
-				_parser = new Parser(this);
-
-			ExecuteParse(expression, postfix);
-
-			return postfix.ToString( );
-			}
-
-#endif
 
 		#endregion
 		#region Constructors
 
-		/// <summary>Initializes a new instance of the ILCalc class
-		/// that is contains empty expression context.</summary>
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CalcContext"/>
+		/// class that is contains empty expression context.</summary>
+		/// <overloads>
+		/// Initializes a new instance of the <see cref="CalcContext"/> class.
+		/// </overloads>
 		[DebuggerHidden]
 		public CalcContext( ) { }
 
-		/// <summary>Initializes a new instance of the ILCalc class
-		/// that is contains specified arguments.</summary>
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CalcContext"/>
+		/// class that is contains specified arguments list.</summary>
 		/// <param name="arguments">Arguments names.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="arguments"/> is null.</exception>
@@ -290,7 +277,7 @@ namespace ILCalc
 		[DebuggerHidden]
 		public CalcContext( params string[] arguments )
 			{
-			_args = new ArgumentCollection(arguments);
+			argsList = new ArgumentCollection(arguments);
 			}
 
 		#endregion

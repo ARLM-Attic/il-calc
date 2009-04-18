@@ -2,12 +2,10 @@
 
 namespace ILCalc
 	{
-	//TODO: fix doc
 	/// <summary>
 	/// Provides enumerated values to use to set expression optimizer options.
 	/// Expression optimizer will be used by <see cref="CalcContext"/>
-	/// when creating <see cref="Evaluator"/>, <see cref="Tabulator"/>
-	/// or <see cref="Interpret"/> objects.
+	/// when creating objects for evaluating expressions.
 	/// </summary>
 	[Flags]
 	[Serializable]

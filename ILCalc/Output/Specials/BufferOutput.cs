@@ -7,20 +7,20 @@ namespace ILCalc
 		{
 		#region Fields
 
-		protected readonly List<MethodInfo> _funs;
-		protected readonly List<double> _nums;
-		protected readonly List<int> _code;
-		protected readonly List<int> _data;
+		protected readonly List<MethodInfo> funcs;
+		protected readonly List<double> nums;
+		protected readonly List<int> code;
+		protected readonly List<int> data;
 		
 		#endregion
 		#region Constructor
 
 		public BufferOutput()
 			{
-			_funs = new List<MethodInfo>( );
-			_nums = new List<double>(4);
-			_code = new List<int>(8);
-			_data = new List<int>(2);
+			funcs = new List<MethodInfo>( );
+			nums = new List<double>(4);
+			code = new List<int>(8);
+			data = new List<int>(2);
 			}
 
 		#endregion
@@ -28,68 +28,56 @@ namespace ILCalc
 
 		public void PutNumber( double value )
 			{
-			_code.Add(Code.Number);
-			_nums.Add(value);
+			code.Add(Code.Number);
+			nums.Add(value);
 			}
 
-		public void PutFunction( MethodInfo func )
-			{
-			_code.Add(Code.Function);
-			_funs.Add(func);
-			}
-
-		public void PutOperator( int oper )
-			{
-			_code.Add(oper);
-			}
+		public void PutOperator( int oper ) { code.Add(oper); }
 
 		public void PutArgument( int id )
 			{
-			_code.Add(Code.Argument);
-			_data.Add(id);
+			code.Add(Code.Argument);
+			data.Add(id);
 			}
 
-		public void PutSeparator( )
+		public void PutSeparator( ) { code.Add(Code.Separator); }
+
+		public void PutBeginCall( ) { code.Add(Code.BeginCall); }
+
+		public void PutBeginParams( int fixCount, int varCount )
 			{
-			_code.Add(Code.Separator);
+			code.Add(Code.ParamCall);
+			data.Add(fixCount);
+			data.Add(varCount);
 			}
 
-		public void BeginCall( int fixCount, int varCount )
+		public void PutMethod( MethodInfo method, int fixCount )
 			{
-			if( fixCount >= 0 )
-				{
-				_code.Add(Code.ParamCall);
-				_data.Add(fixCount);
-				_data.Add(varCount);
-				}
-			else _code.Add(Code.BeginCall);
+			code.Add(Code.Function);
+			data.Add(fixCount);
+			funcs.Add(method);
 			}
 
-		public void PutExprEnd( )
-			{
-			_code.Add(Code.Return);
-			}
+		public void PutExprEnd( ) { code.Add(Code.Return); }
 
 		#endregion
-		#region Members
+		#region Methods
 
 		public void WriteTo( IExpressionOutput output )
 			{
-			int numbPos = 0,
-				funcPos = 0,
-				dataPos = 0;
+			int n = 0, f = 0, d = 0;
 
-			for( int i = 0; i < _code.Count; i++ )
+			for( int i = 0; i < code.Count; i++ )
 				{
-				int code = _code[i];
+				int op = code[i];
 
-				if( Code.IsOperator(code)		) output.PutOperator(code);
-				else if( code == Code.Number	) output.PutNumber(_nums[numbPos++]);
-				else if( code == Code.Argument	) output.PutArgument(_data[dataPos++]);
-				else if( code == Code.Function	) output.PutFunction(_funs[funcPos++]);
-				else if( code == Code.Separator	) output.PutSeparator( );
-				else if( code == Code.BeginCall ) output.BeginCall(-1, 0);
-				else if( code == Code.ParamCall	) output.BeginCall(_data[dataPos++], _data[dataPos++]);
+				if( Code.IsOperator(op)       ) output.PutOperator(op);
+				else if( op == Code.Number    ) output.PutNumber(nums[n++]);
+				else if( op == Code.Argument  ) output.PutArgument(data[d++]);
+				else if( op == Code.Function  ) output.PutMethod(funcs[f++], data[d++]);
+				else if( op == Code.Separator ) output.PutSeparator( );
+				else if( op == Code.BeginCall ) output.PutBeginCall( );
+				else if( op == Code.ParamCall ) output.PutBeginParams(data[d++], data[d++]);
 				else output.PutExprEnd( );
 				}
 			}

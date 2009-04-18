@@ -10,38 +10,38 @@ namespace ILCalc
 			// =================================== Fractal part ==
 
 			// numbers not like ".123"
-			if( c != _dot )
+			if( c != dotSymbol )
 				{
 				// skip digits
-				while( i < _len && Char.IsDigit(_expr[i]) ) i++;
+				while( i < exprLen && Char.IsDigit(expr[i]) ) i++;
 
 				// skip dot
-				if( i < _len && _expr[i] == _dot ) i++;
+				if( i < exprLen && expr[i] == dotSymbol ) i++;
 				}
 
 			// skip digits
-			while( i < _len && Char.IsDigit(_expr[i]) ) i++;
+			while( i < exprLen && Char.IsDigit(expr[i]) ) i++;
 
 			// ================================ Exponental part ==
 
 			// at least 2 chars
-			if(i + 1 < _len)
+			if(i + 1 < exprLen)
 				{
 				// E character
-				c = _expr[i];
+				c = expr[i];
 				if( c == 'e' || c == 'E' )
 					{
 					int j = i;
 
 					// exponetal sign
-					c = _expr[++j];
+					c = expr[++j];
 					if( c == '-' || c == '+' ) j++;
 
 					// eponental part
-					if( i < _len && Char.IsDigit(_expr[j]) )
+					if( i < exprLen && Char.IsDigit(expr[j]) )
 						{
 						j++;
-						while( j < _len && Char.IsDigit(_expr[j]) ) j++;
+						while( j < exprLen && Char.IsDigit(expr[j]) ) j++;
 						i = j;
 						}
 					}
@@ -50,12 +50,12 @@ namespace ILCalc
 			// =================================== Try to parse ==
 
 			// extract number substring
-			string number = _expr.Substring(_curPos, i - _curPos);
+			string number = expr.Substring(curPos, i - curPos);
 			try
 				{
 				return Double.Parse(number,
 					NumberStyles.AllowDecimalPoint |
-					NumberStyles.AllowExponent, _numf);
+					NumberStyles.AllowExponent, numFormat);
 				}
 			catch(FormatException e)
 				{

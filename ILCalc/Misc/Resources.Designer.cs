@@ -106,6 +106,24 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delegate&apos;s invocation list count should be equal one..
+        /// </summary>
+        internal static string errDelegateInvCount {
+            get {
+                return ResourceManager.GetString("errDelegateInvCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delegates with target is not supported (maybe because of closure)..
+        /// </summary>
+        internal static string errDelegateWithTarget {
+            get {
+                return ResourceManager.GetString("errDelegateWithTarget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Brace disbalance (not closed)..
         /// </summary>
         internal static string errDisbalanceClose {
@@ -151,11 +169,29 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Function &quot;{0}&quot; does not exist in the collection..
+        /// </summary>
+        internal static string errFunctionNotExist {
+            get {
+                return ResourceManager.GetString("errFunctionNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty or null identifier name..
         /// </summary>
         internal static string errIdentifierEmpty {
             get {
                 return ResourceManager.GetString("errIdentifierEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maybe trying to import lambda without specifing the name?.
+        /// </summary>
+        internal static string errIdentifierFromLambda {
+            get {
+                return ResourceManager.GetString("errIdentifierFromLambda", resourceCulture);
             }
         }
         
@@ -196,7 +232,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to parameter #{0} of &apos;{1}&apos; type. All parameters should be of &apos;{2}&apos; type.
+        ///   Looks up a localized string similar to parameter #{0} of &apos;{1}&apos; type. All parameters should be of &apos;{2}&apos; type..
         /// </summary>
         internal static string errMethodBadParam {
             get {
@@ -205,7 +241,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to returns value of &apos;{0}&apos; type. Function should return &apos;{1}&apos; type.
+        ///   Looks up a localized string similar to returns value of &apos;{0}&apos; type. Function should return &apos;{1}&apos; type..
         /// </summary>
         internal static string errMethodBadReturn {
             get {
@@ -214,7 +250,16 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method &quot;{0}&quot; cannot be founded (method non public?)..
+        ///   Looks up a localized string similar to Import failed: method.
+        /// </summary>
+        internal static string errMethodImportFailed {
+            get {
+                return ResourceManager.GetString("errMethodImportFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method &quot;{0}&quot; cannot be founded (non public / not static?)..
         /// </summary>
         internal static string errMethodNotFounded {
             get {
@@ -232,7 +277,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to must be static.
+        ///   Looks up a localized string similar to must be static..
         /// </summary>
         internal static string errMethodNotStatic {
             get {
@@ -241,20 +286,11 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported.
+        ///   Looks up a localized string similar to parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported..
         /// </summary>
         internal static string errMethodParamInvalid {
             get {
                 return ResourceManager.GetString("errMethodParamInvalid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to with same parameters is already in the list.
-        /// </summary>
-        internal static string errMethodSameParams {
-            get {
-                return ResourceManager.GetString("errMethodSameParams", resourceCulture);
             }
         }
         
@@ -282,6 +318,15 @@ namespace ILCalc {
         internal static string errNumberOverflow {
             get {
                 return ResourceManager.GetString("errNumberOverflow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function with same parameters ({0}) is already in the list (overload impossible)..
+        /// </summary>
+        internal static string errOverloadImpossible {
+            get {
+                return ResourceManager.GetString("errOverloadImpossible", resourceCulture);
             }
         }
         

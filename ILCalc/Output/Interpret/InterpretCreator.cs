@@ -8,27 +8,27 @@ namespace ILCalc
 		{
 		#region Fields
 
-		private readonly Stack<int> _calls;
+		private readonly Stack<int> calls;
 
-		internal readonly List<int> _code;
-		internal readonly List<double> _numbers;
-		internal readonly List<InterpCall> _funcs;
-		internal readonly List<Delegate> _delegates;
+		internal readonly List<int> code;
+		internal readonly List<double> numbers;
+		internal readonly List<FuncCall> funcs;
+		internal readonly List<Delegate> delegates;
 
-		internal int _stackMax;
-		private int _stackSize;
+		internal int stMax;
+		private int stSize;
 
 		#endregion
 		#region Constructor
 
-		internal InterpretCreator( )
+		public InterpretCreator( )
 			{
-			_code = new List<int>(8);
-			_funcs = new List<InterpCall>( );
-			_numbers = new List<double>(4);
-			_delegates = new List<Delegate>( );
+			code = new List<int>(8);
+			funcs = new List<FuncCall>( );
+			numbers = new List<double>(4);
+			delegates = new List<Delegate>( );
 
-			_calls = new Stack<int>( );
+			calls = new Stack<int>( );
 			}
 
 		#endregion
@@ -36,126 +36,126 @@ namespace ILCalc
 
 		public void PutNumber( double value )
 			{
-			_numbers.Add(value);
-			_code.Add(Code.Number);
+			numbers.Add(value);
+			code.Add(Code.Number);
 
-			if( ++_stackSize > _stackMax )
-				{
-				_stackMax = _stackSize;
-				}
+			if( ++stSize > stMax ) stMax = stSize;
 			}
 
 		public void PutArgument( int id )
 			{
-			_code.Add(Code.Argument);
-			_code.Add(id);
+			code.Add(Code.Argument);
+			code.Add(id);
 
-			if( ++_stackSize > _stackMax )
-				{
-				_stackMax = _stackSize;
-				}
-			}
-
-		public void PutFunction( MethodInfo func )
-			{
-			int argc = _calls.Pop();
-			if( argc >= 0 ) // params method
-				{
-				int argv = _calls.Pop();
-
-				_code.Add(Code.Function);
-				_code.Add(AddFunc(new InterpCall(func, argc, argv)));
-
-				_stackSize -= (argc + argv - 1);
-				return;
-				}
-
-			argc = func.GetParameters().Length;
-			switch( argc )
-				{
-				case 0:
-					_code.Add(Code.Delegate0);
-					_code.Add(AddDelegate(func, _eval0));
-					if(++_stackSize > _stackMax)
-						{
-						_stackMax = _stackSize;
-						}
-					break;
-
-				case 1:
-					_code.Add(Code.Delegate1);
-					_code.Add(AddDelegate(func, _eval1));
-					break;
-
-				case 2:
-					_code.Add(Code.Delegate2);
-					_code.Add(AddDelegate(func, _eval2));
-					_stackSize--;
-					break;
-
-				default:
-					_code.Add(Code.Function);
-					_code.Add(AddFunc(new InterpCall(func, argc)));
-					_stackSize -= argc - 1;
-					break;
-				}
+			if( ++stSize > stMax ) stMax = stSize;
 			}
 
 		public void PutOperator( int oper )
 			{
-			_code.Add(oper);
+			code.Add(oper);
 
 			if( oper != Code.Neg )
-				{
-				_stackSize--;
-				}
+				stSize--;
 			}
 
 		public void PutSeparator( ) { }
+		public void PutBeginCall( ) { }
 
-		public void BeginCall( int fixCount, int varCount )
+		public void PutBeginParams( int fixCount, int varCount )
 			{
-			if(fixCount >= 0)
+			calls.Push(varCount);
+			calls.Push(fixCount);
+			}
+
+		public void PutMethod( MethodInfo method, int fixCount )
+			{
+			if( fixCount < 0 ) // params method
 				{
-				_calls.Push(varCount);
+				    fixCount = calls.Pop( );
+				int varCount = calls.Pop( );
+
+				code.Add(Code.Function);
+				code.Add(PutMethod(method, fixCount, varCount));
+				RecalcStackSize(fixCount + varCount);
+				return;
 				}
-			_calls.Push(fixCount);
+
+			switch( fixCount )
+				{
+				case 0:
+					code.Add(Code.Delegate0);
+					code.Add(PutDelegate(method, evalType0));
+					if( ++stSize > stMax ) stMax = stSize;
+					break;
+
+				case 1:
+					code.Add(Code.Delegate1);
+					code.Add(PutDelegate(method, evalType1));
+					break;
+
+				case 2:
+					code.Add(Code.Delegate2);
+					code.Add(PutDelegate(method, evalType2));
+					stSize--;
+					break;
+
+				default:
+					code.Add(Code.Function);
+					code.Add(PutMethod(method, fixCount, -1));
+					RecalcStackSize(fixCount);
+					break;
+				}
 			}
 
 		public void PutExprEnd( )
 			{
-			_code.Add(Code.Return);
-			_code.Add(0); // fictive code
+			code.Add(Code.Return);
+			code.Add(0); // fictive code
 			}
 
 		#endregion
 		#region Helpers
 
-		private int AddDelegate( MethodInfo func, Type delegateType )
+		private void RecalcStackSize( int argsCount )
 			{
-			for(int i = 0; i < _delegates.Count; i++)
+			if( argsCount == 0 )
 				{
-				if(_delegates[i].Method == func) return i;
-				i++;
+				if( ++stSize > stMax ) stMax = stSize;
 				}
 
-			var del = Delegate.CreateDelegate(delegateType, null, func);
-
-			_delegates.Add(del);
-			return _delegates.Count - 1;
+			else stSize -= argsCount - 1;
 			}
 
-		private int AddFunc( InterpCall call )
+		private int PutDelegate( MethodInfo method, Type delegateType )
 			{
-			MethodInfo func = call.Method;
-			for(int i = 0; i < _funcs.Count; i++)
+			for(int i = 0; i < delegates.Count; i++)
 				{
-				if(_funcs[i].Method == func) return i;
-				i++;
+				if( delegates[i].Method == method )
+					{
+					return i;
+					}
 				}
 
-			_funcs.Add(call);
-			return _funcs.Count - 1;
+			delegates.Add(
+				Delegate.CreateDelegate(delegateType, null, method)
+				);
+
+			return delegates.Count - 1;
+			}
+
+		private int PutMethod( MethodInfo method, int argc, int argv )
+			{
+			for( int i = 0; i < funcs.Count; i++ )
+				{
+				if( funcs[i].Method == method
+				 && funcs[i].IsReusable(argc, argv))
+					{
+					return i;
+					}
+				}
+
+			funcs.Add(new FuncCall(method, argc, argv));
+			return funcs.Count - 1;
 			}
 
 		#endregion
@@ -163,9 +163,9 @@ namespace ILCalc
 
 		// Types ==================================================
 
-		private static readonly Type _eval0 = typeof(EvalFunc0);
-		private static readonly Type _eval1 = typeof(EvalFunc1);
-		private static readonly Type _eval2 = typeof(EvalFunc2);
+		private static readonly Type evalType0 = typeof(EvalFunc0);
+		private static readonly Type evalType1 = typeof(EvalFunc1);
+		private static readonly Type evalType2 = typeof(EvalFunc2);
 
 		#endregion
 		}

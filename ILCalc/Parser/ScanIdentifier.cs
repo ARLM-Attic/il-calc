@@ -4,23 +4,21 @@ using System.Globalization;
 
 namespace ILCalc
 	{
-	using ListOfItems = List< MethodGroup.Item >;
-
 	sealed partial class Parser
 		{
 		private Item ScanIdenifier( ref int i )
 			{
 			int len = 0;
 
-			var matches = ( _context._culture != null )?
+			var matches = ( context.parseCulture != null )?
 				GetMatchesCulture(ref len):
 				GetMatchesOrdinal(ref len);
 
 			if( len == 0 ) throw UnresolvedIdentifier(1);
 
-			if( _curPos + len < _len )
+			if( curPos + len < exprLen )
 				{
-				char c = _expr[_curPos + len];
+				char c = expr[curPos + len];
 				if( Char.IsLetterOrDigit(c) || c == '_' )
 					{
 					throw UnresolvedIdentifier(len + 1);
@@ -29,7 +27,7 @@ namespace ILCalc
 
 			i += len - 1;
 
-			return (matches.Count == 1)?
+			return ( matches.Count == 1 )?
 				SimpleMatch(matches[0], ref i, len):
 				AmbiguousMatch(matches, ref i, len);
 			}
@@ -40,58 +38,60 @@ namespace ILCalc
 			{
 			switch( match.Type )
 				{
-				case Iden.Argument: // ===============================
+				case IdenType.Argument: // ===============================
 					{
-					_output.PutArgument(match.Index);
+					output.PutArgument(match.Index);
 					return Item.Identifier;
 					}
 
-				case Iden.Constant: // ===============================
+				case IdenType.Constant: // ===============================
 					{
-					_output.PutNumber(_context._consts[match.Index]);
+					output.PutNumber(context.constDict[match.Index]);
 					return Item.Identifier;
 					}
 
-				case Iden.Function: // ===============================
+				case IdenType.Function: // ===============================
 					{
-					int fPos = _curPos;
+					int funcPos = curPos;
 					if( !SkipBrace(ref i) )
-						throw NoOpenBrace(fPos, len);
+						throw NoOpenBrace(funcPos, len);
 
-					MethodGroup methods = GetMethod(match);
-					if( methods.HasParams )
+					FunctionGroup group = GetGroup(match);
+
+					if( group.HasParamsMethods )
 						{
-						IExpressionOutput old = _output;
+						IExpressionOutput old = output;
 						
 						var buf = new BufferOutput( );
 						
-						_output = buf; int args = ParseNested(ref i, true);
-						_output = old;
+						output = buf; int args = ParseNested(ref i, true);
+						output = old;
 
-						var func = methods.GetParamsFunc(args);
+						Function func = group.GetOverload(args);
 						
 						if( func != null )
 							OutputBufferCall(buf, func, args);
-
-						else throw WrongArgsCount(args, fPos, len, methods);
+						else 
+							throw WrongArgsCount(funcPos, len, args, group);
 						}
 					else
 						{
-						_output.BeginCall(-1, 0); // std call
+						output.PutBeginCall( );
 
 						int args = ParseNested(ref i, true);
-						var func = methods.GetStdFunc(args);
+						var func = group.GetOverload(args);
 
 						if( func != null )
-							_output.PutFunction(func.Func);
-
-						else throw WrongArgsCount(args, fPos, len, methods);
+							output.PutMethod(func.Method, func.ArgsCount);
+						else
+							throw WrongArgsCount(funcPos, len, args, group);
 						}
 
 					return Item.End;
 					}
 
-				default: throw new NotSupportedException();
+				default:
+					throw new NotSupportedException();
 				}
 			} 
 
@@ -100,45 +100,48 @@ namespace ILCalc
 			{
 			#region Count Matches
 
-			var matchFn = new List<Capture>( );
-			var matchId = new List<Capture>( );
+			var funcMatches = new List<Capture>( );
+			var idenMatches = new List<Capture>( );
 
 			foreach( Capture match in matches )
 				{
 				if( IsFunc(match) )
-					 matchFn.Add(match);
-				else matchId.Add(match);
+					 funcMatches.Add(match);
+				else idenMatches.Add(match);
 				}
 				
 			#endregion
 			#region Locals
 
-			ListOfItems funcs;
+			List<Function> funcs;
 			BufferOutput buf;
-			int args, fPos = _curPos;
+			int args, funcPos = curPos;
 
 			#endregion
 			
 			//===================================== > 0 Identifiers ==
-			if( matchFn.Count == 0 )
+			if( funcMatches.Count == 0 )
 				{
-				throw AmbiguousMatch(_curPos, matchId);
+				throw AmbiguousMatch(curPos, idenMatches);
 				}
 			
 			//======================================= > 0 Functions ==
-			if( matchId.Count == 0 )
+			if( idenMatches.Count == 0 )
 				{
 				if( !SkipBrace(ref i) )
-					throw NoOpenBrace(fPos, len);
+					{
+					throw NoOpenBrace(funcPos, len);
+					}
 
-				funcs = GetSuitableFunctions(matchFn, ref i, out buf, out args);
+				funcs = GetSuitable(funcMatches, ref i, out buf, out args);
 
 				if( funcs.Count == 1 )
 					OutputBufferCall(buf, funcs[0], args);
 
 				else if( funcs.Count == 0 )
-					 throw WrongArgsCount(args, fPos, len, null);
-				else throw AmbiguousMatch(fPos, matchFn);
+					throw WrongArgsCount(funcPos, len, args, null);
+				else
+					throw AmbiguousMatch(funcPos, funcMatches);
 
 				return Item.End;
 				}
@@ -148,33 +151,34 @@ namespace ILCalc
 			if( !SkipBrace(ref i) ) // if no brace ahead
 				{
 				i = prevPos;
-				if( matchId.Count != 1 )
-					throw AmbiguousMatch(fPos, matchId);
+				if( idenMatches.Count != 1 )
+					throw AmbiguousMatch(funcPos, idenMatches);
 
-				return SimpleMatch(matchId[0], ref i, len);
+				return SimpleMatch(idenMatches[0], ref i, len);
 				}
 			
-			funcs = GetSuitableFunctions(matchFn, ref i, out buf, out args);
+			funcs = GetSuitable(funcMatches, ref i, out buf, out args);
 
 			if( args == 1 ) // one arg: maybe iden
 				{
 				// can't deduce if exist func with 1 arg
 				if( funcs.Count != 0 )
-					throw AmbiguousMatch(fPos, matches);
+					throw AmbiguousMatch(funcPos, matches);
 
 				// not more than one iden candidate
-				if( matchId.Count != 1 )
-					throw AmbiguousMatch(fPos, matchId);
+				if( idenMatches.Count != 1 )
+					throw AmbiguousMatch(funcPos, idenMatches);
 
-				return SimpleMatch(matchId[0], ref i, len);
+				return SimpleMatch(idenMatches[0], ref i, len);
 				}
 
 			if( funcs.Count == 1 )
 				OutputBufferCall(buf, funcs[0], args);
 
 			else if( funcs.Count == 0 )
-				 throw WrongArgsCount(args, fPos, len, null);
-			else throw AmbiguousMatch(fPos, matchFn);
+				throw WrongArgsCount(funcPos, len, args, null);
+			else
+				throw AmbiguousMatch(funcPos, funcMatches);
 			
 			return Item.End;
 			}
@@ -182,205 +186,141 @@ namespace ILCalc
 		#endregion
 		#region Helpers
 
-		private MethodGroup GetMethod( Capture match )
+		private FunctionGroup GetGroup( Capture match )
 			{
-			return _context._funcs[match.Index];
+			return context.funcsDict[match.Index];
 			}
 
-		private ListOfItems GetSuitableFunctions(
-						IEnumerable<Capture> matches, ref int i,
-						out BufferOutput buf, out int args )
+		private List<Function> GetSuitable( IEnumerable<Capture> matches,
+						ref int i, out BufferOutput buf, out int args )
 			{
-			var methods = new List<MethodGroup>( );
+			var methods = new List<FunctionGroup>( );
+
 			foreach( Capture match in matches )
 				{
-				methods.Add(GetMethod(match));
+				methods.Add(GetGroup(match));
 				}
 
-			IExpressionOutput old = _output;
+			IExpressionOutput old = output;
 
 			buf = new BufferOutput();
 			
-			_output = buf; args = ParseNested(ref i, true);
-			_output = old;
+			output = buf; args = ParseNested(ref i, true);
+			output = old;
 
-			int fixCount = -1;
-			bool isParams = false;
-
-			var funcs = new ListOfItems( );
-			foreach( MethodGroup method in methods )
-				{
-				var item = method.GetFunc(args);
-				if( item == null ) continue;
-
-				// some kind of overload resolution :)
-				// TODO: completely rewrite here
-				// TODO: merge in FunctionGroup!
-
-				if( item.ArgCount > fixCount )
-					{
-					funcs.Clear( );
-					funcs.Add(item);
-					fixCount = item.ArgCount;
-					isParams = item.IsParams;
-					}
-				else if( item.ArgCount == fixCount )
-					{
-					if( item.IsParams )
-						{
-						if( isParams )
-							funcs.Add(item);
-						}
-					else
-						{
-						if( isParams )
-							{
-							isParams = false;
-							funcs.Clear( );
-							}
-
-						funcs.Add(item);
-						}
-					}
-				}
-
-			return funcs;
+			return FunctionGroup.GetOverloadsList(methods, args);
 			}
 
-		private void OutputBufferCall( BufferOutput buf, MethodGroup.Item func, int args )
+		private void OutputBufferCall( BufferOutput buf, Function func, int args )
 			{
-			if( func.IsParams )
-				 _output.BeginCall(func.ArgCount, args - func.ArgCount);
-			else _output.BeginCall(-1, 0);
+			if( func.HasParamArray )
+				 output.PutBeginParams(func.ArgsCount, args - func.ArgsCount);
+			else output.PutBeginCall( );
 			
-			buf.WriteTo(_output);
+			buf.WriteTo(output);
 
-			_output.PutFunction(func.Func);
+			output.PutMethod(func.Method, -1);
 			}
 
 		private bool SkipBrace( ref int i )
 			{
-			while( i < _len && Char.IsWhiteSpace(_expr[i]) ) i++;
+			while( i < exprLen
+				&& Char.IsWhiteSpace(expr[i]) ) i++;
 
-			if( i >= _len ) return false;
+			if( i >= exprLen ) return false;
 
-			_curPos = i;
-			_prePos = _curPos;
-			char c = _expr[i++];
+			curPos = i;
+			prePos = curPos;
+			char c = expr[i++];
 
 			return ( c == '(' );
 			}
 
 		private int ParseNested( ref int i, bool func )
 			{
-			int bPos = _curPos;
-			_prePos = _curPos;
-			_depth++;
+			int bPos = curPos;
+			prePos = curPos;
+			exprDepth++;
 
 			int args = Parse(ref i, func);
-			
-			if( args == -1 && _depth > 0 )
+			if( args == -1 && exprDepth > 0 )
 				{
 				throw BraceDisbalance(bPos, false);
 				}
 			
-			_depth--;
+			exprDepth--;
 			return args;
 			}
 
 		#endregion
 		#region Search
 
-		private enum Iden { Argument, Constant, Function }
+		private enum IdenType { Argument, Constant, Function }
 		
 		private static bool IsFunc( Capture match )
 			{
-			return match.Type == Iden.Function;
+			return match.Type == IdenType.Function;
 			}
 
 		private struct SearchItem
 			{
-			private readonly IEnumerable<string> _names;
-			private readonly Iden _type;
+			private readonly IEnumerable<string> names;
+			private readonly IdenType type;
 
 			public IEnumerable< string > Names
-							 { get { return _names; } }
-			public Iden Type { get { return _type;  } }
+								 { get { return names; } }
+			public IdenType Type { get { return type;  } }
 
-			public SearchItem( Iden type, IEnumerable<string> names )
+			public SearchItem( IdenType type, IEnumerable<string> names )
 				{
-				_names = names;
-				_type  = type;
+				this.names = names;
+				this.type  = type;
 				}
 			}
 
 		private struct Capture
 			{
-			private readonly Iden _type;
-			private readonly int _index;
+			private readonly IdenType type;
+			private readonly int index;
 
-			public Iden Type { get { return  _type; } }
-			public int Index { get { return _index; } }
+			public IdenType Type { get { return  type; } }
+			public int Index     { get { return index; } }
 
-			public Capture( Iden type, int index )
+			public Capture( IdenType type, int index )
 				{
-				_index = index;
-				_type  = type;
+				this.index = index;
+				this.type  = type;
 				}
 			}
-
-#if SILVERLIGHT
 
 		private List<Capture> GetMatchesCulture( ref int max )
 			{
 			var match = new List<Capture>( );
 
-			CultureInfo culture = _context._culture;
-			bool ignoreCase = _context._ignoreCase;
+			CultureInfo culture = context.parseCulture;
 
-			var compare = ignoreCase?
+#if SILVERLIGHT
+			var compare = context.ignoreCase?
 				CompareOptions.IgnoreCase:
 				CompareOptions.None;
+#else
+			bool ignoreCase = context.ignoreCase;
+#endif
 
-			foreach( SearchItem list in _idens )
+			foreach( SearchItem list in idenList )
 				{
 				int id = 0;
 				foreach( string name in list.Names )
 					{
 					int ln = name.Length;
 					if( ln >= max &&
-						String.Compare(_expr, _curPos, name, 0, ln, culture, compare) == 0)
-						{
-						if( ln != max ) match.Clear();
-						match.Add(new Capture(list.Type, id));
-						max = ln;
-						}
-					id++;
-					}
-				}
-
-			return match;
-			}
-
+#if SILVERLIGHT
+						String.Compare(expr, curPos, name, 0, ln, culture, compare) == 0 )
 #else
-
-		private List<Capture> GetMatchesCulture( ref int max )
-			{
-			var match = new List<Capture>( );
-			
-			CultureInfo culture = _context._culture;
-			bool ignoreCase = _context._ignoreCase;
-
-			foreach( SearchItem list in _idens )
-				{
-				int id = 0;
-				foreach( string name in list.Names )
-					{
-					int ln = name.Length;
-					if(	ln >= max &&
-						String.Compare(_expr, _curPos, name, 0, ln, ignoreCase, culture) == 0 )
+						String.Compare(expr, curPos, name, 0, ln, ignoreCase, culture) == 0 )
+#endif
 						{
-						if(ln != max) match.Clear( );
+						if( ln != max ) match.Clear( );
 						match.Add(new Capture(list.Type, id));
 						max = ln;
 						}
@@ -390,25 +330,23 @@ namespace ILCalc
 
 			return match;
 			}
-
-#endif
 
 		private List<Capture> GetMatchesOrdinal( ref int max )
 			{
 			var match = new List<Capture>( );
 			
-			var strCmp = ( _context._ignoreCase )?
+			var strCmp = ( context.ignoreCase )?
 				StringComparison.OrdinalIgnoreCase:
 				StringComparison.Ordinal;
 
-			foreach( SearchItem list in _idens )
+			foreach( SearchItem list in idenList )
 				{
 				int id = 0;
 				foreach( string name in list.Names )
 					{
 					int ln = name.Length;
 					if(	ln >= max &&
-						String.Compare(_expr, _curPos, name, 0, ln, strCmp) == 0 )
+						String.Compare(expr, curPos, name, 0, ln, strCmp) == 0 )
 						{
 						if(ln != max) match.Clear( );
 						match.Add(new Capture(list.Type, id));

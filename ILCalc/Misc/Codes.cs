@@ -1,10 +1,10 @@
 ﻿namespace ILCalc
 	{
-	// NOTE: maybe bring back enum?
+	// NOTE: enumeration?
 
 	static class Code
 		{
-		public const int None = -1;
+		//public const int None = -1;
 		public const int Return = 255;
 
 		// Operators ======================
@@ -22,26 +22,16 @@
 		public const int Function  = 10;
 		public const int Separator = 11;
 		public const int ParamCall = 12;
-		public const int BeginCall = 13; // TODO: move up?
+		public const int BeginCall = 13;
 		
 		// For Interpret ==================
 		public const int Delegate0 = 16;
 		public const int Delegate1 = 17;
 		public const int Delegate2 = 18;
 
-		#region Members
-
 		public static bool IsOperator( int code )
 			{
 			return code < Number;
 			}
-
-		public static bool IsCallBegin( int code )
-			{
-			return code == ParamCall
-				|| code == BeginCall;
-			}
-
-		#endregion
 		}
 	}
