@@ -25,8 +25,8 @@ namespace ILCalc_Console
 
 			var calc = new CalcContext( );
 
-			calc.Constants.ImportBuiltin( );
-			calc.Functions.ImportBuiltin( );
+			calc.Constants.ImportBuiltIn( );
+			calc.Functions.ImportBuiltIn( );
 			calc.Functions.Import(typeof(Program), typeof(Functions));
 			calc.Constants.Add("max", 1.23);
 
@@ -54,7 +54,7 @@ namespace ILCalc_Console
 				if( input == "exit" ) break;
 				if( input == "args" )		 ShowCollection(calc.Arguments, ' ');
 				else if( input == "consts" ) ShowCollection(calc.Constants.Keys, ' ');
-				else if( input == "funcs"  ) ShowCollection(calc.Functions, '\t');
+				else if( input == "funcs"  ) ShowCollection(calc.Functions.Keys, '\t');
 				else if( input == "case" )
 					{
 					calc.IgnoreCase = !calc.IgnoreCase;
@@ -162,7 +162,7 @@ namespace ILCalc_Console
 							{
 							res = (mode == Mode.Compile)?
 								calc.CreateEvaluator(input).Evaluate() :
-								calc.Evaluate(input);
+								calc.CreateInterpret(input).Evaluate();
 
 							Console.Write(" = ");
 							if(calc.Culture != null)

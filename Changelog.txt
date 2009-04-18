@@ -1,0 +1,23 @@
+v0.9.2.1 =================
+
+	* Solution: this changelog included.
+	* Solution: directory structure redone.
+	* FunctionCollection: completely rewritten.
+	* FunctionCollection: added small support for delegates.
+	* Engine: some improvements in method calls.
+	* Rename: FunctionCollection => FunctionDictionary.
+	* Rename: ConstantCollection => ConstantDictionary.
+	* Documentation: many fixes, added new Functions API.
+	* Interpret: all known bugs are fixed, serialization works now.
+	* Interpret: performance increase (replacing collections with arrays).
+	* Interpret: fully immutable now (but not thread-safe!).
+	* Interpret: added EvaluateSync() - thread-safe version of Evaluate().
+	* TabRange: serializable (just forget to mark it with attribute).
+	* TabRange: explictly implements IEnumerable<double>.
+	* TabRange: Count property value calculation is cached now.
+	* IEvaluator: was removed from SL/CF versions (no need for it).
+	* Unit Tests: improved + new (for thread-safety).
+
+v0.9.1.0 =================
+
+	* Initial release.

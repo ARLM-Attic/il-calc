@@ -11,9 +11,9 @@ namespace SilverCalc
 		{
 		#region Fields
 
-		private readonly List<string> _exprs = new List<string>( );
-		private readonly CalcContext _calc;
-		private int _listPos = -1;
+		private readonly List<string> exprList = new List<string>( );
+		private readonly CalcContext calc;
+		private int listPos = -1;
 
 		#endregion
 		#region Constructor
@@ -25,10 +25,10 @@ namespace SilverCalc
 			HideInfo .Completed += delegate {  infoPanel.Visibility = Visibility.Collapsed; };
 			HideError.Completed += delegate { errorPanel.Visibility = Visibility.Collapsed; };
 
-			_calc = new CalcContext();
-			_calc.Culture = CultureInfo.CurrentCulture;
-			_calc.Functions.ImportBuiltin( );
-			_calc.Constants.ImportBuiltin( );
+			calc = new CalcContext();
+			calc.Culture = CultureInfo.CurrentCulture;
+			calc.Functions.ImportBuiltIn( );
+			calc.Constants.ImportBuiltIn( );
 			}
 
 		#endregion
@@ -46,7 +46,7 @@ namespace SilverCalc
 			double res;
 			try
 				{
-				res = _calc.Evaluate(expr);
+				res = calc.Evaluate(expr);
 				}
 			catch( SyntaxException err )
 				{
@@ -80,8 +80,8 @@ namespace SilverCalc
 			expressionBox.Text = "";
 			expressionBox.Focus( );
 			
-			_exprs.Add(expr);
-			_listPos = _exprs.Count;
+			exprList.Add(expr);
+			listPos = exprList.Count;
 			}
 
 		private void expressionBox_KeyDown( object sender, KeyEventArgs e )
@@ -90,19 +90,19 @@ namespace SilverCalc
 				{
 				launchEvaluate_Click(null, null);
 				}
-			else if( _exprs.Count != 0 )
+			else if( exprList.Count != 0 )
 				{
 				if( e.Key == Key.Up )
 					{
-					if( --_listPos < 0 )
-						_listPos = _exprs.Count - 1;
-					expressionBox.Text = _exprs[_listPos];
+					if( --listPos < 0 )
+						listPos = exprList.Count - 1;
+					expressionBox.Text = exprList[listPos];
 					}
 				else if( e.Key == Key.Down )
 					{
-					if( ++_listPos >= _exprs.Count )
-						_listPos = 0;
-					expressionBox.Text = _exprs[_listPos];
+					if( ++listPos >= exprList.Count )
+						listPos = 0;
+					expressionBox.Text = exprList[listPos];
 					}
 				}
 			}
@@ -116,22 +116,22 @@ namespace SilverCalc
 				}
 
 			console.Text = "";
-			_exprs.Clear( );
+			exprList.Clear( );
 			expressionBox.Focus( );
 			}
 
 		private void listFunctions_Click( object sender, RoutedEventArgs e )
 			{
-			ListMembers("Available functions:", _calc.Functions.Names);
+			ListMembers("Available functions:", calc.Functions.Keys);
 			}
 
 		private void listConstants_Click( object sender, RoutedEventArgs e )
 			{
-			ListMembers("Available constants:", _calc.Constants.Keys);
+			ListMembers("Available constants:", calc.Constants.Keys);
 			}
 
 		#endregion
-		#region Members
+		#region Methods
 
 		private void ListMembers( string str, IEnumerable<string> names )
 			{

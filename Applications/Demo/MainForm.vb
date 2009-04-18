@@ -61,6 +61,20 @@ Public Class MainForm
 		' Import math so we have access to its functions in expressions
 		MyContext.Imports.AddType(GetType(Math))
 		MyContext.Imports.AddMethod("Rand", GetType(MainForm), "")
+		MyContext.Options.IntegersAsDoubles = True
+		MyContext.ParserOptions.RequireDigitsBeforeDecimalPoint = True
+		MyContext.Options.ParseCulture = CultureInfo.CurrentCulture
+		MyContext.ParserOptions.DecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator(0)
+		MyContext.ParserOptions.FunctionArgumentSeparator = CultureInfo.CurrentCulture.TextInfo.ListSeparator(0)
+		MyContext.ParserOptions.RecreateParser()
+
+		' Innitialize ILCalc
+		MyILCalcContext = New CalcContext("x", "y")
+		MyILCalcContext.Constants.ImportBuiltIn()
+		MyILCalcContext.Functions.ImportBuiltIn()
+		MyILCalcContext.Functions.Add(AddressOf MainForm.Rand)
+		MyILCalcContext.Optimization = OptimizeModes.ConstantFolding Or OptimizeModes.PowOptimize
+		MyILCalcContext.Culture = CultureInfo.CurrentCulture
 
 		InitSizes()
 
@@ -74,14 +88,6 @@ Public Class MainForm
 		Me.PopulatePresets()
 		Me.HookTextboxes()
 		AddHandler ddPresets.SelectedIndexChanged, AddressOf ddPresets_FirstSelectedIndexChanged
-
-		' Innitialize ILCalc
-		MyILCalcContext = New CalcContext("x", "y")
-		MyILCalcContext.Constants.ImportBuiltin()
-		MyILCalcContext.Functions.ImportBuiltin()
-		MyILCalcContext.Functions.Add(GetType(MainForm), "Rand")
-		MyILCalcContext.Optimization = OptimizeModes.ConstantFolding Or OptimizeModes.PowOptimize
-		MyILCalcContext.Culture = CultureInfo.CurrentCulture
 
 	End Sub
 

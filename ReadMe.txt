@@ -2,9 +2,9 @@
   ILCalc - Arithmetical Expressions Evaluator  
 ===============================================
 
- A .NET library for quickly parse and evaluate
-  simple arithmetical expressions defined via
-   strings by interpret or compiling to MSIL.
+A .NET library for quickly parse and evaluate
+simple arithmetical expressions defined via
+strings by interpreter or compiling to MSIL.
 
 ===============================================
 

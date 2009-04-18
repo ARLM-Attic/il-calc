@@ -14,7 +14,7 @@ namespace SilverCalc
 			InitializeComponent( );
 			}
 
-		#region Members
+		#region Methods
 
 		private void Application_Startup( object sender, StartupEventArgs e )
 			{

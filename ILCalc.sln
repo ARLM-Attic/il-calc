@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc", "ILCalc\ILCalc.csp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EE7CFB11-7DD3-4FDC-95DD-26B5A2EB58FB}"
 	ProjectSection(SolutionItems) = preProject
-		CalcTests.testrunconfig = CalcTests.testrunconfig
+		Changelog.txt = Changelog.txt
 		ILCalc.vsmdi = ILCalc.vsmdi
 		License.txt = License.txt
 		ReadMe.txt = ReadMe.txt
