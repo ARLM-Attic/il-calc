@@ -1,128 +1,108 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Threading;
 
+// NOTE: maybe struct => more lightweight? Test.
 namespace ILCalc
-	{
-	//NOTE: maybe struct => more lightweight? Test.
-
+{
 	[Serializable]
-	sealed partial class FuncCall
-		{
+	internal sealed partial class FuncCall
+	{
 		#region Fields
 
-		private readonly MethodInfo method;
+		private readonly FunctionItem func;
 		private readonly int lastIndex;
 
 		private readonly object[] fixArgs;
 		private readonly double[] varArgs;
 		private readonly object syncRoot;
-
-		public MethodInfo Method
-			{
-			[DebuggerHidden] get { return method; }
-			}
+		private readonly int argsCount;
 
 		#endregion
 		#region Constructor
 
-		public FuncCall( MethodInfo method, int fixCount, int varCount )
+		public FuncCall(FunctionItem func, int argsCount)
+		{
+			Debug.Assert(func != null);
+			Debug.Assert(argsCount >= 0);
+
+			Debug.Assert((func.HasParamArray && func.ArgsCount <= argsCount)
+			         || (!func.HasParamArray && func.ArgsCount == argsCount));
+
+			int fixCount = func.ArgsCount;
+
+			if (func.HasParamArray)
 			{
-			if( varCount >= 0 )
-				{
-				varArgs = new double[varCount];
-				fixArgs = new object[fixCount + 1];
-				fixArgs[fixCount] = varArgs;
-				}
+				this.varArgs = new double[argsCount - fixCount];
+				this.fixArgs = new object[fixCount + 1];
+				this.fixArgs[fixCount] = this.varArgs;
+			}
 			else
-				{
-				fixArgs = new object[fixCount];
-				varArgs = null;
-				}
-
-			this.method = method;
-			lastIndex = fixCount - 1;
-			syncRoot = new object( );
+			{
+				this.fixArgs = new object[fixCount];
 			}
 
-		#endregion
-		#region IsReusable
-
-		public bool IsReusable( int fixCount, int varCount )
-			{
-			if( varArgs == null )
-				{
-				return varCount < 0
-					&& fixCount == fixArgs.Length;
-				}
-
-			return varCount == varArgs.Length
-				&& fixCount == fixArgs.Length - 1;
-			}
+			this.func = func;
+			this.lastIndex = fixCount - 1;
+			this.argsCount = argsCount;
+			this.syncRoot = new object();
+		}
 
 		#endregion
-		#region Invoke Method
+		#region Methods
 
-		public void Invoke( double[] stack, ref int pos )
+		public bool IsReusable(FunctionItem other, int otherArgsCount)
+		{
+			Debug.Assert(other != null);
+			Debug.Assert(otherArgsCount >= 0);
+
+			// NOTE: modify when impl instance calls
+			return this.func.Method == other.Method
+				&& this.argsCount == otherArgsCount;
+		}
+
+		public void Invoke(double[] stack, ref int pos)
+		{
+			Debug.Assert(stack != null);
+			Debug.Assert(stack.Length > pos);
+
+			if (Monitor.TryEnter(this.syncRoot))
 			{
-			if( Monitor.TryEnter(syncRoot) )
+				try
 				{
-				// params array:
-				if( varArgs != null )
+					// fill parameters array:
+					if (this.varArgs != null)
 					{
-					for( int i = varArgs.Length - 1; i >= 0; i-- )
+						// TODO: rewrite faster!
+						for (int i = this.varArgs.Length - 1; i >= 0; i--)
 						{
-						varArgs[i] = stack[pos--];
+							this.varArgs[i] = stack[pos--];
 						}
 					}
 
-				// standart args:
-				object[] fixTemp = fixArgs;
-				for( int i = lastIndex; i >= 0; i-- )
+					// fill arguments:
+					object[] fixTemp = this.fixArgs;
+					for (int i = this.lastIndex; i >= 0; i--)
 					{
-					fixTemp[i] = stack[pos--];
+						fixTemp[i] = stack[pos--];
 					}
 
-				// invoke via reflection:
-				try
-					{
-					stack[++pos] = (double)
-						method.Invoke(null, fixTemp);
-					}
-				finally { Monitor.Exit(syncRoot); }
+					// invoke via reflection:
+					stack[++pos] = this.func.Invoke(fixTemp);
 				}
+				finally
+				{
+					Monitor.Exit(this.syncRoot);
+				}
+			}
 			else
-				InvokeSync(stack, ref pos);
-			}
-
-		private void InvokeSync( double[] stack, ref int pos )
 			{
-			var fixTemp = new object[fixArgs.Length];
-
-			// params array:
-			if( varArgs != null )
-				{
-				var varTemp = new double[varArgs.Length];
-				for( int i = varArgs.Length - 1; i >= 0; i-- )
-					{
-					varTemp[i] = stack[pos--];
-					}
-
-				fixTemp[lastIndex + 1] = varTemp;
-				}
-
-			// standart args:
-			for( int i = lastIndex; i >= 0; i-- )
-				{
-				fixTemp[i] = stack[pos--];
-				}
-
-			// invoke via reflection:
-			stack[++pos] = (double)
-				method.Invoke(null, fixTemp);
+				double result = this.func.Invoke(stack, pos, this.argsCount);
+				pos -= this.argsCount - 1;
+				stack[pos] = result; // TODO: is all right here?
 			}
+		}
 
 		#endregion
-		}
 	}
+}

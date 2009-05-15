@@ -1,3 +1,18 @@
+v0.9.3.21 ================
+
+	* Solution: .NET Compact Framework 2.0 is now supported.
+	* Solution: code reformat, satisfy many of StyleCop rules.
+	* Solution: mass Debug.Assert usage => small fixes.
+	* Engine: performance improvements, less memory usage.
+	* Engine: some more decomposition, smaller code size.
+	* Optimizer: fixed folding of functions with params.
+	* Collections: ICollection is now explicitly implemented.
+	* Parser: now is able to control implicit multiplication mode.
+	* Tabulator: rewrited, supported more than 2 ranges now.
+	* Tabulator: static Allocate() and TabulateToArray() methods.
+	* Tabulator: asynchronously Tabulate() is now supported.
+	* TabRange: much better Count property calculation.
+
 v0.9.2.1 =================
 
 	* Solution: this changelog included.

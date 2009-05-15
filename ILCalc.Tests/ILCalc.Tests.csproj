@@ -42,7 +42,7 @@
     <Compile Include="MainTests.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="MultiThreadTests.cs" />
-    <Compile Include="Helpers\OptimizerModes.cs" />
+    <Compile Include="Helpers\Optimizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

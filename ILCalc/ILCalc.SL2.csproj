@@ -62,19 +62,14 @@
     <Compile Include="CalcContext.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
-    <Compile Include="Collections\Function.cs" />
     <Compile Include="Collections\FunctionDictionary.cs" />
     <Compile Include="Collections\FunctionFactory.cs" />
     <Compile Include="Collections\FunctionGroup.cs" />
+    <Compile Include="Collections\FunctionItem.cs" />
     <Compile Include="Collections\Validate.cs" />
     <Compile Include="Evaluators\Interpret.cs" />
     <Compile Include="Misc\Codes.cs" />
     <Compile Include="Misc\Delegates.cs" />
-    <Compile Include="Misc\Resources.Designer.cs">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <Compile Include="Output\IExpressionOutput.cs" />
     <Compile Include="Output\Interpret\FuncCall.cs" />
     <Compile Include="Output\Interpret\InterpretCreator.cs" />
@@ -84,6 +79,7 @@
     <Compile Include="Output\Specials\BufferOutput.cs" />
     <Compile Include="Output\Specials\NullOutput.cs" />
     <Compile Include="Output\Specials\PostfixWriter.cs" />
+    <Compile Include="Output\TypeHelper.cs" />
     <Compile Include="Parser\Parser.cs" />
     <Compile Include="Parser\ParserMain.cs" />
     <Compile Include="Parser\ScanIdentifier.cs" />
@@ -92,19 +88,21 @@
     <Compile Include="Parser\ThrowHelpers.cs" />
     <Compile Include="Misc\Compatibility.SL2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CalcKey.snk" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Misc\Resources.resx">
+    <EmbeddedResource Include="Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Misc\Resources.ru.resx">
-      <CustomToolNamespace>ILCalc</CustomToolNamespace>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Resource.ru.resx" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight\v2.0\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

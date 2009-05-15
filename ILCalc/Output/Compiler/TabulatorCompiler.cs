@@ -1,223 +1,486 @@
-﻿//#define VISUALIZE
-using System;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection.Emit;
 
 namespace ILCalc
+{
+	using Allocator = Tabulator.Allocator;
+
+	internal sealed class TabulatorCompiler : CompilerBase, IExpressionOutput
 	{
-	sealed class TabulatorCompiler : CompilerBase, IExpressionOutput
-		{
 		#region Fields
 
-		private readonly bool hasOneArg;
-
-		private readonly LocalBuilder indexLocal;
-		private readonly LocalBuilder indexLocal2;
-		private readonly LocalBuilder resultLocal;
-		private readonly LocalBuilder beginLocal;
-		private readonly LocalBuilder arrayLocal;
-		
-		private readonly Label condLabel,  beginLabel;
-		private readonly Label condLabel2, beginLabel2;
+		private readonly List<LocalBuilder> argsLocals;
+		private readonly Stack<LocalBuilder> stepLocals;
+		private readonly Stack<LocalBuilder> locals;
+		private readonly Stack<Label> labels;
 
 		#endregion
 		#region Methods
 
-		public TabulatorCompiler( bool oneArg, bool check )
-			: base(	RetTypes(oneArg),
-					ArgTypes(oneArg), check )
+		public TabulatorCompiler(int argsCount, bool check)
+			: base(argsCount, ReturnType(argsCount), ArgsType(argsCount), check)
+		{
+			Debug.Assert(argsCount > 0);
+
+			this.labels = new Stack<Label>(argsCount * 2);
+			this.argsLocals = new List<LocalBuilder>(argsCount);
+
+			if (argsCount > 2)
 			{
-			hasOneArg = oneArg;
-
-			condLabel  = body.DefineLabel( );
-			beginLabel = body.DefineLabel( );
-
-			indexLocal = body.DeclareLocal(indexType);
-			
-			if(oneArg)
-				{
-				resultLocal = body.DeclareLocal(arrayType);
-				
-				// res = new double[count];
-				body.Emit(OpCodes.Ldarg_1);
-				body.Emit(OpCodes.Newarr, valueType);
-				body.Emit(OpCodes.Stloc, resultLocal);
-
-				// int i = 0;
-				body.Emit(OpCodes.Ldc_I4_0);
-				body.Emit(OpCodes.Stloc, indexLocal);
-
-				// jump to condition
-				body.Emit(OpCodes.Br, condLabel);
-				
-				// res[i] = 
-				body.MarkLabel(beginLabel);
-				body.Emit(OpCodes.Ldloc, resultLocal);
-				body.Emit(OpCodes.Ldloc, indexLocal);
-				}
+				this.stepLocals = new Stack<LocalBuilder>(argsCount);
+				this.locals = new Stack<LocalBuilder>(argsCount * 2);
+				this.BeginMulti();
+			}
 			else
-				{
-				resultLocal   = body.DeclareLocal(arrArrType);
-				indexLocal2  = body.DeclareLocal(indexType);
-				beginLocal = body.DeclareLocal(valueType);
-				arrayLocal = body.DeclareLocal(arrayType);
-				
-				condLabel2  = body.DefineLabel();
-				beginLabel2 = body.DefineLabel();
-				
-				// res = new double[count1][];
-				body.Emit(OpCodes.Ldarg_1);
-				body.Emit(OpCodes.Newarr, arrayType);
-				body.Emit(OpCodes.Stloc, resultLocal);
-				
-				// begin = y
-				body.Emit(OpCodes.Ldarg_2);
-				body.Emit(OpCodes.Stloc, beginLocal);
-
-				// int i = 0;
-				body.Emit(OpCodes.Ldc_I4_0);
-				body.Emit(OpCodes.Stloc, indexLocal);
-
-				// jump to condition
-				body.Emit(OpCodes.Br, condLabel);
-
-				// arr = new double[count2];
-				body.MarkLabel(beginLabel);
-				body.Emit(OpCodes.Ldarg_3);
-				body.Emit(OpCodes.Newarr, valueType);
-				body.Emit(OpCodes.Stloc, arrayLocal);
-
-				// j = 0;
-				body.Emit(OpCodes.Ldc_I4_0);
-				body.Emit(OpCodes.Stloc, indexLocal2);
-
-				// jump to condition
-				body.Emit(OpCodes.Br, condLabel2);
-
-				// arr[j] =
-				body.MarkLabel(beginLabel2);
-				body.Emit(OpCodes.Ldloc, arrayLocal);
-				body.Emit(OpCodes.Ldloc, indexLocal2);
-				}
-			}
-
-		public Tabulator CreateTabulator( string expr )
 			{
-			body.Emit(opSaveElem);
+				this.locals = new Stack<LocalBuilder>(argsCount == 1 ? 1 : 3);
+				this.BeginSimple();
+			}
+		}
 
-			if(!hasOneArg)
+		public Tabulator CreateTabulator(string expr)
+		{
+			il.Emit(OpSaveElem);
+
+			if (this.argsCount > 2)
+			{
+				this.EndMulti();
+			}
+			else
+			{
+				this.EndSimple();
+			}
+
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ret);
+
+			// DynamicMethodVisualizer.Visualizer.Show(dynMethod);
+
+			Delegate method = this.dynMethod.CreateDelegate(this.DelegateType);
+			if( argsCount > 2 )
+			{
+				Allocator alloc = AllocCompiler.Resolve(argsCount);
+				return new Tabulator(expr, method, argsCount, alloc);
+			}
+			
+			return new Tabulator(expr, method, this.argsCount);
+		}
+
+		#endregion
+		#region Emitters
+
+		private void BeginSimple()
+		{
+			LocalBuilder indexLocal = il.DeclareLocal(IndexType);
+			LocalBuilder varLocal = il.DeclareLocal(TypeHelper.ValueType);
+
+			// double x = beginx;
+			if (this.argsCount == 1)
+			{
+				this.il.Emit(OpCodes.Ldarg_2);
+			}
+			else
+			{
+				this.il.Emit(OpCodes.Ldarg_S, (byte) 4);
+			}
+
+			this.il.Emit(OpCodes.Stloc, varLocal);
+
+			// int i = 0;
+			this.il.Emit(OpCodes.Ldc_I4_0);
+			this.il.Emit(OpCodes.Stloc, indexLocal);
+
+			this.EmitLoopBegin();
+
+			this.argsLocals.Add(varLocal);
+			this.locals.Push(indexLocal);
+
+			if (this.argsCount == 2)
+			{
+				LocalBuilder index2Local = this.il.DeclareLocal(IndexType);
+				LocalBuilder arrayLocal = this.il.DeclareLocal(TypeHelper.ArrayType);
+				LocalBuilder var2Local = this.il.DeclareLocal(TypeHelper.ValueType);
+
+				// double b = a[i];
+				this.il.Emit(OpCodes.Ldarg_0);
+				this.il.Emit(OpCodes.Ldloc, indexLocal);
+				this.il.Emit(OpCodes.Ldelem_Ref);
+				this.il.Emit(OpCodes.Stloc, arrayLocal);
+
+				// double y = begin2;
+				this.il.Emit(OpCodes.Ldarg_3);
+				this.il.Emit(OpCodes.Stloc, var2Local);
+
+				// int j = 0;
+				this.il.Emit(OpCodes.Ldc_I4_0);
+				this.il.Emit(OpCodes.Stloc, index2Local);
+
+				this.EmitLoopBegin();
+				this.argsLocals.Add(var2Local);
+				this.locals.Push(index2Local);
+				this.locals.Push(arrayLocal);
+
+				// b[i] = 
+				this.il.Emit(OpCodes.Ldloc, arrayLocal);
+				this.il.Emit(OpCodes.Ldloc, index2Local);
+			}
+			else
+			{
+				// a[i] = 
+				this.il.Emit(OpCodes.Ldarg_0);
+				this.il.Emit(OpCodes.Ldloc, indexLocal);
+			}
+		}
+
+		private void BeginMulti()
+		{
+			for (int i = 0; i < this.argsCount; i++)
+			{
+				LocalBuilder stepLocal = il.DeclareLocal(TypeHelper.ValueType);
+
+				this.il.Emit(OpCodes.Ldarg_1);
+				EmitLoadI4(this.il, i);
+				this.il.Emit(OpLoadElem);
+				this.il.Emit(OpCodes.Stloc, stepLocal);
+
+				this.stepLocals.Push(stepLocal);
+			}
+
+			LocalBuilder lastIndex = null;
+			LocalBuilder lastArray = null;
+
+			for (int i = 0, t = this.argsCount; i < this.argsCount; i++, t--)
+			{
+				Type arrayType = TypeHelper.GetArrayType(t);
+
+				LocalBuilder arrayLocal = this.il.DeclareLocal(arrayType);
+				LocalBuilder indexLocal = this.il.DeclareLocal(IndexType);
+				LocalBuilder varLocal = this.il.DeclareLocal(TypeHelper.ValueType);
+
+				if (i == 0)
 				{
-				// y += step2;
-				body.Emit(OpCodes.Ldarg_2);
-				body.Emit(OpCodes.Ldarg_S, (byte)5);
-				body.Emit(OpCodes.Add);
-				body.Emit(OpCodes.Starg_S, (byte)2);
+					// a = (double[][][]) ar;
+					this.il.Emit(OpCodes.Ldarg_0);
+					this.il.Emit(OpCodes.Castclass, arrayType);
+					this.il.Emit(OpCodes.Stloc, arrayLocal);
+				}
+				else
+				{
+					Debug.Assert(lastArray != null);
+					Debug.Assert(lastIndex != null);
 
-				// j++;
-				body.Emit(OpCodes.Ldloc, indexLocal2);
-				body.Emit(OpCodes.Ldc_I4_1);
-				body.Emit(OpCodes.Add);
-				body.Emit(OpCodes.Stloc, indexLocal2);
-
-				// while(j < count2)
-				body.MarkLabel(condLabel2);
-				body.Emit(OpCodes.Ldloc, indexLocal2);
-				body.Emit(OpCodes.Ldarg_3);
-				body.Emit(OpCodes.Blt, beginLabel2);
-
-				// res[i] = arr;
-				body.Emit(OpCodes.Ldloc, resultLocal);
-				body.Emit(OpCodes.Ldloc, indexLocal);
-				body.Emit(OpCodes.Ldloc, arrayLocal);
-				body.Emit(OpCodes.Stelem_Ref);
-
-				// y = begin
-				body.Emit(OpCodes.Ldloc, beginLocal);
-				body.Emit(OpCodes.Starg_S, (byte)2);
+					// double[] b = a[i];
+					this.il.Emit(OpCodes.Ldloc, lastArray);
+					this.il.Emit(OpCodes.Ldloc, lastIndex);
+					this.il.Emit(OpCodes.Ldelem_Ref);
+					this.il.Emit(OpCodes.Stloc, arrayLocal);
 				}
 
-			// x += step
-			body.Emit(OpCodes.Ldarg_0);
-			
-			if(hasOneArg)
-				 body.Emit(OpCodes.Ldarg_2);
-			else body.Emit(OpCodes.Ldarg_S, (byte)4);
+				// double x = begins[0];
+				this.il.Emit(OpCodes.Ldarg_1);
+				EmitLoadI4(this.il, i + this.argsCount);
+				this.il.Emit(OpLoadElem);
+				this.il.Emit(OpCodes.Stloc, varLocal);
 
-			body.Emit(OpCodes.Add);
-			body.Emit(OpCodes.Starg_S, (byte)0);
-			
-			// i++;
-			body.Emit(OpCodes.Ldloc, indexLocal);
-			body.Emit(OpCodes.Ldc_I4_1);
-			body.Emit(OpCodes.Add);
-			body.Emit(OpCodes.Stloc, indexLocal);
+				// i++;
+				this.il.Emit(OpCodes.Ldc_I4_0);
+				this.il.Emit(OpCodes.Stloc, indexLocal);
 
-			// while(i < count)
-			body.MarkLabel(condLabel);
-			body.Emit(OpCodes.Ldloc, indexLocal);
-			body.Emit(OpCodes.Ldarg_1);
-			body.Emit(OpCodes.Blt, beginLabel);
+				this.EmitLoopBegin();
+				this.argsLocals.Add(varLocal);
+				this.locals.Push(arrayLocal);
+				this.locals.Push(indexLocal);
 
-			// return res
-			body.Emit(OpCodes.Ldloc, resultLocal);
-			body.Emit(OpCodes.Ret);
-
-			#if VISUALIZE
-			DynamicMethodVisualizer.Visualizer.Show(_eval);
-			#endif
-
-			Delegate method = dynMethod.CreateDelegate(hasOneArg? tabType1: tabType2);
-
-			return new Tabulator(expr, method, hasOneArg);
+				lastArray = arrayLocal;
+				lastIndex = indexLocal;
 			}
+
+			Debug.Assert(lastIndex != null);
+			Debug.Assert(lastArray != null);
+
+			// c[z] = 
+			this.il.Emit(OpCodes.Ldloc, lastArray);
+			this.il.Emit(OpCodes.Ldloc, lastIndex);
+		}
+
+		private void EndSimple()
+		{
+			if (this.argsCount == 2)
+			{
+				LocalBuilder arrayLocal = this.locals.Pop();
+				LocalBuilder index2Local = this.locals.Pop();
+				LocalBuilder var2Local = this.argsLocals[1];
+
+				// x += step;
+				this.il.Emit(OpCodes.Ldloc, var2Local);
+				this.il.Emit(OpCodes.Ldarg_2);
+				this.il.Emit(OpCodes.Add);
+				this.il.Emit(OpCodes.Stloc, var2Local);
+
+				this.EmitLoopEnd(index2Local, arrayLocal);
+			}
+
+			LocalBuilder indexLocal = this.locals.Pop();
+			LocalBuilder varLocal = this.argsLocals[0];
+			
+			this.il.Emit(OpCodes.Ldloc, varLocal);
+			this.il.Emit(OpCodes.Ldarg_1);
+			this.il.Emit(OpCodes.Add);
+			this.il.Emit(OpCodes.Stloc, varLocal);
+
+			this.EmitLoopEnd(indexLocal, null);
+		}
+
+		private void EndMulti()
+		{
+			for( int i = 0, j = this.argsCount - 1; i < this.argsCount; i++, j-- )
+			{
+				LocalBuilder indexLocal = locals.Pop();
+				LocalBuilder arrayLocal = locals.Pop();
+				LocalBuilder varLocal = argsLocals[j];
+
+				// x += xstep;
+				il.Emit(OpCodes.Ldloc, varLocal);
+				il.Emit(OpCodes.Ldloc, stepLocals.Pop());
+				il.Emit(OpCodes.Add);
+				il.Emit(OpCodes.Stloc, varLocal);
+
+				this.EmitLoopEnd(indexLocal, arrayLocal);
+			}
+		}
+
+		private void EmitLoopBegin()
+		{
+			Label lbCond  = this.il.DefineLabel();
+			Label lbBegin = this.il.DefineLabel();
+
+			this.il.Emit(OpCodes.Br, lbCond);
+			this.il.MarkLabel(lbBegin);
+
+			this.labels.Push(lbBegin);
+			this.labels.Push(lbCond);
+		}
+
+		private void EmitLoopEnd(LocalBuilder index, LocalBuilder array)
+		{
+			Debug.Assert(index != null);
+
+			// i++;
+			this.il.Emit(OpCodes.Ldloc, index);
+			this.il.Emit(OpCodes.Ldc_I4_1);
+			this.il.Emit(OpCodes.Add);
+			this.il.Emit(OpCodes.Stloc, index);
+
+			Label lbCond  = this.labels.Pop();
+			Label lbBegin = this.labels.Pop();
+
+			// while(i < a.Length)
+			this.il.MarkLabel(lbCond);
+			this.il.Emit(OpCodes.Ldloc, index);
+
+			if( array == null )
+			{
+				this.il.Emit(OpCodes.Ldarg_0);
+			}
+			else
+			{
+				this.il.Emit(OpCodes.Ldloc, array);
+			}
+
+			this.il.Emit(OpCodes.Ldlen);
+			this.il.Emit(OpCodes.Conv_I4);
+			this.il.Emit(OpCodes.Blt, lbBegin);
+		}
 
 		#endregion
 		#region IExpressionOutput
 
-		public void PutArgument( int id )
+		public void PutArgument(int id)
+		{
+			Debug.Assert(id >= 0);
+			Debug.Assert(id < argsLocals.Count);
+
+			this.il.Emit(OpCodes.Ldloc, this.argsLocals[id]);
+		}
+
+		#endregion
+		#region Helpers
+
+		private static Type[] ArgsType(int count)
+		{
+			Debug.Assert(count > 0);
+
+			return ArgsTypes[count <= 2 ? count - 1 : 2];
+		}
+
+		private static Type ReturnType(int count)
+		{
+			Debug.Assert(count > 0);
+
+			return ArgsTypes[count <= 2 ? count - 1 : 2][0];
+		}
+
+		private Type DelegateType
+		{
+			get
 			{
-			if(id == 0)
-				 body.Emit(OpCodes.Ldarg_0);
-			else body.Emit(OpCodes.Ldarg_2);
+				return DelegateTypes[this.argsCount <= 2 ? this.argsCount - 1 : 2];
 			}
+		}
 
 		#endregion
 		#region Static Data
 
-		// Helpers ================================================
+		// Types ================================================================
+		private static readonly Type IndexType = typeof(Int32);
+		private static readonly Type SystemArrayType = typeof(Array);
+		private static readonly Type Array2DType = typeof(Double[][]);
 
-		private static Type RetTypes( bool oneArg )
-			{
-			return oneArg ? arrayType : arrArrType;
-			}
+		private static readonly Type[][] ArgsTypes = new[]
+		{
+			new[] { TypeHelper.ArrayType, TypeHelper.ValueType, TypeHelper.ValueType },
+			new[] { Array2DType, TypeHelper.ValueType, TypeHelper.ValueType, TypeHelper.ValueType, TypeHelper.ValueType },
+			new[] { SystemArrayType, TypeHelper.ArrayType }
+		};
 
-		private static Type[] ArgTypes( bool oneArg )
-			{
-			return oneArg ? argsTypes1 : argsTypes2;
-			}
-
-		// Types ==================================================
-
-		private static readonly Type indexType = typeof( int );
-
-		private static readonly Type arrArrType = typeof( double[][] );
-
-		private static readonly Type tabType1 = typeof( Tabulator.TabFunc1 );
-		private static readonly Type tabType2 = typeof( Tabulator.TabFunc2 );
-		
-		private static readonly Type[] argsTypes1 = new[]
-			{
-				valueType,
-				indexType,
-				valueType
-			};
-
-		private static readonly Type[] argsTypes2 = new[]
-			{
-				valueType, indexType,
-				valueType, indexType,
-				valueType, valueType
-			};
+		private static readonly Type[] DelegateTypes = new[]
+		{
+			typeof(Tabulator.TabFunc1),
+			typeof(Tabulator.TabFunc2),
+			typeof(Tabulator.TabFuncN)
+		};
 
 		#endregion
+		#region AllocCompiler
+
+		internal static class AllocCompiler
+		{
+			#region Fields
+
+			private static readonly Dictionary<int, Allocator> Cache
+				= new Dictionary<int, Allocator>();
+
+			private static readonly Type AllocType = typeof(Allocator);
+			private static readonly Type[] AllocArgs = new[] { typeof(Int32[]) };
+
+			#endregion
+			#region Methods
+
+			public static Allocator Resolve(int rank)
+			{
+				Debug.Assert(rank >= 2);
+				
+				Allocator alloc;
+				if (!Cache.TryGetValue(rank, out alloc))
+				{
+					lock (((ICollection) Cache).SyncRoot)
+					{
+						alloc = Compile(rank);
+						Cache.Add(rank, alloc);
+					}
+				}
+
+				return alloc;
+			}
+
+			private static Allocator Compile(int rank)
+			{
+				var alloc = new DynamicMethod("Alloc", SystemArrayType, AllocArgs, AllocType);
+				var il = alloc.GetILGenerator();
+
+				var locals = new Stack<LocalBuilder>();
+				var labels = new Stack<Label>();
+
+				for (int i = rank - 1, j = 0; i > 0; i--, j++)
+				{
+					var arrayLoc = il.DeclareLocal(TypeHelper.GetArrayType(i + 1));
+					var indexLoc = il.DeclareLocal(IndexType);
+
+					// a = new double[count[i]][]..;
+					il.Emit(OpCodes.Ldarg_0);
+					EmitLoadI4(il, j);
+					il.Emit(OpCodes.Ldelem_I4);
+					il.Emit(OpCodes.Newarr, TypeHelper.GetArrayType(i));
+					il.Emit(OpCodes.Stloc, arrayLoc);
+
+					// int i = 0;
+					il.Emit(OpCodes.Ldc_I4_0);
+					il.Emit(OpCodes.Stloc, indexLoc);
+
+					var lbCond  = il.DefineLabel();
+					var lbBegin = il.DefineLabel();
+
+					il.Emit(OpCodes.Br, lbCond);
+					il.MarkLabel(lbBegin);
+
+					locals.Push(indexLoc);
+					locals.Push(arrayLoc);
+					labels.Push(lbBegin);
+					labels.Push(lbCond);
+				}
+
+				LocalBuilder lastLocal = null;
+
+				for (int i = 0; i < rank - 1; i++)
+				{
+					LocalBuilder arrayLoc = locals.Pop();
+					LocalBuilder indexLoc = locals.Pop();
+
+					if (i == 0)
+					{
+						// arr[i] =
+						il.Emit(OpCodes.Ldloc, arrayLoc);
+						il.Emit(OpCodes.Ldloc, indexLoc);
+
+						// = new double[counts[<rank-1>]]
+						il.Emit(OpCodes.Ldarg_0);
+						EmitLoadI4(il, rank - 1);
+						il.Emit(OpCodes.Ldelem_I4);
+						il.Emit(OpCodes.Newarr, TypeHelper.ValueType);
+						il.Emit(OpCodes.Stelem_Ref);
+					}
+					else
+					{
+						Debug.Assert(lastLocal != null);
+
+						// b[j] = a;
+						il.Emit(OpCodes.Ldloc, arrayLoc);
+						il.Emit(OpCodes.Ldloc, indexLoc);
+						il.Emit(OpCodes.Ldloc, lastLocal);
+						il.Emit(OpCodes.Stelem_Ref);
+					}
+
+					// i++
+					il.Emit(OpCodes.Ldloc, indexLoc);
+					il.Emit(OpCodes.Ldc_I4_1);
+					il.Emit(OpCodes.Add);
+					il.Emit(OpCodes.Stloc, indexLoc);
+
+					// while(i < a.Lengh)
+					il.MarkLabel(labels.Pop());
+					il.Emit(OpCodes.Ldloc, indexLoc);
+					il.Emit(OpCodes.Ldloc, arrayLoc);
+					il.Emit(OpCodes.Ldlen);
+					il.Emit(OpCodes.Conv_I4);
+					il.Emit(OpCodes.Blt, labels.Pop());
+
+					lastLocal = arrayLoc;
+				}
+
+				Debug.Assert(lastLocal != null);
+
+				il.Emit(OpCodes.Ldloc, lastLocal);
+				il.Emit(OpCodes.Ret);
+
+				return (Allocator) alloc.CreateDelegate(AllocType);
+			}
+
+			#endregion
 		}
+
+		#endregion
 	}
+}

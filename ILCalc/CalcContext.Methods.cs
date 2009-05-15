@@ -1,36 +1,29 @@
 ﻿using System;
 
 namespace ILCalc
-	{
+{
 	public sealed partial class CalcContext
-		{
+	{
 		/// <summary>
-		/// Compiles the <see cref="Evaluator"/> object
-		/// for evaluating the specified <paramref name="expression"/>.
-		/// </summary>
+		/// Compiles the <see cref="Evaluator"/> object for evaluating
+		/// the specified <paramref name="expression"/>.</summary>
 		/// <param name="expression">Expression to compile.</param>
-		/// <exception cref="SyntaxException">
-		/// <paramref name="expression"/> contains syntax error(s) and can't be compiled.</exception>
+		/// <exception cref="SyntaxException"><paramref name="expression"/>
+		/// contains syntax error(s) and can't be compiled.</exception>
 		/// <exception cref="ArgumentNullException">
-		/// <paramref name="expression"/> is null.
-		/// </exception>
+		/// <paramref name="expression"/> is null.</exception>
 		/// <remarks>Not available in the .NET CF / Silverlight versions.</remarks>
 		/// <returns><see cref="Evaluator"/> object for evaluating expression.</returns>
-		public Evaluator CreateEvaluator( string expression )
-			{
-			if( expression == null )
+		public Evaluator CreateEvaluator(string expression)
+		{
+			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			int argCount = (argsList != null) ? argsList.Count : 0;
-			var compiler = new EvaluatorCompiler(argCount, checkedMode);
-
-			if( parser == null )
-				parser = new Parser(this);
-
-			ExecuteParse(expression, compiler);
+			var compiler = new EvaluatorCompiler(this.ArgsCount, checkedMode);
+			this.OptimizedParse(expression, compiler);
 
 			return compiler.CreateEvaluator(expression);
-			}
+		}
 
 		/// <summary>
 		/// Compiles the <see cref="Tabulator"/> object for evaluating
@@ -46,45 +39,35 @@ namespace ILCalc
 		/// is not supported (only 1 or 2 arguments supported by now).</exception>
 		/// <remarks>Not available in the .NET CF / Silverlight versions.</remarks>
 		/// <returns><see cref="Tabulator"/> object for evaluating expression.</returns>
-		public Tabulator CreateTabulator( string expression )
-			{
-			if( expression == null )
+		public Tabulator CreateTabulator(string expression)
+		{
+			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			if( argsList == null || argsList.Count < 1 || argsList.Count > 2 )
-				{
-				throw new ArgumentException(
-					Resources.errTabulatorWrongArgs
-					);
-				}
+			if (this.ArgsCount == 0)
+			{
+				throw new ArgumentException(Resource.errTabulatorWrongArgs);
+			}
 
-			var compiler = new TabulatorCompiler((argsList.Count == 1), checkedMode);
-
-			if( parser == null )
-				parser = new Parser(this);
-
-			ExecuteParse(expression, compiler);
+			var compiler = new TabulatorCompiler(this.ArgsCount, this.checkedMode);
+			this.OptimizedParse(expression, compiler);
 
 			return compiler.CreateTabulator(expression);
-			}
+		}
 
 #if DEBUG
 
-		public string PostfixForm( string expression )
-			{
-			if( expression == null )
+		public string PostfixForm(string expression)
+		{
+			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			var postfix = new PostfixWriter(argsList);
+			var postfix = new PostfixWriter(arguments);
+			this.OptimizedParse(expression, postfix);
 
-			if( parser == null )
-				parser = new Parser(this);
-
-			ExecuteParse(expression, postfix);
-
-			return postfix.ToString( );
-			}
+			return postfix.ToString();
+		}
 
 #endif
-		}
 	}
+}

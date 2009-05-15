@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace ILCalc
+{
+	internal sealed partial class Parser
 	{
-	sealed partial class Parser
-		{
 		#region Fields
 
 		private readonly CalcContext context;
@@ -17,83 +18,87 @@ namespace ILCalc
 		private char dotSymbol;
 		private char sepSymbol;
 
-		private IEnumerable<SearchItem> idenList;
+		private List<SearchItem> idenList;
 		private NumberFormatInfo numFormat;
 		
 		#endregion
 		#region Methods
 
-		public Parser( CalcContext context )
-			{
+		public Parser(CalcContext context)
+		{
+			Debug.Assert(context != null);
+
 			this.context = context;
 			
-			InitCulture( );
-			InitIdens( );
-			}
+			this.InitCulture();
+			this.InitIdens();
+		}
 
-		public void Parse( string expression, IExpressionOutput exprOutput )
-			{
-			output = exprOutput;
-			
-			expr = expression;
-			exprLen = expression.Length;
+		// TODO: put optimizer logic here
+		public void Parse(string expression, IExpressionOutput exprOutput)
+		{
+			Debug.Assert(expression != null);
+			Debug.Assert(exprOutput != null);
 
-			prePos = 0;
-			exprDepth = 0;
+			this.expr = expression;
+			this.exprLen = expression.Length;
+			this.output = exprOutput;
+			this.exprDepth = 0;
+			this.prePos = 0;
 
 			int i = 0;
-			Parse(ref i, false);
-			}
+			this.Parse(ref i, false);
+		}
 
-		public void InitCulture( )
+		public void InitCulture()
+		{
+			CultureInfo culture = this.context.parseCulture;
+			if (culture == null)
 			{
-			CultureInfo culture = context.parseCulture;
-			if( culture == null )
-				{
-				dotSymbol = '.';
-				sepSymbol = ',';
-				numFormat = new NumberFormatInfo( );
-				}
+				this.dotSymbol = '.';
+				this.sepSymbol = ',';
+				this.numFormat = new NumberFormatInfo();
+			}
 			else
-				{
-				try
-					{
-					dotSymbol = culture.NumberFormat.NumberDecimalSeparator[0];
-					sepSymbol = culture.TextInfo.ListSeparator[0];
-					}
-				catch( IndexOutOfRangeException )
-					{
-					throw new ArgumentException(Resources.errCultureExtract);
-					}
-
-				numFormat = culture.NumberFormat;
-				}
-			}
-
-		public void InitIdens( )
 			{
-			var list = new List<SearchItem>(2);
-			
-			if(context.argsList != null)
+				try
 				{
-				list.Add(new SearchItem(IdenType.Argument,
-					context.argsList));
+					this.dotSymbol = culture.NumberFormat.NumberDecimalSeparator[0];
+					this.sepSymbol = culture.TextInfo.ListSeparator[0];
+				}
+				catch (IndexOutOfRangeException)
+				{
+					throw new ArgumentException(Resource.errCultureExtract);
 				}
 
-			if(context.constDict != null)
-				{
-				list.Add(new SearchItem(IdenType.Constant,
-					context.constDict.Keys));
-				}
-
-			if(context.funcsDict != null)
-				{
-				list.Add(new SearchItem(IdenType.Function,
-					context.funcsDict.Keys));
-				}
-
-			idenList = list;
+				this.numFormat = culture.NumberFormat;
 			}
+		}
+
+		public void InitIdens()
+		{
+			var list = new List<SearchItem>(2);
+
+			if (this.context.arguments != null)
+			{
+				list.Add(new SearchItem(
+					IdenType.Argument, this.context.arguments));
+			}
+
+			if (this.context.constants != null)
+			{
+				list.Add(new SearchItem(
+					IdenType.Constant, this.context.constants.Keys));
+			}
+
+			if (this.context.functions != null)
+			{
+				list.Add(new SearchItem(
+					IdenType.Function, this.context.functions.Keys));
+			}
+
+			this.idenList = list;
+		}
 
 		#endregion
 		#region Static Data
@@ -111,10 +116,10 @@ namespace ILCalc
 			Identifier	= 5
 			}
 		
-		const string operators = "-+*/%^";
+		private const string Operators = "-+*/%^";
 
-		static readonly int[] opPriority = { 0, 0, 1, 1, 1, 3, 2 };
+		private static readonly int[] Priority = { 0, 0, 1, 1, 1, 3, 2 };
 
 		#endregion
-		}
 	}
+}

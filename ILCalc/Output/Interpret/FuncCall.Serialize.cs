@@ -1,40 +1,39 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
 namespace ILCalc
+{
+	internal sealed partial class FuncCall : ISerializable
 	{
-	sealed partial class FuncCall : ISerializable
-		{
-		private static readonly Type mInfoType = typeof(MethodInfo);
+		private static readonly Type FunctionType = typeof(FunctionItem);
 
-		private FuncCall( SerializationInfo info, StreamingContext context )
-			{
+		private FuncCall(SerializationInfo info, StreamingContext context)
+		{
 			int fixCount = info.GetInt32("fix");
 			int varCount = info.GetInt32("var");
 
-			fixArgs = new object[fixCount];
+			this.fixArgs = new object[fixCount];
 
-			if( varCount >= 0 )
-				{
-				varArgs = new double[varCount];
-				fixArgs[--fixCount] = varArgs;
-				}
-			else varArgs = null;
-
-			lastIndex = fixCount - 1;
-			syncRoot = new object( );
-			method = (MethodInfo) info.GetValue("method", mInfoType);
+			if (varCount >= 0)
+			{
+				this.varArgs = new double[varCount];
+				this.fixArgs[--fixCount] = this.varArgs;
 			}
+
+			this.func = (FunctionItem) info.GetValue("func", FunctionType);
+			this.argsCount = fixCount + varCount;
+			this.lastIndex = fixCount - 1;
+			this.syncRoot = new object();
+		}
 
 		[SecurityPermission(SecurityAction.LinkDemand,
 			Flags = SecurityPermissionFlag.SerializationFormatter)]
-		public void GetObjectData( SerializationInfo info, StreamingContext context )
-			{
+		public void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
 			info.AddValue("fix", fixArgs.Length);
-			info.AddValue("var", varArgs == null? -1: varArgs.Length);
-			info.AddValue("method", method, mInfoType);
-			}
+			info.AddValue("var", varArgs == null ? -1 : varArgs.Length);
+			info.AddValue("func", func, FunctionType);
 		}
 	}
+}

@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A2DA0835-A2C5-45F0-8A5E-4A070B93FAAC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>Ciloci.Flee.Demo.App</StartupObject>
+    <StartupObject>Ciloci.Flee.Demo.MainForm</StartupObject>
     <RootNamespace>Ciloci.Flee.Demo</RootNamespace>
     <AssemblyName>ILCalcComparsionDemo</AssemblyName>
     <MyType>WindowsFormsWithCustomSubMain</MyType>

@@ -160,7 +160,7 @@
     <value>Empty or null identifier name.</value>
   </data>
   <data name="errIdentifierFromLambda" xml:space="preserve">
-    <value>Maybe trying to import lambda without specifing the name?</value>
+    <value>Maybe trying to import lambda without specifying the name?</value>
   </data>
   <data name="errIdentifierStartsWith" xml:space="preserve">
     <value>Incorrect identifier name: "{0}". Name should begin with a letter or underscore.</value>
@@ -211,7 +211,7 @@
     <value>Wrong range: Begin, End or Step is not finite value.</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
-    <value>Tabulator object can be created only for the expression with one or two arguments.</value>
+    <value>Tabulator object can be created only for the expressions with one or more arguments.</value>
   </data>
   <data name="errTooLongRange" xml:space="preserve">
     <value>Wrong range: iterations count doesn't fit in integer values range.</value>

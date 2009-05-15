@@ -1,33 +1,47 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace ILCalc
+namespace System.Runtime.CompilerServices
+{
+	[AttributeUsage(
+		AttributeTargets.Method |
+		AttributeTargets.Class  |
+		AttributeTargets.Assembly)]
+	internal sealed class ExtensionAttribute : Attribute
 	{
-	static class StringExtension
-		{
-		public static string ToLowerInvariant( this String value )
-			{
-			return value.ToLower( );
-			}
-		}
+	}
+}
 
-	enum DebuggerBrowsableState
-		{
-		Collapsed = 2,
+namespace ILCalc
+{
+	internal enum DebuggerBrowsableState
+	{
 		Never = 0,
+		Collapsed = 2,
 		RootHidden = 3
+	}
+
+	internal static class StringExtensions
+	{
+		public static string ToLowerInvariant(this string value)
+		{
+			return value.ToLower();
 		}
+	}
 
 	// ReSharper disable UnusedParameter.Local
-
+	// ReSharper disable UnusedParameter.Global
 	[Conditional("NEVER")]
 	[AttributeUsage(
-		AttributeTargets.Field | AttributeTargets.Property,
+		AttributeTargets.Field |
+		AttributeTargets.Property,
 		AllowMultiple = false)]
-	sealed class DebuggerBrowsableAttribute : Attribute
+	internal sealed class DebuggerBrowsableAttribute : Attribute
+	{
+		public DebuggerBrowsableAttribute(DebuggerBrowsableState state)
 		{
-		public DebuggerBrowsableAttribute( DebuggerBrowsableState state ) { }
 		}
+	}
 
 	[Conditional("NEVER")]
 	[AttributeUsage(
@@ -35,30 +49,35 @@ namespace ILCalc
 		AttributeTargets.Property | AttributeTargets.Enum  |
 		AttributeTargets.Struct   | AttributeTargets.Class |
 		AttributeTargets.Assembly, AllowMultiple = true)]
-	sealed class DebuggerDisplayAttribute : Attribute
+	internal sealed class DebuggerDisplayAttribute : Attribute
+	{
+		public DebuggerDisplayAttribute(string value)
 		{
-		public DebuggerDisplayAttribute( string value ) { }
-		public string Name { get; set; }
 		}
+
+		public string Name { get; set; }
+	}
 
 	[Conditional("NEVER")]
 	[AttributeUsage(
 		AttributeTargets.Struct | AttributeTargets.Class |
 		AttributeTargets.Assembly, AllowMultiple = true)]
-	sealed class DebuggerTypeProxyAttribute : Attribute
+	internal sealed class DebuggerTypeProxyAttribute : Attribute
+	{
+		public DebuggerTypeProxyAttribute(Type type)
 		{
-		public DebuggerTypeProxyAttribute( string typeName ) { }
-		public DebuggerTypeProxyAttribute( Type type ) { }
 		}
+	}
 
 	[Conditional("NEVER")]
 	[AttributeUsage(
 		AttributeTargets.Delegate | AttributeTargets.Enum |
-		AttributeTargets.Struct | AttributeTargets.Class,
+		AttributeTargets.Struct   | AttributeTargets.Class,
 		Inherited = false)]
-	sealed class SerializableAttribute : Attribute
-		{
-		}
-
-	// ReSharper restore UnusedParameter.Local
+	internal sealed class SerializableAttribute : Attribute
+	{
 	}
+
+	// ReSharper restore UnusedParameter.Global
+	// ReSharper restore UnusedParameter.Local
+}

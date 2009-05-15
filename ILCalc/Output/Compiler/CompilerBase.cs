@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Collections.Generic;
 
 namespace ILCalc
+{
+	internal abstract class CompilerBase
 	{
-	abstract class CompilerBase
-		{
 		#region Fields
 
+		// general:
 		protected readonly DynamicMethod dynMethod;
-		protected readonly ILGenerator body;
-		
+		protected readonly ILGenerator il;
+		protected readonly int argsCount;
+
+		// method calls:
 		private readonly bool checkedMode;
 		private readonly Stack<CallInfo> callsStack;
 		private bool useParams;
@@ -19,181 +23,172 @@ namespace ILCalc
 		#endregion
 		#region Constructor
 
-		protected CompilerBase( Type returnType, Type[] paramTypes, bool check )
-			{
-			checkedMode = check;
-			callsStack = new Stack<CallInfo>(4);
-			dynMethod = new DynamicMethod("ilcalc", returnType, paramTypes, valueType, true);
-			body = dynMethod.GetILGenerator( );
-			}
+		//TODO: good owner
+		protected CompilerBase(int argsCount, Type returnType, Type[] paramTypes, bool check)
+		{
+			Debug.Assert(argsCount >= 0);
+			Debug.Assert(paramTypes != null);
+
+			this.checkedMode = check;
+			this.argsCount = argsCount;
+			this.callsStack = new Stack<CallInfo>(2);
+
+			this.dynMethod = new DynamicMethod(
+				"ilcalc", returnType, paramTypes, TypeHelper.ValueType, true);
+
+			this.il = this.dynMethod.GetILGenerator();
+		}
 
 		#endregion
 		#region IExpressionOutput
 
-		public void PutNumber( double value )
+		public void PutNumber(double value)
+		{
+			this.il.Emit(OpCodes.Ldc_R8, value);
+		}
+
+		public void PutOperator(int oper)
+		{
+			Debug.Assert(Code.IsOperator(oper));
+
+			if (oper != Code.Pow)
 			{
-			body.Emit(OpCodes.Ldc_R8, value);
+				this.il.Emit(OpOperators[oper]);
 			}
-
-		public void PutOperator( int oper )
-			{
-			if( oper != Code.Pow )
-				 body.Emit(opOperators[oper]);
-			else body.Emit(OpCodes.Call, powMethod);
-			}
-
-		public void PutSeparator( )
-			{
-			if( !useParams ) return;
-
-			var c = callsStack.Peek( );
-			if( c.NextIsLastFixed( ) )
-				{
-				body_EmitParamArr(c.VarCount, c.Local);
-				}
-			else if( c.Current > 0 )
-				{
-				body.Emit(opSaveElem);
-				body.Emit(OpCodes.Ldloc, c.Local);
-				body_EmitLoadI4(c.Current);
-				}
-			}
-
-		public void PutBeginCall( )
-			{
-			callsStack.Push(null);
-			useParams = false;
-			}
-
-		public void PutBeginParams( int fixCount, int varCount )
-			{
-			LocalBuilder local = (varCount > 0)?
-				body.DeclareLocal(arrayType): null;
-
-			var c = new CallInfo(fixCount, varCount, local);
-			callsStack.Push(c);
-
-			if( fixCount == 0 && varCount > 0 )
-				{
-				body_EmitParamArr(varCount, local);
-				}
-
-			useParams = true;
-			}
-
-		public void PutMethod( MethodInfo method, int argsCount )
-			{
-			if( argsCount < 0 )
-				{
-				var c = callsStack.Pop( );
-				if( c.VarCount > 0 )
-					{
-					body.Emit(opSaveElem);
-					body.Emit(OpCodes.Ldloc, c.Local);
-					}
-				else
-					{
-					body_EmitLoadI4(0);
-					body.Emit(OpCodes.Newarr, valueType);
-					}
-				}
 			else
-				callsStack.Pop( );
-
-			body.Emit(OpCodes.Call, method);
-
-			if( callsStack.Count > 0 )
-				{
-				useParams = (callsStack.Peek( ) != null);
-				}
-			}
-
-		public void PutExprEnd( )
 			{
-//			body.Emit(OpCodes.Call,
-//				typeof(System.Diagnostics.Debugger)
-//				.GetMethod("Break")
-//				);
+				this.il.Emit(OpCodes.Call, PowMethod);
+			}
+		}
 
-			if( checkedMode )
+		public void PutSeparator()
+		{
+			if (this.useParams)
+			{
+				var info = this.callsStack.Peek();
+
+				Debug.Assert(info != null);
+
+				if (info.NextIsLastFixed())
 				{
-				body.Emit(OpCodes.Ckfinite);
+					this.EmitParamArr(info.VarCount, info.Local);
+				}
+				else if (info.Current > 0)
+				{
+					this.il.Emit(OpSaveElem);
+					this.il.Emit(OpCodes.Ldloc, info.Local);
+					EmitLoadI4(this.il, info.Current);
 				}
 			}
+		}
+
+		public void PutBeginCall()
+		{
+			this.callsStack.Push(null);
+			this.useParams = false;
+		}
+
+		public void PutBeginParams(int fixCount, int varCount)
+		{
+			Debug.Assert(fixCount >= 0);
+			Debug.Assert(varCount >= 0);
+
+			LocalBuilder local = (varCount > 0) ?
+				this.il.DeclareLocal(TypeHelper.ArrayType) : null;
+
+			var info = new CallInfo(fixCount, varCount, local);
+			this.callsStack.Push(info);
+
+			if (fixCount == 0 && varCount > 0)
+			{
+				this.EmitParamArr(varCount, local);
+			}
+
+			this.useParams = true;
+		}
+
+		public void PutFunction(FunctionItem func, int argzCount)
+		{
+			Debug.Assert(func != null);
+
+			var info = this.callsStack.Pop();
+
+			if (func.HasParamArray)
+			{
+				Debug.Assert(info != null);
+
+				if (info.VarCount > 0)
+				{
+					this.il.Emit(OpSaveElem);
+					this.il.Emit(OpCodes.Ldloc, info.Local);
+				}
+				else
+				{
+					EmitLoadI4(this.il, 0);
+					this.il.Emit(OpCodes.Newarr, TypeHelper.ValueType);
+				}
+			}
+
+			// NOTE: replace with Callvirt when impl instance calls
+			this.il.Emit(OpCodes.Call, func.Method);
+
+			if (this.callsStack.Count > 0)
+			{
+				this.useParams = this.callsStack.Peek() != null;
+			}
+		}
+
+		public void PutExprEnd()
+		{
+			// il.Emit(OpCodes.Call, typeof(Debugger).GetMethod("Break"));
+			if (this.checkedMode)
+			{
+				this.il.Emit(OpCodes.Ckfinite);
+			}
+		}
 
 		#endregion
 		#region Helpers
 
-		private sealed class CallInfo
+		protected static void EmitLoadI4(ILGenerator body, int value)
+		{
+			if (value < sbyte.MinValue
+			 || value > sbyte.MaxValue)
 			{
-			#region Members
-
-			private readonly LocalBuilder local;
-			private readonly int varCount;
-			private int current;
-
-			public LocalBuilder Local { get { return local;  } }
-			public int VarCount	{ get { return varCount; } }
-			public int Current	{ get { return current;  } }
-
-			public bool NextIsLastFixed( )
-				{
-				return ++current == 0;
-				}
-
-			#endregion
-			#region Constructor
-
-			public CallInfo( int fixCount, int varCount, LocalBuilder local )
-				{
-				this.varCount = varCount;
-				this.local = local;
-
-				current = -fixCount;
-				}
-
-			#endregion
-			}
-
-		private void body_EmitParamArr( int size, LocalBuilder local )
-			{
-			body_EmitLoadI4(size);
-			body.Emit(OpCodes.Newarr, valueType);
-			body.Emit(OpCodes.Stloc, local);
-			body.Emit(OpCodes.Ldloc, local);
-			body_EmitLoadI4(0);
-			}
-
-		protected void body_EmitLoadI4( int value )
-			{
-			if( value < sbyte.MinValue ||
-				value > sbyte.MaxValue )
-				{
 				body.Emit(OpCodes.Ldc_I4, value);
-				}
-
-			else if( value < -1 || value > 8 )
-				{
-				body.Emit(OpCodes.Ldc_I4_S, ( byte ) value);
-				}
-
-			else if( value == -1 )
-				 body.Emit(OpCodes.Ldc_I4_M1);
-			else body.Emit(opLoadConst[value]);
 			}
+			else if (value < -1 || value > 8)
+			{
+				body.Emit(OpCodes.Ldc_I4_S, (byte) value);
+			}
+			else
+			{
+				body.Emit(OpLoadConst[value + 1]);
+			}
+		}
+
+		private void EmitParamArr(int size, LocalBuilder local)
+		{
+			Debug.Assert(size >= 0);
+			Debug.Assert(local != null);
+
+			EmitLoadI4(this.il, size);
+			this.il.Emit(OpCodes.Newarr, TypeHelper.ValueType);
+			this.il.Emit(OpCodes.Stloc, local);
+			this.il.Emit(OpCodes.Ldloc, local);
+			EmitLoadI4(this.il, 0);
+		}
 
 		#endregion
 		#region Static Data
 
-		// Types ==================================================
-
-		protected static readonly Type valueType = typeof( double );
-		protected static readonly Type arrayType = typeof( double[] );
-
 		// OpCodes ================================================
+		protected static readonly OpCode OpLoadElem = OpCodes.Ldelem_R8;
+		protected static readonly OpCode OpSaveElem = OpCodes.Stelem_R8;
 
-		private static readonly OpCode[] opLoadConst =
+		private static readonly OpCode[] OpLoadConst =
 			{
+				OpCodes.Ldc_I4_M1,
 				OpCodes.Ldc_I4_0,
 				OpCodes.Ldc_I4_1,
 				OpCodes.Ldc_I4_2,
@@ -205,10 +200,7 @@ namespace ILCalc
 				OpCodes.Ldc_I4_8
 			};
 
-		protected static readonly OpCode opLoadElem = OpCodes.Ldelem_R8;
-		protected static readonly OpCode opSaveElem = OpCodes.Stelem_R8;
-
-		private static readonly OpCode[] opOperators =
+		private static readonly OpCode[] OpOperators =
 			{
 				OpCodes.Sub,
 				OpCodes.Add,
@@ -219,9 +211,59 @@ namespace ILCalc
 				OpCodes.Neg
 			};
 
-		private static readonly MethodInfo powMethod
-			= typeof( Math ).GetMethod("Pow");
+		private static readonly MethodInfo PowMethod
+			= typeof(Math).GetMethod("Pow");
 
 		#endregion
+		#region CallInfo
+
+		private sealed class CallInfo
+		{
+			private readonly LocalBuilder local;
+			private readonly int varCount;
+			private int current;
+
+			public CallInfo(int fixCount, int varCount, LocalBuilder local)
+			{
+				this.varCount = varCount;
+				this.current = -fixCount;
+				this.local = local;
+			}
+
+			public LocalBuilder Local
+			{
+				get { return this.local; }
+			}
+
+			public int VarCount
+			{
+				get { return this.varCount; }
+			}
+
+			public int Current
+			{
+				get { return this.current; }
+			}
+
+			public bool NextIsLastFixed()
+			{
+				return ++this.current == 0;
+			}
 		}
+
+		#endregion
+
+//		public class EvaluatorOwner
+//		{
+//			private object[] closures;
+//
+//			public EvaluatorOwner(List<object> closures)
+//			{
+//				this.closures = closures.ToArray();
+//			}
+//
+//			public static Type MeType = typeof(EvaluatorOwner);
+//			public static Type ObjArray = typeof(object[]);
+//		}
 	}
+}

@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
+using System.Diagnostics;
 
+// TODO: feature x ^  0		=> 1
+// TODO: feature x ^ -2		=> 1 x x * /
+// TODO: feature x *  0		=> 0
+// TODO: feature 2 + x + 2	=> 4 x +
 namespace ILCalc
+{
+	internal sealed class OptimizeOutput : BufferOutput, IExpressionOutput
 	{
-	//TODO: feature x ^  0		=> 1
-	//TODO: feature x ^ -2		=> 1 x x * /
-	//TODO: feature x *  0		=> 0
-	//TODO: feature 2 + x + 2	=> 4 x +
-
-	sealed class OptimizeOutput : BufferOutput, IExpressionOutput
-		{
 		#region Fields
 
 		private readonly IExpressionOutput output;
@@ -19,242 +18,249 @@ namespace ILCalc
 		#endregion
 		#region Constructor
 
-		public OptimizeOutput( IExpressionOutput output, OptimizeModes mode )
-			{
+		public OptimizeOutput(IExpressionOutput output, OptimizeModes mode)
+		{
+			Debug.Assert(output != null);
+
 			this.output = output;
 			this.mode = mode;
 
-			interp = new QuickInterpret(null, false);
-			}
+			this.interp = new QuickInterpret(null, false);
+		}
 
 		#endregion
 		#region Properties
 
 		private bool ConstantFolding
-			{
-			get { return (mode & OptimizeModes.ConstantFolding) != 0; }
-			}
+		{
+			get { return (this.mode & OptimizeModes.ConstantFolding) != 0; }
+		}
 
 		private bool FuncionFolding
-			{
-			get { return (mode & OptimizeModes.FunctionFolding) != 0; }
-			}
+		{
+			get { return (this.mode & OptimizeModes.FunctionFolding) != 0; }
+		}
 
 		private bool PowOptimize
-			{
-			get { return (mode & OptimizeModes.PowOptimize) != 0; }
-			}
-
-		#endregion
-		#region Helpers
-
-		private static T LastValue<T>( List<T> list, int id )
-			{
-			return list[list.Count - id];
-			}
-
-		private static T PopLast<T>( List<T> list )
-			{
-			int pos = list.Count - 1;
-			T value = list[pos];
-			list.RemoveAt(pos);
-			return value;
-			}
-
-		private static void RemoveLast<T>( List<T> list )
-			{
-			list.RemoveAt(list.Count - 1);
-			}
-
-		private bool IsLastKnown( )
-			{
-			return code[code.Count - 1] == Code.Number;
-			}
-
-		private bool IsLastTwoKnown( )
-			{
-			int index = code.Count;
-			return code[index - 1] == Code.Number
-				&& code[index - 2] == Code.Number;
-			}
+		{
+			get { return (this.mode & OptimizeModes.PowOptimize) != 0; }
+		}
 
 		private double LastNumber
-			{
-			get { return nums[nums.Count - 1];  }
-			set { nums[nums.Count - 1] = value; }
-			}
-
-		private bool IsCallBegin( int pos )
-			{
-			int op = code[pos];
-			return op == Code.ParamCall
-				|| op == Code.BeginCall;
-			}
+		{
+			get { return this.numbers[this.numbers.Count - 1];  }
+			set { this.numbers[this.numbers.Count - 1] = value; }
+		}
 
 		#endregion
 		#region IExpressionOutput
 
-		public new void PutOperator( int oper )
+		public new void PutOperator(int oper)
+		{
+			Debug.Assert(Code.IsOperator(oper));
+
+			if (this.ConstantFolding)
 			{
-			if( ConstantFolding )
-				{
 				// Unary operator optimize ======================
-				if( oper == Code.Neg && IsLastKnown( ) )
-					{
-					OptimizeNegate( );
+				if (oper == Code.Neg && this.IsLastKnown())
+				{
+					this.PerformNegate();
 					return;
-					}
+				}
 
 				// Binary operator optimize =====================
-				if( IsLastTwoKnown( ) )
-					{
-					OptimizeBinaryOp(oper);
+				if (this.IsLastTwoKnown())
+				{
+					this.PerformBinaryOp(oper);
 					return;
-					}
+				}
 
 				// Power operator optimize ======================
-				if( oper == Code.Pow
-				&&	PowOptimize
-				&&	LastValue(code, 1) == Code.Number
-				&&	LastValue(code, 2) == Code.Argument )
+				Debug.Assert(this.code.Count >= 2);
+
+				if (oper == Code.Pow
+				 && this.PowOptimize
+				 && LastValue(code, 1) == Code.Number
+				 && LastValue(code, 2) == Code.Argument)
+				{
+					int value = GetIntegerValue(this.LastNumber);
+					if (value > 0 && value < 16)
 					{
-					int val = GetIntegerValue(LastNumber);
-					if( val > 0 && val < 16 )
-						{
-						OptimizePow(val);
+						this.OptimizePow(value);
 						return;
-						}
 					}
 				}
+			}
 
 			code.Add(oper);
-			}
+		}
 
-		public new void PutMethod( MethodInfo method, int argsCount )
+		public new void PutFunction(FunctionItem func, int argsCount)
+		{
+			if (this.FuncionFolding)
 			{
-			if( FuncionFolding )
-				{
 				int pos = code.Count - 1;
-				bool argsKnown = true;
+				bool allArgsKnown = true;
 
-				while( !IsCallBegin(pos) )
+				while (!this.IsCallBegin(pos))
+				{
+					if (code[pos--] == Code.Number)
 					{
-					if( code[pos--] == Code.Number )
+						if (code[pos] == Code.Separator)
 						{
-						if( code[pos] == Code.Separator ) pos--;
-						}
-					else
-						{
-						argsKnown = false;
-						break;
+							pos--;
 						}
 					}
-
-				if( argsKnown )
+					else
 					{
-					OptimizeFunc(pos, method, argsCount);
-					return;
+						allArgsKnown = false;
+						break;
 					}
 				}
 
-			base.PutMethod(method, argsCount);
+				if (allArgsKnown)
+				{
+					this.FoldFunction(pos, func, argsCount);
+					return;
+				}
 			}
 
-		public new void PutExprEnd( )
-			{
-			WriteTo(output);
-			output.PutExprEnd( );
-			}
+			base.PutFunction(func, argsCount);
+		}
+
+		public new void PutExprEnd()
+		{
+			this.WriteTo(this.output);
+			this.output.PutExprEnd();
+		}
+
+		#endregion
+		#region Helpers
+
+		// NOTE: bring out of here
+		private static int GetIntegerValue(double value)
+		{
+			var intVal = (int) value;
+			return (intVal == value) ? intVal : -1;
+		}
+
+		// ReSharper disable SuggestBaseTypeForParameter
+
+		private static T LastValue<T>(List<T> list, int id)
+		{
+			Debug.Assert(id <= list.Count);
+			return list[list.Count - id];
+		}
+
+		private static void RemoveLast<T>(List<T> list)
+		{
+			Debug.Assert(list.Count >= 1);
+			list.RemoveAt(list.Count - 1);
+		}
+
+		// ReSharper restore SuggestBaseTypeForParameter
+
+		private bool IsLastKnown()
+		{
+			Debug.Assert(code.Count >= 1);
+			return code[code.Count - 1] == Code.Number;
+		}
+
+		private bool IsLastTwoKnown()
+		{
+			Debug.Assert(code.Count >= 2);
+			int index = code.Count;
+			return code[index - 1] == Code.Number
+				&& code[index - 2] == Code.Number;
+		}
+
+		private bool IsCallBegin(int pos)
+		{
+			Debug.Assert(code.Count >= 1);
+
+			int op = code[pos];
+			return op == Code.ParamCall
+				|| op == Code.BeginCall;
+		}
 
 		#endregion
 		#region Optimizations
 
-		private void OptimizeNegate( )
-			{
-			interp.PutNumber(LastNumber);
-			interp.PutOperator(Code.Neg);
+		private void PerformNegate()
+		{
+			Debug.Assert(this.numbers.Count >= 1);
 
-			LastNumber = interp.Result;
+			this.interp.PutNumber(this.LastNumber);
+			this.interp.PutOperator(Code.Neg);
 
-			interp.Clear( );
-			}
+			this.LastNumber = this.interp.Result;
 
-		private void OptimizeBinaryOp( int oper )
-			{
-			interp.PutNumber(LastValue(nums, 2));
-			interp.PutNumber(LastValue(nums, 1));
-			interp.PutOperator(oper);
+			this.interp.Reset();
+		}
 
-			RemoveLast(nums);
+		private void PerformBinaryOp(int oper)
+		{
+			Debug.Assert(this.numbers.Count >= 2);
+			Debug.Assert(this.code.Count >= 1);
+
+			this.interp.PutNumber(LastValue(this.numbers, 2));
+			this.interp.PutNumber(LastValue(this.numbers, 1));
+			this.interp.PutOperator(oper);
+
+			RemoveLast(this.numbers);
 			RemoveLast(code);
 
-			LastNumber = interp.Result;
+			this.LastNumber = this.interp.Result;
 
-			interp.Clear( );
+			this.interp.Reset();
+		}
+
+		private void FoldFunction(int start, FunctionItem func, int argsCount)
+		{
+			Debug.Assert(start >= 0);
+			Debug.Assert(func != null);
+			Debug.Assert(argsCount >= 0);
+			Debug.Assert(argsCount <= this.numbers.Count);
+
+			int numIndex = this.numbers.Count - argsCount;
+			var stack = new double[argsCount];
+			this.numbers.CopyTo(numIndex, stack, 0, argsCount);
+
+			if (code[start] == Code.ParamCall)
+			{
+				Debug.Assert(data.Count >= 2);
+				data.RemoveRange(data.Count - 2, 2);
 			}
 
-		private void OptimizeFunc( int start, MethodInfo func, int argsCount )
+			Debug.Assert(this.code.Count > start);
+			this.code.RemoveRange(start, code.Count - start);
+
+			if (argsCount > 0)
 			{
-			int numIdx = CountNumberShift(start);
-			int numStart = numIdx;
-
-			if( code[start] == Code.ParamCall )
-				{
-				int varCount = PopLast(data);
-				int fixCount = PopLast(data);
-
-				interp.PutBeginParams(fixCount, varCount);
-				}
-			else
-				interp.PutBeginCall( );
-
-			for( int i = start + 1; i < code.Count; i++ )
-				{
-				if( code[i] == Code.Separator )
-					 interp.PutSeparator( );
-				else interp.PutNumber(nums[numIdx++]);
-				}
-
-			interp.PutMethod(func, argsCount);
-
-			nums.RemoveRange(numStart, numIdx - numStart);
-			code.RemoveRange(start, code.Count - start);
-
-			PutNumber(interp.Result);
-			interp.Clear( );
+				Debug.Assert(this.numbers.Count > numIndex);
+				this.numbers.RemoveRange(numIndex, argsCount);
 			}
 
-		private void OptimizePow( int val )
-			{
-			RemoveLast(nums);
+			this.PutNumber(func.Invoke(stack, argsCount));
+		}
+
+		private void OptimizePow(int value)
+		{
+			Debug.Assert(value > 0);
+			Debug.Assert(this.numbers.Count >= 1);
+			Debug.Assert(this.code.Count >= 1);
+
+			RemoveLast(this.numbers);
 			RemoveLast(code);
-			int argId = LastValue(data, 1);
+			int argumentId = LastValue(data, 1);
 
-			for( int i = 1; i < val; i++ )
-				{
-				PutArgument(argId);
+			for (int i = 1; i < value; i++)
+			{
+				PutArgument(argumentId);
 				base.PutOperator(Code.Mul);
-				}
 			}
-
-		private int CountNumberShift( int pos )
-			{
-			int count = 0;
-			for( int i = 0; i < pos; i++ )
-				{
-				if( code[i] == Code.Number ) count++;
-				}
-
-			return count;
-			}
-
-		// NOTE: bring out of here in the future
-		private static int GetIntegerValue( double value )
-			{
-			int intVal = ( int ) value;
-			return (intVal == value) ? intVal : -1;
-			}
+		}
 
 		#endregion
-		}
 	}
+}

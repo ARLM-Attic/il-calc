@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ILCalc
-	{
+{
+	using State = DebuggerBrowsableState;
+
 	/// <summary>
 	/// Manages the unique arguments names available to an expression.<br/>
 	/// This class cannot be inherited.</summary>
@@ -14,15 +16,19 @@ namespace ILCalc
 	/// names are presented in the context's <see cref="ArgumentCollection"/>.
 	/// </remarks>
 	/// <threadsafety instance="false"/>
-	
-	[DebuggerDisplay( "Count = {Count}" )]
+	[DebuggerDisplay("Count = {Count}")]
 	[Serializable]
-	public sealed class ArgumentCollection : IList<string>
-		{
-		#region Fields
 
-		[DebuggerBrowsable( DebuggerBrowsableState.RootHidden )]
-		private readonly List<string> namesList;
+	public sealed class ArgumentCollection : IList<string>, ICollection
+	{
+		#region Field
+
+		[DebuggerBrowsable(State.RootHidden)]
+		private readonly List<string> names;
+
+		[DebuggerBrowsable(State.Never)]
+		[NonSerialized]
+		private object syncRoot;
 
 		#endregion
 		#region Constructors
@@ -34,10 +40,10 @@ namespace ILCalc
 		/// Initializes a new instance of the <see cref="ArgumentCollection"/> class.
 		/// </overloads>
 		[DebuggerHidden]
-		public ArgumentCollection( )
-			{
-			namesList = new List<string>( );
-			}
+		public ArgumentCollection()
+		{
+			this.names = new List<string>();
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ArgumentCollection"/>
@@ -46,12 +52,11 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// <paramref name="name"/> is not valid identifier name.</exception>
 		[DebuggerHidden]
-		public ArgumentCollection( string name )
-			{
+		public ArgumentCollection(string name)
+		{
 			Validate.Name(name);
-
-			namesList = new List<string>(1) { name };
-			}
+			this.names = new List<string>(1) { name };
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ArgumentCollection"/>
@@ -62,17 +67,17 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// Some item of <paramref name="names"/> is not valid identifier name.<br/>-or-<br/>
 		/// Some item of <paramref name="names"/> is already exist in the list.</exception>
-		public ArgumentCollection( params string[] names )
-			{
-			if( names == null )
+		public ArgumentCollection(params string[] names)
+		{
+			if (names == null)
 				throw new ArgumentNullException("names");
 
-			namesList = new List<string>(names.Length);
-			foreach( string name in names )
-				{
-				Add(name);
-				}
+			this.names = new List<string>(names.Length);
+			foreach (string name in names)
+			{
+				this.Add(name);
 			}
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ArgumentCollection"/>
@@ -83,17 +88,17 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// Some item of <paramref name="names"/> is not valid identifier name.<br/>-or-<br/>
 		/// Some item of <paramref name="names"/> is already exist in the list.</exception>
-		public ArgumentCollection( IEnumerable<string> names )
-			{
-			if( names == null )
+		public ArgumentCollection(IEnumerable<string> names)
+		{
+			if (names == null)
 				throw new ArgumentNullException("names");
 
-			namesList = new List<string>( );
-			foreach( string name in names )
-				{
-				Add(name);
-				}
+			this.names = new List<string>();
+			foreach (string name in names)
+			{
+				this.Add(name);
 			}
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ArgumentCollection"/>
@@ -102,64 +107,58 @@ namespace ILCalc
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="list"/> is null.</exception>
 		[DebuggerHidden]
-		public ArgumentCollection( ArgumentCollection list )
-			{
-			if( list == null )
+		public ArgumentCollection(ArgumentCollection list)
+		{
+			if (list == null)
 				throw new ArgumentNullException("list");
 
-			namesList = new List<string>(list.namesList);
-			}
+			this.names = new List<string>(list.names);
+		}
 
 		#endregion
-		#region IList<>
+		#region Properties
 
 		/// <summary>
-		/// Searches for the specified name and returns the zero-based
-		/// index of name in the <see cref="ArgumentCollection"/>.</summary>
-		/// <param name="item">The name to locate
-		/// in the <see cref="ArgumentCollection"/>.</param>
-		/// <returns>The zero-based index of the first occurrence of name within the
-		/// entire <see cref="ArgumentCollection"/>, if found; otherwise, –1.</returns>
-		[DebuggerHidden]
-		public int IndexOf( string item )
-			{
-			return namesList.IndexOf(item);
-			}
+		/// Gets the number of names actually contained
+		/// in the <see cref="ArgumentCollection"/>.</summary>
+		[DebuggerBrowsable(State.Never)]
+		public int Count
+		{
+			[DebuggerHidden]
+			get { return this.names.Count; }
+		}
 
 		/// <summary>
-		/// Inserts an element into the <see cref="ArgumentCollection"/>
-		/// at the specified index.</summary>
-		/// <param name="index">The zero-based index
-		/// at which name should be inserted.</param>
-		/// <param name="item">The name to insert</param>
-		/// <exception cref="ArgumentException">
-		/// <paramref name="item"/> is not valid identifier name.<br/>-or-<br/>
-		/// Argument with <paramref name="item"/> name is already exist.</exception>
-		public void Insert( int index, string item )
-			{
-			Validate.Name(item);
+		/// Gets a value indicating whether the 
+		/// <see cref="ICollection{T}"/> is read-only.</summary>
+		/// <value>Always <b>false</b>.</value>
+		[DebuggerBrowsable(State.Never)]
+		public bool IsReadOnly
+		{
+			[DebuggerHidden]
+			get { return false; }
+		}
 
-			if( namesList.Contains(item) )
+		[DebuggerBrowsable(State.Never)]
+		bool ICollection.IsSynchronized
+		{
+			get { return false; }
+		}
+
+		[DebuggerBrowsable(State.Never)]
+		object ICollection.SyncRoot
+		{
+			get
+			{
+				if (this.syncRoot == null)
 				{
-				throw new ArgumentException(
-					string.Format(Resources.errArgumentExist, item)
-					);
+					System.Threading.Interlocked.CompareExchange(
+						ref this.syncRoot, new object(), null);
 				}
 
-			namesList.Insert(index, item);
+				return this.syncRoot;
 			}
-
-		/// <summary>
-		/// Removes the name at the specified index
-		/// of the <see cref="ArgumentCollection"/>.</summary>
-		/// <param name="index">The zero-based index of the name to remove.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/>
-		/// is less than 0, equal to or greater than Count.</exception>
-		[DebuggerHidden]
-		public void RemoveAt( int index )
-			{
-			namesList.RemoveAt(index);
-			}
+		}
 
 		/// <summary>
 		/// Gets or sets the argument name at the specified index.</summary>
@@ -171,28 +170,78 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// <paramref name="value"/> is not valid identifier name<br/>-or-<br/>
 		/// <paramref name="value"/> name is already exist in the list.</exception>
-		public string this[ int index ]
-			{
+		public string this[int index]
+		{
 			[DebuggerHidden]
-			get { return namesList[index]; }
-			set
-				{
-				if( namesList[index] == value ) return;
-				Validate.Name(value);
-
-				if( namesList.Contains(value) )
-					{
-					throw new ArgumentException(
-						string.Format(Resources.errArgumentExist, value)
-						);
-					}
-
-				namesList[index] = value;
-				}
+			get
+			{
+				return this.names[index];
 			}
 
+			set
+			{
+				if (this.names[index] != value)
+				{
+					Validate.Name(value);
+					if (this.names.Contains(value))
+					{
+						throw new ArgumentException(string.Format(
+							Resource.errArgumentExist, value));
+					}
+
+					this.names[index] = value;
+				}
+			}
+		}
+
 		#endregion
-		#region ICollection<>
+		#region Methods
+
+		/// <summary>
+		/// Searches for the specified name and returns the zero-based
+		/// index of name in the <see cref="ArgumentCollection"/>.</summary>
+		/// <param name="item">The name to locate
+		/// in the <see cref="ArgumentCollection"/>.</param>
+		/// <returns>The zero-based index of the first occurrence of name within the
+		/// entire <see cref="ArgumentCollection"/>, if found; otherwise, –1.</returns>
+		[DebuggerHidden]
+		public int IndexOf(string item)
+		{
+			return this.names.IndexOf(item);
+		}
+
+		/// <summary>
+		/// Inserts an element into the <see cref="ArgumentCollection"/>
+		/// at the specified index.</summary>
+		/// <param name="index">The zero-based index
+		/// at which name should be inserted.</param>
+		/// <param name="item">The name to insert</param>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="item"/> is not valid identifier name.<br/>-or-<br/>
+		/// Argument with <paramref name="item"/> name is already exist.</exception>
+		public void Insert(int index, string item)
+		{
+			Validate.Name(item);
+			if (this.names.Contains(item))
+			{
+				throw new ArgumentException(
+					string.Format(Resource.errArgumentExist, item));
+			}
+
+			this.names.Insert(index, item);
+			}
+
+		/// <summary>
+		/// Removes the name at the specified index
+		/// of the <see cref="ArgumentCollection"/>.</summary>
+		/// <param name="index">The zero-based index of the name to remove.</param>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/>
+		/// is less than 0, equal to or greater than Count.</exception>
+		[DebuggerHidden]
+		public void RemoveAt(int index)
+		{
+			this.names.RemoveAt(index);
+		}
 
 		/// <summary>Adds name to the end
 		/// of the <see cref="ArgumentCollection"/>.</summary>
@@ -200,28 +249,26 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// <paramref name="item"/> is not valid identifier name.<br/>-or-<br/>
 		/// <paramref name="item"/> name is already exist in the list.</exception>
-		public void Add( string item )
-			{
+		public void Add(string item)
+		{
 			Validate.Name(item);
-
-			if( namesList.Contains(item) )
-				{
+			if (this.names.Contains(item))
+			{
 				throw new ArgumentException(
-					string.Format(Resources.errArgumentExist, item)
-					);
-				}
-
-			namesList.Add(item);
+					string.Format(Resource.errArgumentExist, item));
 			}
+
+			this.names.Add(item);
+		}
 
 		/// <summary>
 		/// Removes all names from the <see cref="ArgumentCollection"/>.
 		/// </summary>
 		[DebuggerHidden]
-		public void Clear( )
-			{
-			namesList.Clear( );
-			}
+		public void Clear()
+		{
+			this.names.Clear();
+		}
 
 		/// <summary>
 		/// Determines whether a name is contains in
@@ -231,10 +278,10 @@ namespace ILCalc
 		/// <returns><b>true</b> if name is found in the list;
 		/// otherwise, <b>false</b>.</returns>
 		[DebuggerHidden]
-		public bool Contains( string item )
-			{
-			return namesList.Contains(item);
-			}
+		public bool Contains(string item)
+		{
+			return this.names.Contains(item);
+		}
 
 		/// <summary>
 		/// Copies the entire list of arguments names to a one-dimensional array
@@ -245,36 +292,22 @@ namespace ILCalc
 		/// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
 		/// <exception cref="ArgumentNullException"><paramref name="array"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">
-		/// <paramref name="arrayIndex"/>is less than zero.</exception>
-		/// <exception cref="ArgumentException">
-		/// <paramref name="arrayIndex"/> is equal to or greater than the length of array.
-		/// <br/>-or-<br/>Number of names in the source <see cref="ArgumentCollection"/>
+		/// <paramref name="arrayIndex"/> is less than zero.</exception>
+		/// <exception cref="ArgumentException"><paramref name="arrayIndex"/>
+		/// is equal to or greater than the length of array.<br/>-or-<br/>
+		/// Number of names in the source <see cref="ArgumentCollection"/>
 		/// is greater than the available space from <paramref name="arrayIndex"/>
 		/// to the end of the destination <paramref name="array"/>.</exception>
 		[DebuggerHidden]
-		public void CopyTo( string[] array, int arrayIndex )
-			{
-			namesList.CopyTo(array, arrayIndex);
-			}
+		public void CopyTo(string[] array, int arrayIndex)
+		{
+			this.names.CopyTo(array, arrayIndex);
+		}
 
-		/// <summary>
-		/// Gets the number of names actually contained
-		/// in the <see cref="ArgumentCollection"/>.</summary>
-		[DebuggerBrowsable( DebuggerBrowsableState.Never )]
-		public int Count
-			{
-			[DebuggerHidden] get { return namesList.Count; }
-			}
-
-		/// <summary>
-		/// Gets a value indicating whether the 
-		/// <see cref="ICollection{T}"/> is read-only.</summary>
-		/// <value>Always <b>false</b>.</value>
-		[DebuggerBrowsable( DebuggerBrowsableState.Never )]
-		public bool IsReadOnly
-			{
-			[DebuggerHidden] get { return false; }
-			}
+		void ICollection.CopyTo(Array array, int index)
+		{
+			((ICollection) this.names).CopyTo(array, index);
+		}
 
 		/// <summary>
 		/// Removes the specific name from
@@ -283,13 +316,10 @@ namespace ILCalc
 		/// <returns><b>true</b> if name is successfully removed;
 		/// otherwise, <b>false</b>.</returns>
 		[DebuggerHidden]
-		public bool Remove( string item )
-			{
-			return namesList.Remove(item);
-			}
-
-		#endregion
-		#region IEnumerable<>
+		public bool Remove(string item)
+		{
+			return this.names.Remove(item);
+		}
 
 		/// <summary>
 		/// Returns an enumerator that iterates through the names
@@ -297,17 +327,17 @@ namespace ILCalc
 		/// <returns>An enumerator for the all names
 		/// in <see cref="ArgumentCollection"/>.</returns>
 		[DebuggerHidden]
-		public IEnumerator<string> GetEnumerator( )
-			{
-			return namesList.GetEnumerator( );
-			}
+		public IEnumerator<string> GetEnumerator()
+		{
+			return this.names.GetEnumerator();
+		}
 
 		[DebuggerHidden]
-		IEnumerator IEnumerable.GetEnumerator( )
-			{
-			return namesList.GetEnumerator( );
-			}
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return this.names.GetEnumerator();
+		}
 
 		#endregion
-		}
 	}
+}

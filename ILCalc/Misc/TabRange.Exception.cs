@@ -1,7 +1,7 @@
 using System;
 
 namespace ILCalc
-	{
+{
 	// NOTE: enum for extended info?
 	// NOTE: override Message?
 
@@ -15,22 +15,26 @@ namespace ILCalc
 	/// </remarks>
 	[Serializable]
 	public sealed class InvalidRangeException : Exception
-		{
+	{
 		#region Constructors
 
 		/// <summary>Initializes a new instance of the
 		/// <see cref="InvalidRangeException"/> class.</summary>
 		/// <overloads>Initializes a new instance of the
 		/// <see cref="InvalidRangeException"/> class.</overloads>
-		public InvalidRangeException( ) { }
+		public InvalidRangeException()
+		{
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InvalidRangeException"/>
 		/// class with a specified error message.
 		/// </summary>
 		/// <param name="message">The message that describes the error.</param>
-		public InvalidRangeException( string message )
-			: base(message) { }
+		public InvalidRangeException(string message)
+			: base(message)
+		{
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InvalidRangeException"/>
@@ -42,18 +46,19 @@ namespace ILCalc
 		/// The exception that is the cause of the current exception, or
 		/// a <c>null</c> reference if no inner exception is specified.
 		/// </param>
-		public InvalidRangeException( string message,
-									  Exception innerException )
-			: base(message, innerException) { }
+		public InvalidRangeException(string message, Exception innerException)
+			: base(message, innerException)
+		{
+		}
 
 #if SERIALIZE
 
-		private InvalidRangeException
-			(
-				System.Runtime.Serialization.SerializationInfo info,
-				System.Runtime.Serialization.StreamingContext context
-			)
-			: base(info, context) { }
+		private InvalidRangeException(
+			System.Runtime.Serialization.SerializationInfo info,
+			System.Runtime.Serialization.StreamingContext context)
+			: base(info, context)
+		{
+		}
 
 #endif
 

@@ -5,7 +5,7 @@ namespace ILCalc
 	{
 	static class StringExtension
 		{
-		public static string ToLowerInvariant( this String value )
+		public static String ToLowerInvariant( this String value )
 			{
 			return value.ToLower( );
 			}

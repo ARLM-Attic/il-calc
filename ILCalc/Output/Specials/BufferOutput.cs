@@ -1,87 +1,130 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
+using System.Diagnostics;
 
 namespace ILCalc
+{
+	internal class BufferOutput : IExpressionOutput
 	{
-	class BufferOutput : IExpressionOutput
-		{
 		#region Fields
 
-		protected readonly List<MethodInfo> funcs;
-		protected readonly List<double> nums;
+		protected readonly List<FunctionItem> functions;
+		protected readonly List<double> numbers;
 		protected readonly List<int> code;
 		protected readonly List<int> data;
-		
+
 		#endregion
 		#region Constructor
 
 		public BufferOutput()
-			{
-			funcs = new List<MethodInfo>( );
-			nums = new List<double>(4);
-			code = new List<int>(8);
-			data = new List<int>(2);
-			}
+		{
+			this.functions = new List<FunctionItem>(2);
+			this.numbers = new List<double>(4);
+			this.code = new List<int>(8);
+			this.data = new List<int>(2);
+		}
 
 		#endregion
 		#region IExpressionOutput
 
-		public void PutNumber( double value )
-			{
-			code.Add(Code.Number);
-			nums.Add(value);
-			}
+		public void PutNumber(double value)
+		{
+			this.code.Add(Code.Number);
+			this.numbers.Add(value);
+		}
 
-		public void PutOperator( int oper ) { code.Add(oper); }
+		public void PutOperator(int oper)
+		{
+			Debug.Assert(Code.IsOperator(oper));
 
-		public void PutArgument( int id )
-			{
-			code.Add(Code.Argument);
-			data.Add(id);
-			}
+			this.code.Add(oper);
+		}
 
-		public void PutSeparator( ) { code.Add(Code.Separator); }
+		public void PutArgument(int id)
+		{
+			Debug.Assert(id >= 0);
 
-		public void PutBeginCall( ) { code.Add(Code.BeginCall); }
+			this.code.Add(Code.Argument);
+			this.data.Add(id);
+		}
 
-		public void PutBeginParams( int fixCount, int varCount )
-			{
-			code.Add(Code.ParamCall);
-			data.Add(fixCount);
-			data.Add(varCount);
-			}
+		public void PutSeparator()
+		{
+			this.code.Add(Code.Separator);
+		}
 
-		public void PutMethod( MethodInfo method, int fixCount )
-			{
-			code.Add(Code.Function);
-			data.Add(fixCount);
-			funcs.Add(method);
-			}
+		public void PutBeginCall()
+		{
+			this.code.Add(Code.BeginCall);
+		}
 
-		public void PutExprEnd( ) { code.Add(Code.Return); }
+		public void PutBeginParams(int fixCount, int varCount)
+		{
+			this.code.Add(Code.ParamCall);
+			this.data.Add(fixCount);
+			this.data.Add(varCount);
+		}
+
+		public void PutFunction(FunctionItem func, int argsCount)
+		{
+			Debug.Assert(func != null);
+			Debug.Assert(argsCount >= 0);
+
+			this.code.Add(Code.Function);
+			this.data.Add(argsCount);
+			this.functions.Add(func);
+		}
+
+		public void PutExprEnd()
+		{
+			this.code.Add(Code.Return);
+		}
 
 		#endregion
 		#region Methods
 
-		public void WriteTo( IExpressionOutput output )
-			{
+		public void WriteTo(IExpressionOutput output)
+		{
 			int n = 0, f = 0, d = 0;
 
-			for( int i = 0; i < code.Count; i++ )
-				{
-				int op = code[i];
+			for (int i = 0; i < this.code.Count; i++)
+			{
+				int op = this.code[i];
 
-				if( Code.IsOperator(op)       ) output.PutOperator(op);
-				else if( op == Code.Number    ) output.PutNumber(nums[n++]);
-				else if( op == Code.Argument  ) output.PutArgument(data[d++]);
-				else if( op == Code.Function  ) output.PutMethod(funcs[f++], data[d++]);
-				else if( op == Code.Separator ) output.PutSeparator( );
-				else if( op == Code.BeginCall ) output.PutBeginCall( );
-				else if( op == Code.ParamCall ) output.PutBeginParams(data[d++], data[d++]);
-				else output.PutExprEnd( );
+				if (Code.IsOperator(op))
+				{
+					output.PutOperator(op);
+				}
+				else if (op == Code.Number)
+				{
+					output.PutNumber(this.numbers[n++]);
+				}
+				else if (op == Code.Argument)
+				{
+					output.PutArgument(this.data[d++]);
+				}
+				else if (op == Code.Function)
+				{
+					output.PutFunction(this.functions[f++], this.data[d++]);
+				}
+				else if (op == Code.Separator)
+				{
+					output.PutSeparator();
+				}
+				else if (op == Code.BeginCall)
+				{
+					output.PutBeginCall();
+				}
+				else if (op == Code.ParamCall)
+				{
+					output.PutBeginParams(this.data[d++], this.data[d++]);
+				}
+				else
+				{
+					output.PutExprEnd();
 				}
 			}
+		}
 
 		#endregion
-		}
 	}
+}

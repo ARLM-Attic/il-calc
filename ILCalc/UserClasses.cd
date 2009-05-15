@@ -7,10 +7,9 @@
       <Method Name="GetEnumerator" Hidden="true" />
       <Method Name="IEnumerable.GetEnumerator" Hidden="true" />
       <Property Name="IsReadOnly" Hidden="true" />
-      <Field Name="namesList" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>AEIAAGAAAAAAABAQCAAABAQAAAAAAAAECAAAAABQIAA=</HashCode>
+      <HashCode>AEIAAEAACAAEABAQCAAABAQAAAAAAAAECAAAAABQIII=</HashCode>
       <FileName>Collections\ArgumentCollection.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
@@ -30,31 +29,23 @@
       <Field Name="namesList" Hidden="true" />
       <Field Name="valuesList" Hidden="true" />
     </Members>
+    <NestedTypes>
+      <Class Name="ILCalc.ConstantDictionary.ConstantsDebugView" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Collections\ConstantDictionary.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>CAIgACAAAAAEAAAQKBAABASAAAACAkAEQAAgEABAAAA=</HashCode>
+      <HashCode>CAIgACAACAAEAAAQKBAABASAAAACAkAEQAAgEABAAAI=</HashCode>
       <FileName>Collections\ConstantDictionary.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
-  </Class>
-  <Class Name="ILCalc.Function">
-    <Position X="6.75" Y="3.5" Width="1.75" />
-    <Members>
-      <Field Name="argsCount" Hidden="true" />
-      <Property Name="ArgsString" Hidden="true" />
-      <Method Name="Function" Hidden="true" />
-      <Field Name="hasParams" Hidden="true" />
-      <Field Name="methodInfo" Hidden="true" />
-    </Members>
-    <TypeIdentifier>
-      <HashCode>EAAAAIAIABAAAIAQAAAgAAAAACAAAAAAAAACAAAAAQA=</HashCode>
-      <FileName>Collections\Function.cs</FileName>
-    </TypeIdentifier>
   </Class>
   <Class Name="ILCalc.FunctionDictionary">
     <Position X="4.5" Y="0.75" Width="1.75" />
     <Members>
       <Method Name="FunctionDictionary" Hidden="true" />
-      <Method Name="GetEnumerator" Hidden="true" />
       <Method Name="ICollection&lt;FuncPair&gt;.Add" Hidden="true" />
       <Method Name="ICollection&lt;FuncPair&gt;.Contains" Hidden="true" />
       <Method Name="ICollection&lt;FuncPair&gt;.CopyTo" Hidden="true" />
@@ -66,13 +57,20 @@
       <Field Name="namesList" Hidden="true" />
       <Method Name="OverloadImpossible" Hidden="true" />
     </Members>
+    <NestedTypes>
+      <Class Name="ILCalc.FunctionDictionary.FunctionDebugView" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Collections\FunctionDictionary.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
     <AssociationLine Name="funcsList" Type="ILCalc.FunctionGroup">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="-3.004" Y="-0.565" />
       </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
-      <HashCode>CAIAACABAAAEAhCSKhAABAQAAAAEAEAFAAAgAABAAAA=</HashCode>
+      <HashCode>CAIAACABCAAEAgCSKhAABAQAAAAEAEAlAAAgAABAAAI=</HashCode>
       <FileName>Collections\FunctionDictionary.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -87,83 +85,52 @@
       <Method Name="FunctionGroup" Hidden="true" />
       <Method Name="GetEnumerator" Hidden="true" />
       <Method Name="GetOverload" Hidden="true" />
-      <Method Name="GetOverloadsList" Hidden="true" />
       <Method Name="GetParamsOverload" Hidden="true" />
-      <Property Name="HasParamsMethods" Hidden="true" />
       <Method Name="IEnumerable.GetEnumerator" Hidden="true" />
       <Method Name="InternalAppend" Hidden="true" />
       <Method Name="MakeMethodsArgsList" Hidden="true" />
       <Field Name="paramsFuncsCount" Hidden="true" />
     </Members>
-    <AssociationLine Name="funcList" Type="ILCalc.Function">
-      <MemberNameLabel ManuallyPlaced="true">
-        <Position X="-2.117" Y="0.808" />
-      </MemberNameLabel>
-    </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AAAAAgAAEAggABAACAAABAQAECAAARAECAAAQABQgAA=</HashCode>
+      <HashCode>AAAAAAAAEAggABAACAAABAQAACAAARAECAAAQABQgAI=</HashCode>
       <FileName>Collections\FunctionGroup.cs</FileName>
     </TypeIdentifier>
-    <ShowAsCollectionAssociation>
-      <Field Name="funcList" />
-    </ShowAsCollectionAssociation>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="ILCalc.CalcContext">
     <Position X="0.5" Y="4.25" Width="1.75" />
     <Members>
-      <Field Name="argsList" Hidden="true" />
       <Method Name="CalcContext" Hidden="true" />
       <Field Name="checkedMode" Hidden="true" />
       <Method Name="CheckNeutral" Hidden="true" />
-      <Field Name="constDictionary" Hidden="true" />
       <Method Name="ExecuteParse" Hidden="true" />
-      <Field Name="funcsList" Hidden="true" />
       <Field Name="ignoreCase" Hidden="true" />
       <Field Name="optimizeMode" Hidden="true" />
       <Field Name="parseCulture" Hidden="true" />
       <Field Name="parser" Hidden="true" />
     </Members>
-    <AssociationLine Name="Arguments" Type="ILCalc.ArgumentCollection" FixedFromPoint="true">
-      <Path>
-        <Point X="1.312" Y="4.25" />
-        <Point X="1.312" Y="3.428" />
-      </Path>
+    <AssociationLine Name="Arguments" Type="ILCalc.ArgumentCollection">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="-0.994" Y="0.373" />
       </MemberNameLabel>
     </AssociationLine>
-    <AssociationLine Name="Constants" Type="ILCalc.ConstantDictionary" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="2.25" Y="4.438" />
-        <Point X="3.375" Y="4.438" />
-        <Point X="3.375" Y="3.592" />
-      </Path>
+    <AssociationLine Name="Constants" Type="ILCalc.ConstantDictionary">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="-0.88" Y="0.425" />
       </MemberNameLabel>
     </AssociationLine>
-    <AssociationLine Name="Functions" Type="ILCalc.FunctionDictionary" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="2.25" Y="4.844" />
-        <Point X="5.438" Y="4.844" />
-        <Point X="5.438" Y="3.592" />
-      </Path>
+    <AssociationLine Name="Functions" Type="ILCalc.FunctionDictionary">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="-0.89" Y="0.539" />
       </MemberNameLabel>
     </AssociationLine>
-    <AssociationLine Name="Optimization" Type="ILCalc.OptimizeModes" FixedFromPoint="true">
-      <Path>
-        <Point X="0.812" Y="6.599" />
-        <Point X="0.812" Y="7.5" />
-      </Path>
+    <AssociationLine Name="Optimization" Type="ILCalc.OptimizeModes">
       <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
         <Position X="-1.117" Y="0.36" Height="0.16" Width="0.975" />
       </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AAACAAAIAIiAAgAGJAAAAgIgMQAAAAgAIAAAAAACMAQ=</HashCode>
+      <HashCode>AAAAAAIIAJiAAgAEpgAAAoIgMQAgAAgAIAAIAAACIAQ=</HashCode>
       <FileName>CalcContext.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -182,14 +149,9 @@
       <Field Name="Evaluate2" Hidden="true" />
       <Field Name="EvaluateN" Hidden="true" />
       <Method Name="Evaluator" Hidden="true" />
-      <Field Name="exprString" Hidden="true" />
-      <Method Name="ThrowMethod0" Hidden="true" />
-      <Method Name="ThrowMethod1" Hidden="true" />
-      <Method Name="ThrowMethod2" Hidden="true" />
-      <Method Name="ThrowMethodN" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>AAAAACAEAABAAAAUAAAAAgAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAACAAAAAAAAAUAAAAAgAAABAAAAAAAQAAAAIAAAA=</HashCode>
       <FileName>Evaluators\Evaluator.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.252" />
@@ -202,7 +164,6 @@
       <Field Name="checkedMode" Hidden="true" />
       <Field Name="code" Hidden="true" />
       <Field Name="delegates" Hidden="true" />
-      <Field Name="exprString" Hidden="true" />
       <Field Name="funcs" Hidden="true" />
       <Method Name="IDeserializationCallback.OnDeserialization" Hidden="true" />
       <Method Name="Interpret" Hidden="true" />
@@ -215,7 +176,7 @@
       <Method Name="WrongArgsCount" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>QAIAAG4MAAAAAAAUAAAAIgCAIAQAAABAAAAAAAACAAA=</HashCode>
+      <HashCode>QAIAAG4IAAAAAAAUAAAAIgCAIBQAAABAAAAAAAACAAA=</HashCode>
       <FileName>Evaluators\Interpret.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
@@ -224,12 +185,9 @@
     <Position X="6.75" Y="7.5" Width="1.75" />
     <Members>
       <Field Name="exprString" Hidden="true" />
-      <Field Name="hasOneArg" Hidden="true" />
       <Method Name="Tabulator" Hidden="true" />
       <Field Name="tabulator1" Hidden="true" />
       <Field Name="tabulator2" Hidden="true" />
-      <Method Name="ThrowFunc1" Hidden="true" />
-      <Method Name="ThrowFunc2" Hidden="true" />
     </Members>
     <NestedTypes>
       <Delegate Name="ILCalc.Tabulator.TabFunc1" Collapsed="true">
@@ -242,10 +200,32 @@
           <NewMemberFileName>Evaluators\Tabulator.cs</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
+      <Delegate Name="ILCalc.Tabulator.TabFuncN" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Evaluators\Tabulator.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="ILCalc.Tabulator.Allocator" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Evaluators\Tabulator.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AIAAAAAEAAAAAAAEAAAAAAAAAAgAAAAYAAAAAAwAAIA=</HashCode>
+      <HashCode>kMAAAAAEAIBAAAAUAAAAQAgAAAAAAACYAAAAAAABAIA=</HashCode>
       <FileName>Evaluators\Tabulator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ILCalc.FunctionItem">
+    <Position X="6.75" Y="3.5" Width="1.75" />
+    <Members>
+      <Property Name="ArgsString" Hidden="true" />
+      <Field Name="hasParams" Hidden="true" />
+      <Field Name="methodInfo" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>EAAAAIAIABAIAIAAAAAgggAAACAAAAAAAAACAAAAAQA=</HashCode>
+      <FileName>Collections\FunctionItem.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Interface Name="ILCalc.IEvaluator">

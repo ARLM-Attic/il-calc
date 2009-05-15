@@ -1,172 +1,243 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace ILCalc
+{
+	internal sealed class InterpretCreator : IExpressionOutput
 	{
-	sealed class InterpretCreator : IExpressionOutput
-		{
 		#region Fields
 
-		private readonly Stack<int> calls;
+		private readonly List<int> code;
+		private readonly List<double> numbers;
+		private readonly List<FuncCall> funcs;
+#if !CF2
+		private readonly List<Delegate> delegates;
+#endif
 
-		internal readonly List<int> code;
-		internal readonly List<double> numbers;
-		internal readonly List<FuncCall> funcs;
-		internal readonly List<Delegate> delegates;
-
-		internal int stMax;
-		private int stSize;
+		private int stackMax;
+		private int stackSize;
 
 		#endregion
 		#region Constructor
 
-		public InterpretCreator( )
-			{
-			code = new List<int>(8);
-			funcs = new List<FuncCall>( );
-			numbers = new List<double>(4);
-			delegates = new List<Delegate>( );
+		public InterpretCreator()
+		{
+			this.code = new List<int>(8);
+			this.funcs = new List<FuncCall>();
+			this.numbers = new List<double>(4);
+#if !CF2
+			this.delegates = new List<Delegate>();
+#endif
+		}
 
-			calls = new Stack<int>( );
-			}
+		#endregion
+		#region Properties
+
+		public int[] Codes
+		{
+			[DebuggerHidden]
+			get { return this.code.ToArray(); }
+		}
+
+		public double[] Numbers
+		{
+			[DebuggerHidden]
+			get { return this.numbers.ToArray(); }
+		}
+
+		public FuncCall[] Functions
+		{
+			[DebuggerHidden]
+			get { return this.funcs.ToArray(); }
+		}
+
+#if !CF2
+		public Delegate[] Delegates
+		{
+			[DebuggerHidden]
+			get { return this.delegates.ToArray(); }
+		}
+#endif
+
+		public int StackMax
+		{
+			[DebuggerHidden]
+			get { return this.stackMax; }
+		}
 
 		#endregion
 		#region IExpressionOutput
 
-		public void PutNumber( double value )
-			{
-			numbers.Add(value);
-			code.Add(Code.Number);
+		public void PutNumber(double value)
+		{
+			this.numbers.Add(value);
+			this.code.Add(Code.Number);
 
-			if( ++stSize > stMax ) stMax = stSize;
+			if (++this.stackSize > this.stackMax)
+			{
+				this.stackMax = this.stackSize;
 			}
+		}
 
-		public void PutArgument( int id )
+		public void PutArgument(int id)
+		{
+			Debug.Assert(id >= 0);
+
+			this.code.Add(Code.Argument);
+			this.code.Add(id);
+
+			if (++this.stackSize > this.stackMax)
 			{
-			code.Add(Code.Argument);
-			code.Add(id);
-
-			if( ++stSize > stMax ) stMax = stSize;
+				this.stackMax = this.stackSize;
 			}
+		}
 
-		public void PutOperator( int oper )
+		public void PutOperator(int oper)
+		{
+			Debug.Assert(Code.IsOperator(oper));
+
+			this.code.Add(oper);
+
+			if (oper != Code.Neg)
 			{
-			code.Add(oper);
-
-			if( oper != Code.Neg )
-				stSize--;
+				this.stackSize--;
 			}
+		}
 
-		public void PutSeparator( ) { }
-		public void PutBeginCall( ) { }
+		public void PutSeparator()
+		{
+		}
 
-		public void PutBeginParams( int fixCount, int varCount )
+		public void PutBeginCall()
+		{
+		}
+
+		public void PutBeginParams(int fixCount, int varCount)
+		{
+		}
+
+		// TODO: reuse code!
+		public void PutFunction(FunctionItem func, int argsCount)
+		{
+			Debug.Assert(func != null);
+			Debug.Assert(argsCount >= 0);
+
+#if CF2
+			this.code.Add(Code.Function);
+			this.code.Add(this.AppendFunc(func, argsCount));
+			this.RecalcStackSize(argsCount);
+#else
+			if (func.HasParamArray || func.ArgsCount > 2)
 			{
-			calls.Push(varCount);
-			calls.Push(fixCount);
-			}
-
-		public void PutMethod( MethodInfo method, int fixCount )
-			{
-			if( fixCount < 0 ) // params method
-				{
-				    fixCount = calls.Pop( );
-				int varCount = calls.Pop( );
-
-				code.Add(Code.Function);
-				code.Add(PutMethod(method, fixCount, varCount));
-				RecalcStackSize(fixCount + varCount);
+				this.code.Add(Code.Function);
+				this.code.Add(this.AppendFunc(func, argsCount));
+				this.RecalcStackSize(argsCount);
 				return;
-				}
+			}
 
-			switch( fixCount )
-				{
+			switch (func.ArgsCount)
+			{
 				case 0:
-					code.Add(Code.Delegate0);
-					code.Add(PutDelegate(method, evalType0));
-					if( ++stSize > stMax ) stMax = stSize;
+					this.code.Add(Code.Delegate0);
+					this.code.Add(this.AppendDelegate(func, EvalType0));
+					if (++this.stackSize > this.stackMax)
+					{
+						this.stackMax = this.stackSize;
+					}
+
 					break;
 
 				case 1:
-					code.Add(Code.Delegate1);
-					code.Add(PutDelegate(method, evalType1));
+					this.code.Add(Code.Delegate1);
+					this.code.Add(this.AppendDelegate(func, EvalType1));
 					break;
 
 				case 2:
-					code.Add(Code.Delegate2);
-					code.Add(PutDelegate(method, evalType2));
-					stSize--;
+					this.code.Add(Code.Delegate2);
+					this.code.Add(this.AppendDelegate(func, EvalType2));
+					this.stackSize--;
 					break;
-
-				default:
-					code.Add(Code.Function);
-					code.Add(PutMethod(method, fixCount, -1));
-					RecalcStackSize(fixCount);
-					break;
-				}
 			}
+#endif
+		}
 
-		public void PutExprEnd( )
-			{
-			code.Add(Code.Return);
-			code.Add(0); // fictive code
-			}
+		public void PutExprEnd()
+		{
+			this.code.Add(Code.Return);
+			this.code.Add(0); // fictive code
+		}
 
 		#endregion
 		#region Helpers
 
-		private void RecalcStackSize( int argsCount )
+		private void RecalcStackSize(int argsCount)
+		{
+			Debug.Assert(argsCount >= 0);
+
+			if (argsCount == 0)
 			{
-			if( argsCount == 0 )
+				if (++this.stackSize > this.stackMax)
 				{
-				if( ++stSize > stMax ) stMax = stSize;
+					this.stackMax = this.stackSize;
 				}
-
-			else stSize -= argsCount - 1;
 			}
-
-		private int PutDelegate( MethodInfo method, Type delegateType )
+			else
 			{
-			for(int i = 0; i < delegates.Count; i++)
+				this.stackSize -= argsCount - 1;
+			}
+		}
+
+#if !CF2
+
+		private int AppendDelegate(FunctionItem func, Type delegateType)
+		{
+			Debug.Assert(func != null);
+			Debug.Assert(delegateType != null);
+
+			MethodInfo method = func.Method;
+			for (int i = 0; i < this.delegates.Count; i++)
+			{
+				if (this.delegates[i].Method == method)
 				{
-				if( delegates[i].Method == method )
-					{
 					return i;
-					}
 				}
-
-			delegates.Add(
-				Delegate.CreateDelegate(delegateType, null, method)
-				);
-
-			return delegates.Count - 1;
 			}
 
-		private int PutMethod( MethodInfo method, int argc, int argv )
+			this.delegates.Add(
+				Delegate.CreateDelegate(delegateType, null, method));
+
+			return this.delegates.Count - 1;
+		}
+
+#endif
+
+		private int AppendFunc(FunctionItem func, int argsCount)
+		{
+			Debug.Assert(func != null);
+			Debug.Assert(argsCount >= 0);
+
+			for (int i = 0; i < this.funcs.Count; i++)
 			{
-			for( int i = 0; i < funcs.Count; i++ )
+				if (this.funcs[i].IsReusable(func, argsCount))
 				{
-				if( funcs[i].Method == method
-				 && funcs[i].IsReusable(argc, argv))
-					{
 					return i;
-					}
 				}
-
-			funcs.Add(new FuncCall(method, argc, argv));
-			return funcs.Count - 1;
 			}
+
+			this.funcs.Add(new FuncCall(func, argsCount));
+			return this.funcs.Count - 1;
+		}
 
 		#endregion
 		#region Static Data
 
 		// Types ==================================================
-
-		private static readonly Type evalType0 = typeof(EvalFunc0);
-		private static readonly Type evalType1 = typeof(EvalFunc1);
-		private static readonly Type evalType2 = typeof(EvalFunc2);
+		private static readonly Type EvalType0 = typeof(EvalFunc0);
+		private static readonly Type EvalType1 = typeof(EvalFunc1);
+		private static readonly Type EvalType2 = typeof(EvalFunc2);
 
 		#endregion
-		}
 	}
+}

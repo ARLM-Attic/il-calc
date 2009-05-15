@@ -5,237 +5,242 @@ using System.Text;
 
 namespace ILCalc
 	{
-	static class FunctionFactory
+	internal static class FunctionFactory
 		{
 		#region Fields
 
-		public static readonly Type valueType = typeof(double);
-		public static readonly Type arrayType = typeof(double[]);
-		
-		private static readonly Type runtimeMethodType
-			= typeof(Math).GetMethod("Sin").GetType( );
+		private static readonly Type RuntimeMethodType
+			= typeof(Math).GetMethod("Sin").GetType();
 
 		#endregion
 		#region Methods
 
-		public static Function CreateInstance( MethodInfo method, bool throwOnFailure )
-			{
+		public static FunctionItem CreateInstance(MethodInfo method, bool throwOnFailure)
+		{
 			// MethodInfo from DynamicMethod shouldn't pass here:
-			if( method.GetType() != runtimeMethodType )
+			if (method.GetType() != RuntimeMethodType)
+			{
+				if (throwOnFailure)
 				{
-				if( throwOnFailure )
-					{
-					throw MethodImportFailure(method,
-						Resources.errMethodNotRuntimeMethod);
-					}
+					throw MethodImportFailure(
+						method, Resource.errMethodNotRuntimeMethod);
+				}
 
 				return null;
-				}
-
-			// (should be removed in future)
-			if( !method.IsStatic )
-				{
-				if( throwOnFailure )
-					{
-					throw MethodImportFailure(method,
-						Resources.errMethodNotStatic);
-					}
-
-				return null;
-				}
-
-			// now validate return type:
-			if( method.ReturnType != valueType )
-				{
-				if( throwOnFailure )
-					throw InvalidMethodReturn(method);
-
-				return null;
-				}
-
-			// and method parameters types:
-			var args = method.GetParameters( );
-			foreach( ParameterInfo param in args )
-				{
-				if( param.ParameterType != valueType )
-					{
-					// maybe this is params method?
-					if( IsParamArrayParameter(param, args.Length) )
-						{
-						return new Function(method, args.Length - 1, true);
-						}
-
-					if( throwOnFailure )
-						throw InvalidParamType(method, param);
-
-					return null;
-					}
-
-#if !CF
-				if( !IsValidParameter(param) )
-					{
-					if( throwOnFailure )
-						throw InvalidParameter(method, param);
-
-					return null;
-					}
-#endif
-				}
-
-			return new Function(method, args.Length, false);
 			}
 
-		[DebuggerHidden]
-		public static bool CheckDelegate( Delegate deleg, bool throwOnFailure )
+			// (should be removed in future)
+			if (!method.IsStatic)
 			{
-			if( deleg == null )
-				throw new ArgumentNullException("deleg");
+				if (throwOnFailure)
+				{
+					throw MethodImportFailure(
+						method, Resource.errMethodNotStatic);
+				}
+
+				return null;
+			}
+
+			// now validate return type:
+			if (method.ReturnType != TypeHelper.ValueType)
+			{
+				if (throwOnFailure)
+				{
+					throw InvalidMethodReturn(method);
+				}
+
+				return null;
+			}
+
+			// and method parameters types:
+			var args = method.GetParameters();
+			foreach (ParameterInfo param in args)
+			{
+				if (param.ParameterType != TypeHelper.ValueType)
+				{
+					// maybe this is params method?
+					if (IsParamArrayParameter(param, args.Length))
+					{
+						return new FunctionItem(method, args.Length - 1, true);
+					}
+
+					if (throwOnFailure)
+					{
+						throw InvalidParamType(method, param);
+					}
+
+					return null;
+				}
+
+#if !CF
+				if (param.IsOut || param.IsOptional)
+				{
+					if (throwOnFailure)
+					{
+						throw InvalidParameter(method, param);
+					}
+
+					return null;
+				}
+#endif
+			}
+
+			return new FunctionItem(method, args.Length, false);
+		}
+
+#if !CF2
+
+		[DebuggerHidden]
+		public static bool CheckDelegate(Delegate target, bool throwOnFailure)
+		{
+			if (target == null)
+				throw new ArgumentNullException("target");
 
 			// check the invocation count:
-			if( deleg.GetInvocationList( ).Length != 1 )
+			if (target.GetInvocationList().Length != 1)
+			{
+				if (throwOnFailure)
 				{
-				if( throwOnFailure )
-					{
-					throw new ArgumentException(
-						Resources.errDelegateInvCount);
-					}
+					throw new ArgumentException(Resource.errDelegateInvCount);
+				}
 
 				return false;
-				}
+			}
 
 			// stop DynamicMethod here:
-			if( deleg.Method.GetType( ) != runtimeMethodType )
+			if (target.Method.GetType() != RuntimeMethodType)
+			{
+				if (throwOnFailure)
 				{
-				if( throwOnFailure )
-					{
-					throw MethodImportFailure(deleg.Method,
-						Resources.errMethodNotRuntimeMethod);
-					}
+					throw MethodImportFailure(
+						target.Method, Resource.errMethodNotRuntimeMethod);
+				}
 
 				return false;
-				}
+			}
 
 			// delegates with targets are not supported:
-			if( deleg.Target != null )
+			if (target.Target != null)
+			{
+				if (throwOnFailure)
 				{
-				if( throwOnFailure )
-					{
-					throw new ArgumentException(Resources.errDelegateWithTarget);
-					}
+					throw new ArgumentException(
+						Resource.errDelegateWithTarget);
+				}
 
 				return false;
-				}
+			}
 
 			return true;
 			}
 
+#endif
+
 		[DebuggerHidden]
-		public static MethodInfo GetHelper( Type type, string methodName, int argsCount )
-			{
-			if( type == null )
+		public static MethodInfo GetHelper(Type type, string methodName, int argsCount)
+		{
+			if (type == null)
 				throw new ArgumentNullException("type");
 
-			if( methodName == null )
+			if (methodName == null)
 				throw new ArgumentNullException("methodName");
 
-			const BindingFlags flags =
+			const BindingFlags Flags =
 				BindingFlags.Static |
 				BindingFlags.Public |
 				BindingFlags.FlattenHierarchy;
 
 			MethodInfo method = (argsCount < 0) ?
-				type.GetMethod(methodName, flags) :
-				type.GetMethod(methodName, flags, null,
-					MakeParamsTypes(argsCount), null);
+				type.GetMethod(methodName, Flags) :
+				type.GetMethod(methodName, Flags, null, MakeParamsTypes(argsCount), null);
 
-			if( method == null )
-				{
+			if (method == null)
+			{
 				throw new ArgumentException(
-					string.Format(Resources.errMethodNotFounded, methodName)
-					);
-				}
+					string.Format(Resource.errMethodNotFounded, methodName));
+			}
 
 			return method;
-			}
+		}
 
 		[DebuggerHidden]
-		private static Type[] MakeParamsTypes( int count )
-			{
+		private static Type[] MakeParamsTypes(int count)
+		{
 			var paramTypes = new Type[count];
 
-			for( int i = 0; i < count; i++ )
-				{
-				paramTypes[i] = valueType;
-				}
+			for (int i = 0; i < count; i++)
+			{
+				paramTypes[i] = TypeHelper.ValueType;
+			}
 
 			return paramTypes;
-			}
+		}
 
 		#endregion
 		#region Predicates
 
-#if !CF
-
-		private static bool IsValidParameter( ParameterInfo param )
-			{
-			return !param.IsOut
-				&& !param.IsOptional;
-			}
-
-#endif
-
-		private static bool IsParamArrayParameter( ParameterInfo param, int argsCount )
-			{
+		private static bool IsParamArrayParameter(ParameterInfo param, int argsCount)
+		{
 			return param.Position == argsCount - 1
-				&& param.ParameterType == arrayType
 #if !CF
 				&& !param.IsOptional
 				&& !param.IsOut
 #endif
-				;
-			}
+				&& param.ParameterType == TypeHelper.ArrayType;
+		}
 
 		#endregion
 		#region ThrowHelpers
 
-		private static ArgumentException InvalidMethodReturn( MethodInfo method )
-			{
-			return MethodImportFailure(method,
-				Resources.errMethodBadReturn,
-				method.ReturnType.FullName,
-				valueType.Name);
-			}
+		private static Exception InvalidMethodReturn(MethodInfo method)
+		{
+			Debug.Assert(method != null);
 
-		private static ArgumentException InvalidParamType(
-				MethodInfo method, ParameterInfo param )
-			{
-			return MethodImportFailure(method,
-				Resources.errMethodBadParam,
+			return MethodImportFailure(
+				method,
+				Resource.errMethodBadReturn,
+				method.ReturnType.FullName,
+				TypeHelper.ValueType.Name);
+		}
+
+		private static Exception InvalidParamType(MethodInfo method, ParameterInfo param)
+		{
+			Debug.Assert(method != null);
+			Debug.Assert(param != null);
+
+			return MethodImportFailure(
+				method,
+				Resource.errMethodBadParam,
 				param.Position,
 				param.ParameterType.Name,
-				valueType.Name);
-			}
+				TypeHelper.ValueType.Name);
+		}
 
-		private static ArgumentException InvalidParameter( MethodInfo method,
-				ParameterInfo param )
-			{
-			return MethodImportFailure(method,
-				Resources.errMethodParamInvalid,
+		private static Exception InvalidParameter(MethodInfo method, ParameterInfo param)
+		{
+			Debug.Assert(method != null);
+			Debug.Assert(param != null);
+
+			return MethodImportFailure(
+				method,
+				Resource.errMethodParamInvalid,
 				param.Position);
-			}
+		}
 
 		[DebuggerHidden]
-		private static ArgumentException MethodImportFailure( MethodInfo func,
-				string format, params object[] args )
-			{
-			var buf = new StringBuilder(Resources.errMethodImportFailed);
+		private static Exception MethodImportFailure(
+			MethodInfo method, string format, params object[] arguments)
+		{
+			var buf = new StringBuilder(Resource.errMethodImportFailed);
 
-			buf.Append(" \""); buf.Append(func);
-			buf.Append("\" "); buf.AppendFormat(format, args);
+			buf.Append(" \"");
+			buf.Append(method);
+			buf.Append("\" ");
+			buf.AppendFormat(format, arguments);
 
-			return new ArgumentException(buf.ToString( ));
-			}
+			return new ArgumentException(buf.ToString());
+		}
 
 		#endregion
-		}
 	}
+}

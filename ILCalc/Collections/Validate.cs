@@ -2,44 +2,45 @@
 using System.Text;
 
 namespace ILCalc
+{
+	internal static class Validate
 	{
-	static class Validate
+		public static void Name(string name)
 		{
-		public static void Name( string name )
+			if (string.IsNullOrEmpty(name))
 			{
-			if( string.IsNullOrEmpty(name) )
-				throw new ArgumentException(Resources.errIdentifierEmpty);
+				throw new ArgumentException(Resource.errIdentifierEmpty);
+			}
 
 			char first = name[0];
-			if( !char.IsLetter(first) && first != '_' )
-				{
+			if (!char.IsLetter(first) && first != '_')
+			{
 				throw InvalidFirstSymbol(name, first);
-				}
-
-			for( int i = 1; i < name.Length; i++ )
-				{
-				char ch = name[i];
-				if( !char.IsLetterOrDigit(ch) && ch != '_' )
-					{
-					throw new ArgumentException(
-						string.Format(Resources.errIdentifierSymbol, ch, name)
-						);
-					}
-				}
 			}
 
-		private static ArgumentException InvalidFirstSymbol( string name, char first )
+			for (int i = 1; i < name.Length; i++)
 			{
-			var buf = new StringBuilder( );
-			buf.AppendFormat(Resources.errIdentifierStartsWith, name);
-
-			if(first == '<')
+				char ch = name[i];
+				if (!char.IsLetterOrDigit(ch) && ch != '_')
 				{
-				buf.Append(' ');
-				buf.Append(Resources.errIdentifierFromLambda);
+					throw new ArgumentException(
+						string.Format(Resource.errIdentifierSymbol, ch, name));
 				}
-
-			return new ArgumentException(buf.ToString( ));
 			}
 		}
+
+		private static ArgumentException InvalidFirstSymbol(string name, char first)
+		{
+			var buf = new StringBuilder();
+			buf.AppendFormat(Resource.errIdentifierStartsWith, name);
+
+			if (first == '<')
+			{
+				buf.Append(' ');
+				buf.Append(Resource.errIdentifierFromLambda);
+			}
+
+			return new ArgumentException(buf.ToString());
+		}
 	}
+}

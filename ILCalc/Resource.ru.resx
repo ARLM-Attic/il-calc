@@ -211,7 +211,7 @@
     <value>Некорректный промежуток: значение Begin, End или Step не является конечным числом (Inf / NaN).</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
-    <value>Tabulator может быть скомпилирован только для выражения с одним или двумя аргументами.</value>
+    <value>Tabulator может быть скомпилирован только для выражения с одним или более аргументами.</value>
   </data>
   <data name="errTooLongRange" xml:space="preserve">
     <value>Некоррентный промежуток: количество итераций промежутка лежит вне границ представления целых чисел.</value>
