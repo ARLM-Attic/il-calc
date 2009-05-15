@@ -32,7 +32,7 @@
                 <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                     <LinearGradientBrush.GradientStops>
                         <GradientStop Color="#FFFFFF" Offset="0"/>
-                        <GradientStop Color="#CDCDCD" Offset="1"/>
+                        <GradientStop Color="#E6E6E6" Offset="1"/>
                     </LinearGradientBrush.GradientStops>
                 </LinearGradientBrush>
             </Border.Background>
@@ -109,9 +109,9 @@
             <TextBox.Background>
                 <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                     <LinearGradientBrush.GradientStops>
-                        <GradientStop Color="#707070" Offset="0"/>
-                        <GradientStop Color="#F4F4F4" Offset="0.04"/>
-                        <GradientStop Color="#B8B8B8" Offset="0.98"/>
+                        <GradientStop Color="#A0A0A0" Offset="0"/>
+                        <GradientStop Color="#FFFFFF" Offset="0.04"/>
+                        <GradientStop Color="#D0D0D0" Offset="0.98"/>
                         <GradientStop Color="#FFFFFF" Offset="1"/>
                     </LinearGradientBrush.GradientStops>
                 </LinearGradientBrush>
@@ -169,8 +169,8 @@
             <Border.Background>
                 <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                     <LinearGradientBrush.GradientStops>
-                        <GradientStop Color="#eeeeee" Offset="0"/>
-                        <GradientStop Color="#909090" Offset="1"/>
+                        <GradientStop Color="#F0F0F0" Offset="0"/>
+                        <GradientStop Color="#BEBEBE" Offset="1"/>
                     </LinearGradientBrush.GradientStops>
                 </LinearGradientBrush>
             </Border.Background>
@@ -188,6 +188,7 @@
                          Text="2sin(pi/6)+pi(3+4/3)"
                          FontFamily="Lucida Console Unicode"
                          FontSize="14" Foreground="Gray"
+                         BorderBrush="#AFAFAF"
                          >
                     
                     <ToolTipService.ToolTip>
@@ -197,10 +198,10 @@
                     <TextBox.Background>
                         <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                             <LinearGradientBrush.GradientStops>
-                                <GradientStop Color="#66747474" Offset="0"/>
+                                <GradientStop Color="#66A0A0A0" Offset="0"/>
                                 <GradientStop Color="#66FFFFFF" Offset="0.10"/>
                                 <GradientStop Color="#66DDDDDD" Offset="0.90"/>
-                                <GradientStop Color="#88FFFFFF" Offset="1"/>
+                                <GradientStop Color="#88D0D0D0" Offset="1"/>
                             </LinearGradientBrush.GradientStops>
                         </LinearGradientBrush>
                     </TextBox.Background>

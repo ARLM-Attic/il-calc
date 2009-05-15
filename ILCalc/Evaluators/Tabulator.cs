@@ -547,7 +547,7 @@ namespace ILCalc
 
 		/// <summary>
 		/// Begins an asynchronous tabulation of the compiled expression
-		/// with specified argument <paramref cref="ranges"/>.</summary>
+		/// with specified argument <paramref name="ranges"/>.</summary>
 		/// <param name="ranges">Argument ranges.</param>
 		/// <param name="callback">
 		/// The <see cref="AsyncCallback"/> delegate.</param>
