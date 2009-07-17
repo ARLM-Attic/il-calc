@@ -234,6 +234,9 @@
   <data name="errWrongStepSign" xml:space="preserve">
     <value>Wrong range step: invalid step sign.</value>
   </data>
+  <data name="errWrongTargetType" xml:space="preserve">
+    <value>Wrong target object type: {0} (not assignable to {1}).</value>
+  </data>
   <data name="sAnd" xml:space="preserve">
     <value>and</value>
   </data>

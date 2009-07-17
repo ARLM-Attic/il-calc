@@ -21,6 +21,8 @@ namespace ILCalc
 	[DebuggerDisplay("{ToString()} ({ArgumentsCount} argument(s))")]
 	[Serializable]
 
+	// TODO: should not know about creator!
+
 	public sealed partial class Interpret
 	{
 		#region Fields
@@ -41,24 +43,24 @@ namespace ILCalc
 		[Browsable(State.Never)] private readonly int stackMax;
 
 		// stack & params array, sync object:
-		[NonSerialized, Browsable(State.Never)] private double[] stackArray;
-		[NonSerialized, Browsable(State.Never)] private double[] paramArray;
-		[NonSerialized, Browsable(State.Never)] private object syncRoot;
+		[Browsable(State.Never), NonSerialized] private double[] stackArray;
+		[Browsable(State.Never), NonSerialized] private double[] paramArray;
+		[Browsable(State.Never), NonSerialized] private object syncRoot;
 
 		#endregion
 		#region Constructor
 
 		internal Interpret(string expression, int argsCount, bool check, InterpretCreator creator)
 		{
-			this.code = creator.Codes;
-			this.funcs = creator.Functions;
-			this.numbers = creator.Numbers;
+			this.code = creator.GetCodes();
+			this.funcs = creator.GetFunctions();
+			this.numbers = creator.GetNumbers();
 #if !CF2
-			this.delegates = creator.Delegates;
+			this.delegates = creator.GetDelegates();
 #endif
 
-			this.stackMax = creator.StackMax;
 			this.expression = expression;
+			this.stackMax = creator.StackMax;
 			this.argsCount = argsCount;
 			this.checkedMode = check;
 
@@ -77,7 +79,6 @@ namespace ILCalc
 		/// </summary>
 		public int ArgumentsCount
 		{
-			[DebuggerHidden]
 			get { return this.argsCount; }
 		}
 
@@ -86,9 +87,9 @@ namespace ILCalc
 		/// checks causes during the expression evaluation.</summary>
 		/// <value>Inherited from <see cref="CalcContext.OverflowCheck"/>
 		/// property of parent context value.</value>
+		// TODO: remove?
 		public bool OverflowCheck
 		{
-			[DebuggerHidden]
 			get { return this.checkedMode; }
 		}
 
@@ -117,15 +118,12 @@ namespace ILCalc
 		/// with no arguments.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate()
 		{
 			if (this.argsCount != 0)
-			{
-				throw this.WrongArgsCount(0);
-			}
+				throw WrongArgsCount(0);
 
-			return this.RunInterp(this.stackArray, this.paramArray);
+			return Run(this.stackArray, this.paramArray);
 		}
 
 		/// <summary>
@@ -139,17 +137,14 @@ namespace ILCalc
 		/// with one argument.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(double arg)
 		{
 			if (this.argsCount != 1)
-			{
-				throw this.WrongArgsCount(1);
-			}
+				throw WrongArgsCount(1);
 
 			this.paramArray[0] = arg;
 
-			return this.RunInterp(this.stackArray, this.paramArray);
+			return Run(this.stackArray, this.paramArray);
 		}
 
 		/// <summary>
@@ -164,18 +159,15 @@ namespace ILCalc
 		/// method with two arguments.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(double arg1, double arg2)
 		{
 			if (this.argsCount != 2)
-			{
-				throw this.WrongArgsCount(2);
-			}
+				throw WrongArgsCount(2);
 
 			this.paramArray[0] = arg1;
 			this.paramArray[1] = arg2;
 
-			return this.RunInterp(this.stackArray, this.paramArray);
+			return Run(this.stackArray, this.paramArray);
 		}
 
 		// TODO: Evaluate(,,)
@@ -190,15 +182,12 @@ namespace ILCalc
 		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(params double[] args)
 		{
-			if (this.argsCount != args.Length)
-			{
-				throw this.WrongArgsCount(args.Length);
-			}
+			if (args == null || args.Length != this.argsCount)
+				throw WrongArgsCount(args);
 
-			return this.RunInterp(this.stackArray, args);
+			return Run(this.stackArray, args);
 		}
 
 		#endregion
@@ -216,28 +205,22 @@ namespace ILCalc
 		/// method with no arguments.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double EvaluateSync()
 		{
 			if (this.argsCount != 0)
-			{
-				throw this.WrongArgsCount(0);
-			}
+				throw WrongArgsCount(0);
 
 			if (Monitor.TryEnter(this.syncRoot))
 			{
 				try
 				{
-					return this.RunInterp(this.stackArray, this.paramArray);
+					return this.Run(this.stackArray, this.paramArray);
 				}
-				finally
-				{
-					Monitor.Exit(this.syncRoot);
-				}
+				finally { Monitor.Exit(this.syncRoot); }
 			}
 
 			// no need for allocate zero-lenght array
-			return this.RunInterp(new double[this.stackMax], this.paramArray);
+			return this.Run(new double[this.stackMax], this.paramArray);
 		}
 
 		/// <summary>
@@ -251,13 +234,10 @@ namespace ILCalc
 		/// with one argument.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double EvaluateSync(double arg)
 		{
 			if (this.argsCount != 1)
-			{
-				throw this.WrongArgsCount(1);
-			}
+				throw WrongArgsCount(1);
 
 			if (Monitor.TryEnter(this.syncRoot))
 			{
@@ -265,15 +245,12 @@ namespace ILCalc
 
 				try
 				{
-					return this.RunInterp(this.stackArray, this.paramArray);
+					return this.Run(this.stackArray, this.paramArray);
 				}
-				finally
-				{
-					Monitor.Exit(this.syncRoot);
-				}
+				finally { Monitor.Exit(this.syncRoot); }
 			}
 
-			return this.RunInterp(new double[this.stackMax], new[] { arg });
+			return this.Run(new double[this.stackMax], new[] { arg });
 		}
 
 		/// <summary>
@@ -291,9 +268,7 @@ namespace ILCalc
 		public double EvaluateSync(double arg1, double arg2)
 		{
 			if (this.argsCount != 2)
-			{
-				throw this.WrongArgsCount(2);
-			}
+				throw WrongArgsCount(2);
 
 			if (Monitor.TryEnter(this.syncRoot))
 			{
@@ -302,15 +277,12 @@ namespace ILCalc
 
 				try
 				{
-					return this.RunInterp(this.stackArray, this.paramArray);
+					return this.Run(this.stackArray, this.paramArray);
 				}
-				finally
-				{
-					Monitor.Exit(this.syncRoot);
-				}
+				finally { Monitor.Exit(this.syncRoot); }
 			}
 
-			return this.RunInterp(new double[this.stackMax], new[] { arg1, arg2 });
+			return this.Run(new double[this.stackMax], new[] { arg1, arg2 });
 		}
 
 		/// <summary>
@@ -322,27 +294,21 @@ namespace ILCalc
 		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double EvaluateSync(params double[] args)
 		{
-			if (this.argsCount != args.Length)
-			{
-				throw this.WrongArgsCount(args.Length);
-			}
+			if (args == null || args.Length != this.argsCount)
+				throw WrongArgsCount(args);
 
 			if (Monitor.TryEnter(this.syncRoot))
 			{
 				try
 				{
-					return this.RunInterp(this.stackArray, args);
+					return this.Run(this.stackArray, args);
 				}
-				finally
-				{
-					Monitor.Exit(this.syncRoot);
-				}
+				finally { Monitor.Exit(this.syncRoot); }
 			}
 
-			return this.RunInterp(new double[this.stackMax], args);
+			return this.Run(new double[this.stackMax], args);
 		}
 
 		#endregion
@@ -362,52 +328,38 @@ namespace ILCalc
 				Resource.errWrongArgsCount, actualCount, this.argsCount));
 		}
 
-		private double RunInterp(double[] stackArr, double[] args)
+		private Exception WrongArgsCount(double[] args)
+		{
+			if (args == null)
+				return new ArgumentNullException("args");
+
+			return new ArgumentException(string.Format(
+				Resource.errWrongArgsCount, args.Length, this.argsCount));
+		}
+
+		private double Run(double[] stackArr, double[] args)
 		{
 			int c = 0, // code position
-			    n = 0; // number position
+			    n = 0, // number position
+			    i =-1; // stack marker
 
 			double[] stack = stackArr;
-			int i = -1;
-
 			while (true)
 			{
 				int op = this.code[c++];
-
 				if (Code.IsOperator(op))
 				{
 					double value = stack[i--];
 					if (op != Code.Neg)
 					{
-						if (op == Code.Add)
-						{
-							stack[i] += value;
-						}
-						else if (op == Code.Mul)
-						{
-							stack[i] *= value;
-						}
-						else if (op == Code.Sub)
-						{
-							stack[i] -= value;
-						}
-						else if (op == Code.Div)
-						{
-							stack[i] /= value;
-						}
-						else if (op == Code.Rem)
-						{
-							stack[i] %= value;
-						}
-						else
-						{
-							stack[i] = Math.Pow(stack[i], value);
-						}
+						if      (op == Code.Add) stack[i] += value;
+						else if (op == Code.Mul) stack[i] *= value;
+						else if (op == Code.Sub) stack[i] -= value;
+						else if (op == Code.Div) stack[i] /= value;
+						else if (op == Code.Rem) stack[i] %= value;
+						else stack[i] = Math.Pow(stack[i], value);
 					}
-					else
-					{
-						stack[++i] = -value;
-					}
+					else stack[++i] = -value;
 				}
 				else if (op == Code.Number)
 				{
@@ -416,24 +368,14 @@ namespace ILCalc
 				else
 				{
 					int id = this.code[c++];
-
 					if (op == Code.Argument)
 					{
 						stack[++i] = args[id];
 					}
 #if !CF2
-					else if (op == Code.Delegate0)
-					{
-						stack[++i] = ((EvalFunc0) this.delegates[id])();
-					}
-					else if (op == Code.Delegate1)
-					{
-						stack[i] = ((EvalFunc1) this.delegates[id])(stack[i]);
-					}
-					else if (op == Code.Delegate2)
-					{
-						stack[--i] = ((EvalFunc2) this.delegates[id])(stack[i], stack[i + 1]);
-					}
+					else if (op == Code.Delegate0) stack[++i] = ((EvalFunc0) this.delegates[id])();
+					else if (op == Code.Delegate1) stack[  i] = ((EvalFunc1) this.delegates[id])(stack[i]);
+					else if (op == Code.Delegate2) stack[--i] = ((EvalFunc2) this.delegates[id])(stack[i], stack[i+1]);
 #endif
 					else if (op == Code.Function)
 					{
@@ -441,11 +383,7 @@ namespace ILCalc
 					}
 					else
 					{
-						if (this.checkedMode)
-						{
-							Check(stack[0]);
-						}
-
+						if (this.checkedMode) Check(stack[0]);
 						return stack[0];
 					}
 				}

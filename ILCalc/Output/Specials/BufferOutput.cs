@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ILCalc
 {
+	[Serializable]
 	internal class BufferOutput : IExpressionOutput
 	{
 		#region Fields
@@ -15,6 +17,7 @@ namespace ILCalc
 		#endregion
 		#region Constructor
 
+		//TODO: abstract class?
 		public BufferOutput()
 		{
 			this.functions = new List<FunctionItem>(2);
@@ -57,20 +60,13 @@ namespace ILCalc
 			this.code.Add(Code.BeginCall);
 		}
 
-		public void PutBeginParams(int fixCount, int varCount)
-		{
-			this.code.Add(Code.ParamCall);
-			this.data.Add(fixCount);
-			this.data.Add(varCount);
-		}
-
 		public void PutFunction(FunctionItem func, int argsCount)
 		{
 			Debug.Assert(func != null);
 			Debug.Assert(argsCount >= 0);
 
 			this.code.Add(Code.Function);
-			this.data.Add(argsCount);
+			this.data.Add(argsCount); // NOTE: not needed for compiler?
 			this.functions.Add(func);
 		}
 
@@ -82,46 +78,22 @@ namespace ILCalc
 		#endregion
 		#region Methods
 
+		// TODO: move to OptimizeOutput?
 		public void WriteTo(IExpressionOutput output)
 		{
-			int n = 0, f = 0, d = 0;
+			int i = 0, n = 0, f = 0, d = 0;
 
-			for (int i = 0; i < this.code.Count; i++)
+			while (true)
 			{
-				int op = this.code[i];
+				int op = this.code[i++];
 
-				if (Code.IsOperator(op))
-				{
-					output.PutOperator(op);
-				}
-				else if (op == Code.Number)
-				{
-					output.PutNumber(this.numbers[n++]);
-				}
-				else if (op == Code.Argument)
-				{
-					output.PutArgument(this.data[d++]);
-				}
-				else if (op == Code.Function)
-				{
-					output.PutFunction(this.functions[f++], this.data[d++]);
-				}
-				else if (op == Code.Separator)
-				{
-					output.PutSeparator();
-				}
-				else if (op == Code.BeginCall)
-				{
-					output.PutBeginCall();
-				}
-				else if (op == Code.ParamCall)
-				{
-					output.PutBeginParams(this.data[d++], this.data[d++]);
-				}
-				else
-				{
-					output.PutExprEnd();
-				}
+				if (Code.IsOperator(op))       output.PutOperator(op);
+				else if (op == Code.Number)    output.PutNumber(this.numbers[n++]);
+				else if (op == Code.Argument)  output.PutArgument(this.data[d++]);
+				else if (op == Code.Function)  output.PutFunction(this.functions[f++], this.data[d++]);
+				else if (op == Code.Separator) output.PutSeparator();
+				else if (op == Code.BeginCall) output.PutBeginCall();
+				else { output.PutExprEnd(); break; }
 			}
 		}
 

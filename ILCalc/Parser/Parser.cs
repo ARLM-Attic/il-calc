@@ -19,7 +19,7 @@ namespace ILCalc
 			int separators = 0;
 			var operators = new Stack<int>();
 
-			while (i < this.exprLen)
+			while (i < this.xlen)
 			{
 				char c = this.expr[i];
 
@@ -38,11 +38,11 @@ namespace ILCalc
 					// [ )123 ], [ 123 456 ] or [ pi123 ]
 					if (prev >= Item.Number)
 					{
-						this.ScanNumber(c, ref i);
-						throw this.IncorrectConstr(prev, Item.Number, i);
+						ScanNumber(c, ref i);
+						throw IncorrectConstr(prev, Item.Number, i);
 					}
 
-					this.output.PutNumber(ScanNumber(c, ref i));
+					Output.PutNumber(ScanNumber(c, ref i));
 					prev = Item.Number;
 				}
 
@@ -56,7 +56,7 @@ namespace ILCalc
 						// [ )+ ], [ 123+ ] or [ pi+ ]
 						if (prev >= Item.Number)
 						{
-							this.Flush(operators, Priority[oper]);
+							Flush(operators, Priority[oper]);
 							operators.Push(oper);
 						}
 
@@ -70,7 +70,7 @@ namespace ILCalc
 						// UNARY [+] =========
 						else
 						{
-							throw this.IncorrectConstr(prev, Item.Operator, i);
+							throw IncorrectConstr(prev, Item.Operator, i);
 						}
 
 						prev = Item.Operator;
@@ -81,17 +81,17 @@ namespace ILCalc
 					{
 						if (!func)
 						{
-							throw this.InvalidSeparator();
+							throw InvalidSeparator();
 						}
 
 						// [ (, ], [ +, ] or [ ,, ]
 						if (prev <= Item.Begin)
 						{
-							throw this.IncorrectConstr(prev, Item.Separator, i);
+							throw IncorrectConstr(prev, Item.Separator, i);
 						}
 
-						this.Flush(operators);
-						this.output.PutSeparator();
+						Flush(operators);
+						Output.PutSeparator();
 						separators++;
 
 						prev = Item.Separator;
@@ -103,16 +103,16 @@ namespace ILCalc
 						// [ )( ], [ 123( ] or [ pi( ]
 						if (prev >= Item.Number)
 						{
-							if (!this.context.implicitMul)
+							if (!Context.ImplicitMul)
 							{
-								throw this.IncorrectConstr(prev, Item.Begin, i);
+								throw IncorrectConstr(prev, Item.Begin, i);
 							}
 						
-							this.Flush(operators, 1);
+							Flush(operators, 1);
 							operators.Push(Code.Mul); // Insert [*]
 						}
 
-						this.ParseNested(ref i, false);
+						ParseNested(ref i, false);
 						prev = Item.End;
 					}
 
@@ -123,13 +123,13 @@ namespace ILCalc
 						if (prev <= Item.Separator || (!func
 						 && prev == Item.Begin))
 						{
-							throw this.IncorrectConstr(prev, Item.End, i);
+							throw IncorrectConstr(prev, Item.End, i);
 						}
 
-						this.Flush(operators);
+						Flush(operators);
 						if (this.exprDepth == 0)
 						{
-							throw this.BraceDisbalance(this.curPos, true);
+							throw BraceDisbalance(this.curPos, true);
 						}
 
 						if (prev != Item.Begin)
@@ -148,26 +148,26 @@ namespace ILCalc
 							// [ pi sin ]
 							if (prev == Item.Identifier)
 							{
-								throw this.IncorrectIden(i);
+								throw IncorrectIden(i);
 							}
 
-							if (!this.context.implicitMul)
+							if (!Context.ImplicitMul)
 							{
-								throw this.IncorrectConstr(prev, Item.Identifier, i);
+								throw IncorrectConstr(prev, Item.Identifier, i);
 							}
 
 							// [ )pi ] or [ 123pi ]
-							this.Flush(operators, 1);
+							Flush(operators, 1);
 							operators.Push(Code.Mul); // Insert [*]
 						}
 
-						prev = this.ScanIdenifier(ref i);
+						prev = ScanIdenifier(ref i);
 					}
 
 					// ========================================= UNRESOLVED ==
 					else
 					{
-						throw this.UnresolvedSymbol(this.curPos);
+						throw UnresolvedSymbol(this.curPos);
 					}
 				}
 
@@ -178,11 +178,11 @@ namespace ILCalc
 			// [ +) ], [ ,) ] or [ () ]
 			if (prev <= Item.Begin)
 			{
-				throw this.IncorrectConstr(prev, Item.End, i);
+				throw IncorrectConstr(prev, Item.End, i);
 			}
 
-			this.Flush(operators);
-			this.output.PutExprEnd();
+			Flush(operators);
+			Output.PutExprEnd();
 
 			return -1;
 		}
@@ -193,15 +193,16 @@ namespace ILCalc
 		{
 			while (stack.Count > 0)
 			{
-				this.output.PutOperator(stack.Pop());
+				Output.PutOperator(stack.Pop());
 			}
 		}
 
 		private void Flush(Stack<int> stack, int priority)
 		{
-			while (stack.Count > 0 && priority <= Priority[stack.Peek()])
+			while (stack.Count > 0 &&
+			       priority <= Priority[stack.Peek()])
 			{
-				this.output.PutOperator(stack.Pop());
+				Output.PutOperator(stack.Pop());
 			}
 		}
 

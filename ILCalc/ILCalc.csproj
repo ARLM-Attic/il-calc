@@ -47,11 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
+    <Compile Include="CalcContext.Serialization.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
     <Compile Include="CalcContext.Methods.cs" />
     <Compile Include="Collections\FunctionItem.cs" />
-    <Compile Include="Collections\FunctionDictionary.cs" />
+    <Compile Include="Collections\FunctionCollection.cs" />
     <Compile Include="Collections\FunctionFactory.cs" />
     <Compile Include="Collections\FunctionGroup.cs" />
     <Compile Include="Collections\Validate.cs" />
@@ -65,10 +66,10 @@
     <Compile Include="Misc\Delegates.cs" />
     <Compile Include="Misc\TabRange.cs" />
     <Compile Include="Misc\TabRange.Exception.cs" />
+    <Compile Include="Output\NewCompiler\CompilerBase.cs" />
+    <Compile Include="Output\NewCompiler\EvaluatorCompiler.cs" />
+    <Compile Include="Output\NewCompiler\TabulatorCompiler.cs" />
     <Compile Include="Output\TypeHelper.cs" />
-    <Compile Include="Output\Compiler\CompilerBase.cs" />
-    <Compile Include="Output\Compiler\EvaluatorCompiler.cs" />
-    <Compile Include="Output\Compiler\TabulatorCompiler.cs" />
     <Compile Include="Output\IExpressionOutput.cs" />
     <Compile Include="Output\Interpret\FuncCall.cs" />
     <Compile Include="Output\Interpret\FuncCall.Serialize.cs" />
@@ -94,7 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CalcKey.snk" />
-    <None Include="UserClasses.cd" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

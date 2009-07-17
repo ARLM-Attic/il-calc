@@ -4,95 +4,114 @@ using System.Reflection;
 using System.Text;
 
 namespace ILCalc
-	{
+{
 	internal static class FunctionFactory
-		{
+	{
 		#region Fields
 
-		private static readonly Type RuntimeMethodType
-			= typeof(Math).GetMethod("Sin").GetType();
+		// standard runtime method type:
+		private static readonly Type RuntimeMethodType =
+			typeof(FunctionFactory).GetMethod("TryResolve").GetType();
 
 		#endregion
 		#region Methods
 
-		public static FunctionItem CreateInstance(MethodInfo method, bool throwOnFailure)
+		public static FunctionItem FromReflection(
+			MethodInfo method, object target, bool throwOnFailure)
 		{
-			// MethodInfo from DynamicMethod shouldn't pass here:
+			// DynamicMethod shouldn't pass here:
 			if (method.GetType() != RuntimeMethodType)
 			{
 				if (throwOnFailure)
-				{
-					throw MethodImportFailure(
-						method, Resource.errMethodNotRuntimeMethod);
-				}
+					throw MethodImportFailure(method, Resource.errMethodNotRuntimeMethod);
 
 				return null;
 			}
 
-			// (should be removed in future)
-			if (!method.IsStatic)
+			// validate static methods:
+			if (target == null && !method.IsStatic)
 			{
 				if (throwOnFailure)
-				{
-					throw MethodImportFailure(
-						method, Resource.errMethodNotStatic);
-				}
+					throw MethodImportFailure(method, Resource.errMethodNotStatic);
 
 				return null;
 			}
 
-			// now validate return type:
+			// validate target type:
+			if (target != null)
+			{
+				Debug.Assert(!method.IsStatic);
+
+				Type thisType = method.DeclaringType;
+				Type targetType = target.GetType();
+
+				if (!thisType.IsAssignableFrom(targetType))
+				{
+					if (throwOnFailure)
+						throw new ArgumentException(string.Format(
+							Resource.errWrongTargetType,
+							targetType.FullName,
+							thisType.FullName));
+
+					return null;
+				}
+			}
+
+			// validate return type:
 			if (method.ReturnType != TypeHelper.ValueType)
 			{
 				if (throwOnFailure)
-				{
 					throw InvalidMethodReturn(method);
-				}
 
 				return null;
 			}
 
 			// and method parameters types:
-			var args = method.GetParameters();
-			foreach (ParameterInfo param in args)
+			var parameters = method.GetParameters();
+			foreach (ParameterInfo p in parameters)
 			{
-				if (param.ParameterType != TypeHelper.ValueType)
+				if (p.ParameterType != TypeHelper.ValueType)
 				{
 					// maybe this is params method?
-					if (IsParamArrayParameter(param, args.Length))
+					if (p.Position == parameters.Length - 1
+#if !CF
+						&& !p.IsOptional
+						&& !p.IsOut
+#endif
+						&& p.ParameterType == TypeHelper.ArrayType)
 					{
-						return new FunctionItem(method, args.Length - 1, true);
+						return new FunctionItem(
+							method, target, parameters.Length - 1, true);
 					}
 
 					if (throwOnFailure)
-					{
-						throw InvalidParamType(method, param);
-					}
+						throw InvalidParamType(method, p);
 
 					return null;
 				}
 
 #if !CF
-				if (param.IsOut || param.IsOptional)
+				if (p.IsOut || p.IsOptional)
 				{
 					if (throwOnFailure)
-					{
-						throw InvalidParameter(method, param);
-					}
+						throw InvalidParameter(method, p);
 
 					return null;
 				}
 #endif
 			}
 
-			return new FunctionItem(method, args.Length, false);
+			return new FunctionItem(method, target, parameters.Length, false);
 		}
 
 #if !CF2
 
-		[DebuggerHidden]
-		public static bool CheckDelegate(Delegate target, bool throwOnFailure)
+		public static FunctionItem FromDelegate(
+			Delegate target, int argsCount, bool hasParams, bool throwOnFailure)
 		{
+			Debug.Assert(argsCount >= 0);
+
+			// common callers argument check:
 			if (target == null)
 				throw new ArgumentNullException("target");
 
@@ -100,50 +119,36 @@ namespace ILCalc
 			if (target.GetInvocationList().Length != 1)
 			{
 				if (throwOnFailure)
-				{
-					throw new ArgumentException(Resource.errDelegateInvCount);
-				}
+					throw new ArgumentException(
+						Resource.errDelegateInvCount);
 
-				return false;
+				return null;
 			}
 
 			// stop DynamicMethod here:
 			if (target.Method.GetType() != RuntimeMethodType)
 			{
-				if (throwOnFailure)
-				{
-					throw MethodImportFailure(
-						target.Method, Resource.errMethodNotRuntimeMethod);
-				}
+				// cool hack here =)
+				// get the Delegate invoker:
+				var invoker = target.GetType().GetMethod("Invoke");
 
-				return false;
+				// and create function with Delegate target:
+				return new FunctionItem(
+					invoker, target, argsCount, hasParams);
 			}
 
-			// delegates with targets are not supported:
-			if (target.Target != null)
-			{
-				if (throwOnFailure)
-				{
-					throw new ArgumentException(
-						Resource.errDelegateWithTarget);
-				}
-
-				return false;
-			}
-
-			return true;
-			}
+			return new FunctionItem(
+				target.Method, target.Target, argsCount, hasParams);
+		}
 
 #endif
 
-		[DebuggerHidden]
-		public static MethodInfo GetHelper(Type type, string methodName, int argsCount)
+		public static MethodInfo TryResolve(
+			Type type, string name, int argsCount)
 		{
-			if (type == null)
-				throw new ArgumentNullException("type");
-
-			if (methodName == null)
-				throw new ArgumentNullException("methodName");
+			// common arguments checks:
+			if (type == null) throw new ArgumentNullException("type");
+			if (name == null) throw new ArgumentNullException("name");
 
 			const BindingFlags Flags =
 				BindingFlags.Static |
@@ -151,46 +156,31 @@ namespace ILCalc
 				BindingFlags.FlattenHierarchy;
 
 			MethodInfo method = (argsCount < 0) ?
-				type.GetMethod(methodName, Flags) :
-				type.GetMethod(methodName, Flags, null, MakeParamsTypes(argsCount), null);
+				type.GetMethod(name, Flags) :
+				type.GetMethod(name, Flags, null, MakeArgs(argsCount), null);
 
 			if (method == null)
 			{
 				throw new ArgumentException(
-					string.Format(Resource.errMethodNotFounded, methodName));
+					string.Format(Resource.errMethodNotFounded, name));
 			}
 
 			return method;
 		}
 
-		[DebuggerHidden]
-		private static Type[] MakeParamsTypes(int count)
-		{
-			var paramTypes = new Type[count];
+		#endregion
+		#region Helpers
 
-			for (int i = 0; i < count; i++)
+		private static Type[] MakeArgs(int count)
+		{
+			var types = new Type[count];
+			for (int i = 0; i < types.Length; i++)
 			{
-				paramTypes[i] = TypeHelper.ValueType;
+				types[i] = TypeHelper.ValueType;
 			}
 
-			return paramTypes;
+			return types;
 		}
-
-		#endregion
-		#region Predicates
-
-		private static bool IsParamArrayParameter(ParameterInfo param, int argsCount)
-		{
-			return param.Position == argsCount - 1
-#if !CF
-				&& !param.IsOptional
-				&& !param.IsOut
-#endif
-				&& param.ParameterType == TypeHelper.ArrayType;
-		}
-
-		#endregion
-		#region ThrowHelpers
 
 		private static Exception InvalidMethodReturn(MethodInfo method)
 		{
@@ -203,10 +193,11 @@ namespace ILCalc
 				TypeHelper.ValueType.Name);
 		}
 
-		private static Exception InvalidParamType(MethodInfo method, ParameterInfo param)
+		private static Exception InvalidParamType(
+			MethodInfo method, ParameterInfo param)
 		{
 			Debug.Assert(method != null);
-			Debug.Assert(param != null);
+			Debug.Assert(param  != null);
 
 			return MethodImportFailure(
 				method,
@@ -216,7 +207,8 @@ namespace ILCalc
 				TypeHelper.ValueType.Name);
 		}
 
-		private static Exception InvalidParameter(MethodInfo method, ParameterInfo param)
+		private static Exception InvalidParameter(
+			MethodInfo method, ParameterInfo param)
 		{
 			Debug.Assert(method != null);
 			Debug.Assert(param != null);
@@ -227,16 +219,19 @@ namespace ILCalc
 				param.Position);
 		}
 
-		[DebuggerHidden]
 		private static Exception MethodImportFailure(
 			MethodInfo method, string format, params object[] arguments)
 		{
-			var buf = new StringBuilder(Resource.errMethodImportFailed);
+			Debug.Assert(format != null);
+			Debug.Assert(arguments != null);
 
-			buf.Append(" \"");
-			buf.Append(method);
-			buf.Append("\" ");
-			buf.AppendFormat(format, arguments);
+			var buf = new StringBuilder(
+				Resource.errMethodImportFailed);
+
+			buf.Append(" \"")
+			   .Append(method)
+			   .Append("\" ")
+			   .AppendFormat(format, arguments);
 
 			return new ArgumentException(buf.ToString());
 		}

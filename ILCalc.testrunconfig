@@ -1,7 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <TestRunConfiguration name="ILCalc" id="929d8f02-98b6-41df-9a7f-26933bf6fa9b" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2006">
   <Description>This is a default test run configuration for a local test run.</Description>
-  <CodeCoverage keyFile="D:\Projects\ILCalc\ILCalc\CalcKey.snk" />
+  <CodeCoverage enabled="true" keyFile="D:\Projects\ILCalc\ILCalc\CalcKey.snk">
+    <Regular>
+      <CodeCoverageItem binaryFile="ILCalc\bin\Debug\ILCalc.dll" pdbFile="ILCalc\bin\Debug\ILCalc.pdb" instrumentInPlace="true" />
+    </Regular>
+  </CodeCoverage>
   <Timeouts runTimeout="1800000" testTimeout="600000" />
   <NamingScheme baseName="ILCalc_Test" useDefault="false" />
   <Hosts skipUnhostableTests="false" />

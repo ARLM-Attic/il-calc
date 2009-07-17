@@ -2,7 +2,7 @@
 using System.Diagnostics;
 
 namespace ILCalc
-	{
+{
 	using State = DebuggerBrowsableState;
 	using Browsable = DebuggerBrowsableAttribute;
 
@@ -24,7 +24,7 @@ namespace ILCalc
 	[DebuggerDisplay("{ToString()} ({ArgumentsCount} argument(s))")]
 
 	public sealed class Evaluator : IEvaluator
-		{
+	{
 		#region Fields
 
 		/// <summary>
@@ -45,10 +45,8 @@ namespace ILCalc
 		[Browsable(State.Never)]
 		public readonly EvalFunc2 Evaluate2;
 
-		// NOTE: fix summary if impl redirect
-
 		/// <summary>
-		/// Directly invokes the compiled expression with giving three or more arguments.
+		/// Directly invokes the compiled expression with specified arguments.
 		/// This field is readonly.</summary>
 		[Browsable(State.Never)]
 		public readonly EvalFuncN EvaluateN;
@@ -62,15 +60,18 @@ namespace ILCalc
 		#endregion
 		#region Constructor
 
-		internal Evaluator(string expression, Delegate method, int argsCount)
+		internal Evaluator(
+			string expression, Delegate method, int argsCount)
 		{
 			Debug.Assert(expression != null);
 			Debug.Assert(argsCount >= 0);
 			Debug.Assert(method != null);
 
-			this.Evaluate0 = this.Throw0;
-			this.Evaluate1 = this.Throw1;
-			this.Evaluate2 = this.Throw2;
+			this.expression = expression;
+			this.argsCount  = argsCount;
+			this.Evaluate0 = Throw0;
+			this.Evaluate1 = Throw1;
+			this.Evaluate2 = Throw2;
 
 			if (argsCount == 0)
 			{
@@ -91,9 +92,6 @@ namespace ILCalc
 			{
 				this.EvaluateN = (EvalFuncN) method;
 			}
-
-			this.expression = expression;
-			this.argsCount = argsCount;
 		}
 
 		#endregion
@@ -105,7 +103,6 @@ namespace ILCalc
 		[Browsable(State.Never)]
 		public int ArgumentsCount
 		{
-			[DebuggerHidden]
 			get { return this.argsCount; }
 		}
 
@@ -113,7 +110,6 @@ namespace ILCalc
 		/// Returns the expression string,
 		/// that this <see cref="Evaluator"/> represents.</summary>
 		/// <returns>Expression string.</returns>
-		[DebuggerHidden]
 		public override string ToString()
 		{
 			return this.expression;
@@ -131,7 +127,6 @@ namespace ILCalc
 		/// with no arguments is not compiled.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate()
 		{
 			return this.Evaluate0();
@@ -146,7 +141,6 @@ namespace ILCalc
 		/// with one argument is not compiled.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(double arg)
 		{
 			return this.Evaluate1(arg);
@@ -162,7 +156,6 @@ namespace ILCalc
 		/// <see cref="Evaluator"/> with two arguments is not compiled.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(double arg1, double arg2)
 		{
 			return this.Evaluate2(arg1, arg2);
@@ -180,7 +173,6 @@ namespace ILCalc
 		/// with giving three arguments.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(double arg1, double arg2, double arg3)
 		{
 			return this.EvaluateN(arg1, arg2, arg3);
@@ -196,13 +188,11 @@ namespace ILCalc
 		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public double Evaluate(params double[] args)
 		{
-			if (args == null
-			 || args.Length != this.argsCount)
+			if (args == null || args.Length != this.argsCount)
 			{
-				this.WrongArgs(args);
+				WrongArgs(args);
 			}
 
 			return this.EvaluateN(args);
@@ -211,37 +201,36 @@ namespace ILCalc
 		#endregion
 		#region Throw Methods
 
-		[DebuggerHidden]
 		private double Throw0()
 		{
-			throw new InvalidOperationException(string.Format(
-				Resource.errWrongArgsCount, 0, this.argsCount));
+			throw new InvalidOperationException(
+				string.Format(Resource.errWrongArgsCount, 0, this.argsCount));
 		}
 
-		[DebuggerHidden]
 		private double Throw1(double arg)
 		{
-			throw new InvalidOperationException(string.Format(
-				Resource.errWrongArgsCount, 1, this.argsCount));
+			throw new InvalidOperationException(
+				string.Format(Resource.errWrongArgsCount, 1, this.argsCount));
 		}
 
-		[DebuggerHidden]
 		private double Throw2(double arg1, double arg2)
 		{
-			throw new InvalidOperationException(string.Format(
-				Resource.errWrongArgsCount, 2, this.argsCount));
+			throw new InvalidOperationException(
+				string.Format(Resource.errWrongArgsCount, 2, this.argsCount));
 		}
 
-		[DebuggerHidden]
 		private void WrongArgs(double[] args)
 		{
 			if( args == null )
 				throw new ArgumentNullException("args");
 
-			throw new ArgumentException(string.Format(
-				Resource.errWrongArgsCount, args.Length, this.argsCount));
+			throw new ArgumentException(
+				string.Format(
+					Resource.errWrongArgsCount,
+					args.Length,
+					this.argsCount));
 		}
 
 		#endregion
-		}
 	}
+}

@@ -128,7 +128,7 @@ namespace SilverCalc
 
 		private void listFunctions_Click( object sender, RoutedEventArgs e )
 		{
-			this.ListMembers("Available functions:", this.calc.Functions.Keys);
+			this.ListMembers("Available functions:", this.calc.Functions.Names);
 		}
 
 		private void listConstants_Click(object sender, RoutedEventArgs e)

@@ -234,6 +234,9 @@
   <data name="errWrongStepSign" xml:space="preserve">
     <value>Некорректный промежуток: не правильный знак значения Step.</value>
   </data>
+  <data name="errWrongTargetType" xml:space="preserve">
+    <value>Неверный тип объекта вызова: {0} (не совместимый с {1}).</value>
+  </data>
   <data name="sAnd" xml:space="preserve">
     <value>и</value>
   </data>

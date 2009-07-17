@@ -9,11 +9,11 @@ using ILCalc;
 using ILCalc.Console;
 
 namespace ILCalc_Console
-	{
+{
 	public class Program
-		{
+	{
 		static void Main( )
-			{
+		{
 			#region Initialize
 
 			Console.Title = "ILCalc Console";
@@ -36,7 +36,7 @@ namespace ILCalc_Console
 			#endregion
 
 			while(true)
-				{
+			{
 				#region Input
 
 				Console.ForegroundColor = ConsoleColor.Gray;
@@ -54,72 +54,73 @@ namespace ILCalc_Console
 				if( input == "exit" ) break;
 				if( input == "args" )		 ShowCollection(calc.Arguments, ' ');
 				else if( input == "consts" ) ShowCollection(calc.Constants.Keys, ' ');
-				else if( input == "funcs"  ) ShowCollection(calc.Functions.Keys, '\t');
+				else if( input == "funcs"  ) ShowCollection(calc.Functions.Names, '\t');
 				else if( input == "case" )
-					{
+				{
 					calc.IgnoreCase = !calc.IgnoreCase;
 					Console.WriteLine(calc.IgnoreCase ? " = insensitive" : " = sensitive");
-					}
+				}
 				else if( input == "check" )
-					{
+				{
 					calc.OverflowCheck = !calc.OverflowCheck;
 					Console.WriteLine(" = {0}", calc.OverflowCheck ? "true" : "false");
-					}
+				}
 				else if(input == "range")
-					{
+				{
 					Console.WriteLine();
 					Console.Write(" begin = "); range.Begin = InputDouble(calc.Culture);
 					Console.Write(" end   = "); range.End   = InputDouble(calc.Culture);
 					Console.Write(" step  = "); range.Step  = InputDouble(calc.Culture);
-					}
+				}
 				else if( input == "gc" )
-					{
+				{
 					GC.Collect();
 					GC.WaitForPendingFinalizers();
 					Console.WriteLine(" collected");
-					}
+				}
 				else if( input == "save" ) SaveCalc(calc);
 				else if( input == "load" ) calc = LoadCalc( );
 				else if( input == "addconst" ) AddConstant(calc);
 				else if( input == "culture" ) SetCulture(calc);
 				else if( input == "compile" )
-					{
+				{
 					mode = Mode.Compile;
 					calc.Arguments.Clear( );
 					Console.WriteLine(" : using evaluator");
-					}
+				}
 				else if(input == "interp")
-					{
+				{
 					mode = Mode.Interpret;
 					calc.Arguments.Clear();
 					Console.WriteLine(" : using interpret");
-					}
+				}
 				else if(input == "tab")
-					{
+				{
 					mode = Mode.Tabulate;
-					calc.Arguments = new ArgumentCollection("x");
+					calc.Arguments.Clear();
+					calc.Arguments.Add("x");
 					Console.WriteLine(" : using tabulator");
-					}
+				}
 				else if(input == "help" || input == "?")
-					{
+				{
 					ShowHelp( );
-					}
+				}
 				else if( input == "cls" )
-					{
+				{
 					Console.Clear( );
-					}
+				}
 				
 				#endregion
 				#region Evaluation
 
 				else
-					{
+				{
 					double res;
 					Console.ForegroundColor = ConsoleColor.White;
 					try
-						{
+					{
 						if(mode == Mode.Tabulate)
-							{
+						{
 							double[] arr = calc
 								.CreateTabulator(input)
 								.Tabulate(range);
@@ -131,35 +132,35 @@ namespace ILCalc_Console
 
 							Console.ForegroundColor = ConsoleColor.Cyan;
 							if(calc.Culture != null)
-								{
+							{
 								foreach( double value in arr )
-									{
-									Console.WriteLine(value.ToString(calc.Culture.NumberFormat));
-									}
-								}
-							else
 								{
+									Console.WriteLine(value.ToString(calc.Culture.NumberFormat));
+								}
+							}
+							else
+							{
 								int pos = 0;
 								Console.Write(' ');
 								foreach( double value in arr )
-									{
+								{
 									if( value >= 0.0 ) Console.Write(' ');
 
 									Console.Write(value.ToString("N5"));
 									if( ++pos == 8 )
-										{
+									{
 										pos = 0;
 										Console.WriteLine( );
 										Console.Write(' ');
-										}
-									else Console.Write(" ");
 									}
+									else Console.Write(" ");
+								}
 
 								Console.WriteLine('\n');
-								}
 							}
+						}
 						else
-							{
+						{
 							res = (mode == Mode.Compile)?
 								calc.CreateEvaluator(input).Evaluate() :
 								calc.CreateInterpret(input).Evaluate();
@@ -168,24 +169,24 @@ namespace ILCalc_Console
 							if(calc.Culture != null)
 								 Console.WriteLine(res.ToString(calc.Culture.NumberFormat));
 							else Console.WriteLine(res);
-							}
 						}
+					}
 					catch( SyntaxException e )
-						{
+					{
 						ShowSyntaxException(input, e);
-						}
+					}
 					catch( Exception e )
-						{
+					{
 						Console.ForegroundColor = ConsoleColor.Red;
 						Console.WriteLine(" => {0}", e.GetType().Name);
 						Console.ForegroundColor = ConsoleColor.DarkGray;
 						Console.WriteLine(e.Message);
-						}
 					}
+				}
 
 				#endregion
-				}
 			}
+		}
 
 		private static void ShowHelp( )
 			{

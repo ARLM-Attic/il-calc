@@ -39,11 +39,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CallsTests.cs" />
+    <Compile Include="ExceptionsTests.cs" />
     <Compile Include="MainTests.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="MultiThreadTests.cs" />
     <Compile Include="Helpers\Optimizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TabulatorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ILCalc\ILCalc.csproj">

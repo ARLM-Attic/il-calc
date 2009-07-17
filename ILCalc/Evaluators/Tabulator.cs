@@ -32,49 +32,54 @@ namespace ILCalc
 		#endregion
 		#region Constructors
 
-		internal Tabulator(string expression, Delegate method, int argsCount, Allocator alloc)
+		private Tabulator(string expression, int argsCount)
 		{
 			Debug.Assert(expression != null);
-			Debug.Assert(method != null);
-			Debug.Assert(alloc != null);
-			Debug.Assert(argsCount > 2);
-
-			var tab = (TabFuncN) method;
-
-			this.tabulator1 = this.ThrowMethod1;
-			this.tabulator2 = this.ThrowMethod2;
-			this.tabulatorN = tab;
-			this.asyncTab = new TabFuncN((a, d) => this.tabulatorN(a, d));
+			Debug.Assert(argsCount > 0);
 
 			this.exprString = expression;
 			this.argsCount = argsCount;
+		}
+
+		internal Tabulator(
+			string expression, Delegate method, int argsCount, Allocator alloc)
+			: this(expression, argsCount)
+		{
+			Debug.Assert(method != null);
+			Debug.Assert(alloc  != null);
+			Debug.Assert(argsCount > 2);
+
+			this.tabulator1 = ThrowMethod1;
+			this.tabulator2 = ThrowMethod2;
+			this.tabulatorN = (TabFuncN) method;
+			this.asyncTab   = (TabFuncN) this.tabulatorN.Invoke;
+
 			this.allocator = alloc;
 		}
 
-		internal Tabulator(string expression, Delegate method, int argsCount)
+		internal Tabulator(
+			string expression, Delegate method, int argsCount)
+			: this(expression, argsCount)
 		{
-			Debug.Assert(expression != null);
 			Debug.Assert(method != null);
 			Debug.Assert(argsCount <= 2);
 
 			if (argsCount == 1)
 			{
+				this.tabulator2 = ThrowMethod2;
 				this.tabulator1 = (TabFunc1) method;
-				this.tabulator2 = this.ThrowMethod2;
-				this.tabulatorN = (a, d) => this.tabulator1((double[]) a, d[0], d[1]);
-				this.asyncTab = new TabFunc1((a, s, b) => this.tabulator1(a, s, b));
+				this.asyncTab   = (TabFunc1) this.tabulator1.Invoke; // nice :)
+				this.tabulatorN = (a,d) => this.tabulator1((double[]) a, d[0], d[1]);
 			}
 			else
 			{
-				this.tabulator1 = this.ThrowMethod1;
+				this.tabulator1 = ThrowMethod1;
 				this.tabulator2 = (TabFunc2) method;
-				this.tabulatorN = (a, d) => this.tabulator2((double[][]) a, d[0], d[1], d[2], d[3]);
-				this.asyncTab = new TabFunc2((a, b, c, d, e) => this.tabulator2(a, b, c, d, e));
+				this.asyncTab   = (TabFunc2) this.tabulator2.Invoke;
+				this.tabulatorN = (a,d) => this.tabulator2((double[][]) a, d[0], d[1], d[2], d[3]);
 			}
 
-			this.allocator = this.ThrowAlloc;
-			this.exprString = expression;
-			this.argsCount = argsCount;
+			this.allocator = ThrowAlloc;
 		}
 
 		#endregion
@@ -97,7 +102,6 @@ namespace ILCalc
 		[Browsable(State.Never)]
 		public int RangesCount
 		{
-			[DebuggerHidden]
 			get { return this.argsCount; }
 		}
 
@@ -128,10 +132,10 @@ namespace ILCalc
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>One-dimensional array of the evaluated values.</returns>
-		[DebuggerHidden]
 		public double[] Tabulate(double begin, double end, double step)
 		{
-			return this.Tabulate(new TabRange(begin, end, step));
+			return Tabulate(
+				new TabRange(begin, end, step));
 		}
 
 		/// <summary>
@@ -145,7 +149,6 @@ namespace ILCalc
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>One-dimensional array of the evaluated values.</returns>
-		[DebuggerHidden]
 		public double[] Tabulate(TabRange range)
 		{
 			return this.tabulator1(
@@ -167,7 +170,6 @@ namespace ILCalc
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>Two-dimensional jagged array of the evaluated values.</returns>
-		[DebuggerHidden]
 		public double[][] Tabulate(TabRange range1, TabRange range2)
 		{
 			var array = new double[range1.ValidCount][];
@@ -201,9 +203,11 @@ namespace ILCalc
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>Three-dimensional jagged array of the evaluated values
 		/// casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public Array Tabulate(TabRange range1, TabRange range2, TabRange range3)
 		{
+			if (this.argsCount != 3)
+				throw WrongRanges(3);
+
 			return this.tabulatorN(
 				this.allocator(
 					range1.ValidCount,
@@ -234,11 +238,12 @@ namespace ILCalc
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public Array Tabulate(params TabRange[] ranges)
 		{
-			if (ranges == null)
-				throw new ArgumentNullException("ranges");
+			if (ranges == null || ranges.Length != this.argsCount)
+			{
+				throw WrongRanges(ranges);
+			}
 
 			var lengths = new int[ranges.Length];
 			var data = new double[ranges.Length * 2];
@@ -249,7 +254,7 @@ namespace ILCalc
 
 				lengths[i] = range.ValidCount;
 				data[i] = range.Step;
-				data[ranges.Length + i] = range.Step;
+				data[ranges.Length + i] = range.Begin;
 			}
 
 			return this.tabulatorN(this.allocator(lengths), data);
@@ -276,7 +281,6 @@ namespace ILCalc
 		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public void TabulateToArray(double[] array, double begin, double step)
 		{
 			if (array == null)
@@ -299,7 +303,6 @@ namespace ILCalc
 		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		[DebuggerHidden]
 		public void TabulateToArray(double[] array, TabRange range)
 		{
 			if (array == null)
@@ -326,7 +329,6 @@ namespace ILCalc
 		/// <remarks>Pre-allocated array should be correctly evaluated (by the
 		/// attached <see cref="Tabulator.Allocate(TabRange, TabRange)"/> method),
 		/// or tabulator may throw <see cref="NullReferenceException"/>.</remarks>
-		[DebuggerHidden]
 		public void TabulateToArray(double[][] array, TabRange range1, TabRange range2)
 		{
 			if (array == null)
@@ -361,7 +363,6 @@ namespace ILCalc
 		/// <see cref="Tabulator.Allocate(TabRange, TabRange, TabRange)"/> method.<br/>
 		/// Otherwise this tabulator may throw <see cref="NullReferenceException"/>
 		/// or <see cref="InvalidCastException"/>.</remarks>
-		[DebuggerHidden]
 		public void TabulateToArray(Array array, TabRange range1, TabRange range2, TabRange range3)
 		{
 			if (array == null)
@@ -396,13 +397,14 @@ namespace ILCalc
 		/// the attached <see cref="Tabulator.Allocate(TabRange[])"/> method.<br/>
 		/// Otherwise this tabulator may throw <see cref="NullReferenceException"/>
 		/// or <see cref="InvalidCastException"/>.</remarks>
-		[DebuggerHidden]
 		public void TabulateToArray(Array array, params TabRange[] ranges)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
-			if (ranges == null)
-				throw new ArgumentNullException("ranges");
+			if (ranges == null || ranges.Length != this.argsCount)
+			{
+				throw WrongRanges(ranges);
+			}
 
 			var data = new double[ranges.Length * 2];
 			for(int i = 0; i < ranges.Length; i++)
@@ -410,15 +412,15 @@ namespace ILCalc
 				TabRange range = ranges[i];
 				range.Validate();
 
-				data[i] = range.Begin;
-				data[ranges.Length + i] = range.Step;
+				data[i] = range.Step;
+				data[ranges.Length + i] = range.Begin;
 			}
 
 			this.tabulatorN(array, data);
 		}
 
 		#endregion
-		#region Begin/End Tabulate
+		#region AsyncTabulate
 
 		/// <summary>
 		/// Begins an asynchronous tabulation of the compiled
@@ -438,14 +440,11 @@ namespace ILCalc
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>An <see cref="IAsyncResult"/> that references
 		/// the asynchronous tabulation result.</returns>
-		[DebuggerHidden]
 		public IAsyncResult BeginTabulate(
 			TabRange range, AsyncCallback callback, object state)
 		{
-			if( this.argsCount != 1 )
-			{
-				this.InvalidArgs(1);
-			}
+			if (this.argsCount != 1)
+				throw InvalidArgs(1);
 
 			return ((TabFunc1) this.asyncTab).BeginInvoke(
 				new double[range.ValidCount],
@@ -473,14 +472,11 @@ namespace ILCalc
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>An <see cref="IAsyncResult"/> that references
 		/// the asynchronous tabulation result.</returns>
-		[DebuggerHidden]
 		public IAsyncResult BeginTabulate(
 			TabRange range1, TabRange range2, AsyncCallback callback, object state)
 		{
 			if( this.argsCount != 2 )
-			{
-				this.InvalidArgs(1);
-			}
+				throw InvalidArgs(2);
 
 			var array = new double[range1.ValidCount][];
 			int count = range2.ValidCount;
@@ -522,10 +518,8 @@ namespace ILCalc
 		public IAsyncResult BeginTabulate(
 			TabRange range1, TabRange range2, TabRange range3, AsyncCallback callback, object state)
 		{
-			if( this.argsCount != 3 )
-			{
-				this.InvalidArgs(1);
-			}
+			if (this.argsCount != 3)
+				throw WrongRanges(3);
 
 			return ((TabFuncN) this.asyncTab).BeginInvoke(
 				this.allocator(
@@ -534,12 +528,8 @@ namespace ILCalc
 					range3.ValidCount),
 				new[]
 				{
-					range1.Step,
-					range2.Step,
-					range3.Step,
-					range1.Begin,
-					range2.Begin,
-					range3.Begin
+					range1.Step,  range2.Step,  range3.Step,
+					range1.Begin, range2.Begin, range3.Begin
 				}, 
 				callback,
 				state);
@@ -565,26 +555,24 @@ namespace ILCalc
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public IAsyncResult BeginTabulate(
 			TabRange[] ranges, AsyncCallback callback, object state)
 		{
-			if( ranges == null
-			 || this.argsCount != ranges.Length )
+			if (ranges == null || ranges.Length != this.argsCount)
 			{
-				this.WrongRanges(ranges);
+				throw WrongRanges(ranges);
 			}
 
 			var lengths = new int[ranges.Length];
-			var data = new double[ranges.Length * 2];
+			var data = new double[ranges.Length*2];
 
 			for(int i = 0; i < ranges.Length; i++)
 			{
 				TabRange range = ranges[i];
 
 				lengths[i] = range.ValidCount;
-				data[i] = range.Begin;
-				data[ranges.Length + i] = range.Step;
+				data[i] = range.Step;
+				data[ranges.Length+i] = range.Begin;
 			}
 
 			return ((TabFuncN) this.asyncTab).BeginInvoke(
@@ -603,23 +591,17 @@ namespace ILCalc
 		/// was previously called for the asynchronous tabulation.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public Array EndTabulate(IAsyncResult result)
 		{
 			if (result == null)
 				throw new ArgumentNullException("result");
 
-			if (this.argsCount == 1)
+			switch (this.argsCount)
 			{
-				return ((TabFunc1) this.asyncTab).EndInvoke(result);
+				case 1:  return ((TabFunc1) this.asyncTab).EndInvoke(result);
+				case 2:  return ((TabFunc2) this.asyncTab).EndInvoke(result);
+				default: return ((TabFuncN) this.asyncTab).EndInvoke(result);
 			}
-
-			if (this.argsCount == 2)
-			{
-				return ((TabFunc2) this.asyncTab).EndInvoke(result);
-			}
-
-			return ((TabFuncN) this.asyncTab).EndInvoke(result);
 		}
 
 		#endregion
@@ -638,10 +620,10 @@ namespace ILCalc
 		/// Argument range from <paramref name="begin"/>, <paramref name="end"/> and
 		/// <paramref name="step"/> is not valid for iteration over it.</exception>
 		/// <returns>Allocated one-dimensional array.</returns>
-		[DebuggerHidden]
 		public static double[] Allocate(double begin, double end, double step)
 		{
-			return new double[new TabRange(begin, end, step).ValidCount];
+			return new double[
+				new TabRange(begin, end, step).ValidCount];
 		}
 
 		/// <summary>
@@ -651,7 +633,6 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range"/> is not valid for iteration over it.</exception>
 		/// <returns>Allocated one-dimensional array.</returns>
-		[DebuggerHidden]
 		public static double[] Allocate(TabRange range)
 		{
 			return new double[range.ValidCount];
@@ -666,7 +647,6 @@ namespace ILCalc
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated two-dimensional jagged array.</returns>
-		[DebuggerHidden]
 		public static double[][] Allocate(TabRange range1, TabRange range2)
 		{
 			var array = new double[range1.ValidCount][];
@@ -691,7 +671,6 @@ namespace ILCalc
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated three-dimensional jagged array
 		/// casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public static Array Allocate(TabRange range1, TabRange range2, TabRange range3)
 		{
 			Allocator alloc = TabulatorCompiler.AllocCompiler.Resolve(3);
@@ -714,21 +693,13 @@ namespace ILCalc
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated <paramref name="ranges"/>-dimensional
 		/// jagged array casted to <see cref="Array"/> type.</returns>
-		[DebuggerHidden]
 		public static Array Allocate(params TabRange[] ranges)
 		{
 			if (ranges == null)
 				throw new ArgumentNullException("ranges");
 
-			if (ranges.Length == 1)
-			{
-				return new double[ranges[0].ValidCount];
-			}
-
-			if (ranges.Length == 2)
-			{
-				return Allocate(ranges[0], ranges[1]);
-			}
+			if (ranges.Length == 1) return new double[ranges[0].ValidCount];
+			if (ranges.Length == 2) return Allocate(ranges[0], ranges[1]);
 
 			var lenghts = new int[ranges.Length];
 			for (int i = 0; i < ranges.Length; i++)
@@ -743,7 +714,6 @@ namespace ILCalc
 		#endregion
 		#region Throw Methods
 
-		[DebuggerHidden]
 		private double[] ThrowMethod1(
 			double[] array, double step, double begin)
 		{
@@ -751,36 +721,41 @@ namespace ILCalc
 				Resource.errWrongRangesCount, 1, this.argsCount));
 		}
 
-		[DebuggerHidden]
 		private double[][] ThrowMethod2(
-			double[][] array, double step1, double step2, double begin1, double begin2)
+			double[][] array,
+			double step1,  double step2,
+			double begin1, double begin2)
 		{
 			throw new InvalidOperationException(string.Format(
 				Resource.errWrongRangesCount, 2, this.argsCount));
 		}
 
-		[DebuggerHidden]
+		// NOTE: unused?
 		private Array ThrowAlloc(int[] length)
 		{
 			throw new InvalidOperationException(string.Format(
 				Resource.errWrongRangesCount, length.Length, this.argsCount));
 		}
 
-		[DebuggerHidden]
-		private void InvalidArgs(int actualCount)
+		private Exception InvalidArgs(int actualCount)
 		{
-			throw new InvalidOperationException(string.Format(
+			return new InvalidOperationException(string.Format(
 				Resource.errWrongRangesCount, actualCount, this.argsCount));
 		}
 
-		[DebuggerHidden]
-		private void WrongRanges(TabRange[] ranges)
+		private Exception WrongRanges(TabRange[] ranges)
 		{
-			if( ranges == null )
-				throw new ArgumentNullException("ranges");
+			if (ranges == null)
+				return new ArgumentNullException("ranges");
 
-			throw new ArgumentException(string.Format(
+			return new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, ranges.Length, this.argsCount));
+		}
+
+		private Exception WrongRanges(int actualCount)
+		{
+			return new ArgumentException(string.Format(
+				Resource.errWrongRangesCount, actualCount, this.argsCount));
 		}
 
 		#endregion

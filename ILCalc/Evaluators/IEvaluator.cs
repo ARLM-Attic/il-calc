@@ -1,12 +1,12 @@
 ﻿namespace ILCalc
-	{
+{
 	/// <summary>
 	/// Represents the object for the expression evaluation.
 	/// </summary>
 	/// <seealso cref="Evaluator"/>
 	/// <seealso cref="Interpret"/>
 	public interface IEvaluator
-		{
+	{
 		/// <summary>
 		/// Gets the arguments count, that this <see cref="IEvaluator"/> implemented for.
 		/// </summary>
@@ -34,10 +34,8 @@
 		/// <returns>Evaluated value.</returns>
 		double Evaluate(double arg1, double arg2);
 
-		// TODO: fix summary?
-
 		/// <summary>
-		/// Invokes the expression evaluation with giving three or more arguments.
+		/// Invokes the expression evaluation with the specified arguments.
 		/// </summary>
 		/// <param name="args">Expression arguments.</param>
 		/// <returns>Evaluated value.</returns>
@@ -48,5 +46,5 @@
 		/// </summary>
 		/// <returns>Expression string.</returns>
 		string ToString();
-		}
 	}
+}

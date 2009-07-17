@@ -1,14 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 
 namespace ILCalc
 {
 	using State = DebuggerBrowsableState;
-	using Browsable = DebuggerBrowsableAttribute;
 
-	// TODO: ImportBuiltIn( ) => FunctionDictionary.GetBuiltIn( )
+	// TODO: away from here
+	internal interface IQuickEnumerable
+	{
+		List<string>.Enumerator GetEnumerator();
+	}
+
+	// TODO: ImportBuiltIn( ) => FunctionCollection.GetBuiltIn( )
 	// TODO: Syncronize Create methods (parser sync)?
+	// TODO: try to make structs somewhere =)
+	// TODO: extract comments from code
+
+	// TODO: OnDeserialize fill namesList
 
 	/// <summary>
 	/// Represents the expression context (arguments, constants and functions
@@ -23,15 +33,26 @@ namespace ILCalc
 	{
 		#region Fields
 
-		[Browsable(State.Never)] internal ArgumentCollection arguments;
-		[Browsable(State.Never)] internal ConstantDictionary constants;
-		[Browsable(State.Never)] internal FunctionDictionary functions;
-		[Browsable(State.Never)] internal CultureInfo parseCulture;
-		[Browsable(State.Never)] private OptimizeModes optimizeMode;
-		[Browsable(State.Never)] internal bool implicitMul = true;
-		[Browsable(State.Never)] internal bool ignoreCase = true;
-		[Browsable(State.Never)] private bool checkedMode;
-		[Browsable(State.Never)][NonSerialized]
+		// TODO: check all usages for null comparsion
+
+		// Imports collections
+		[DebuggerBrowsable(State.Never)] private readonly ArgumentCollection arguments;
+		[DebuggerBrowsable(State.Never)] private readonly ConstantDictionary constants;
+		[DebuggerBrowsable(State.Never)] private readonly FunctionCollection functions;
+
+		// Context settings
+		[DebuggerBrowsable(State.Never)] private CultureInfo parseCulture;
+		[DebuggerBrowsable(State.Never)] private OptimizeModes optimizeMode;
+		[DebuggerBrowsable(State.Never)] private bool implicitMul = true;
+		[DebuggerBrowsable(State.Never)] private bool ignoreCase = true;
+		[DebuggerBrowsable(State.Never)] private bool checkedMode;
+
+		// Literals lookup list
+		[DebuggerBrowsable(State.Never), NonSerialized]
+		private IQuickEnumerable[] literalsList;
+
+		// Parser instance
+		[DebuggerBrowsable(State.Never), NonSerialized]
 		private Parser parser;
 
 		#endregion
@@ -40,11 +61,19 @@ namespace ILCalc
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CalcContext"/>
 		/// class that is contains empty expression context.</summary>
-		/// <overloads>
-		/// Initializes a new instance of the <see cref="CalcContext"/> class.
-		/// </overloads>
+		/// <overloads>Initializes a new instance
+		/// of the <see cref="CalcContext"/> class.</overloads>
 		public CalcContext()
 		{
+			this.arguments = new ArgumentCollection();
+			this.constants = new ConstantDictionary();
+			this.functions = new FunctionCollection();
+			this.literalsList = new IQuickEnumerable[]
+			{
+				this.arguments,
+				this.constants,
+				this.functions
+			};
 		}
 
 		/// <summary>
@@ -56,92 +85,36 @@ namespace ILCalc
 		/// <exception cref="ArgumentException">
 		/// Some name of <paramref name="arguments"/> is not valid identifier name.<br/>-or-<br/>
 		/// Some name of <paramref name="arguments"/> is already exist in the list.</exception>
-		[DebuggerHidden]
-		public CalcContext(params string[] arguments)
+		public CalcContext(params string[] arguments) : this()
 		{
-			this.arguments = new ArgumentCollection(arguments);
+			if (arguments == null)
+				throw new ArgumentNullException("arguments");
+
+			this.arguments.AddRange(arguments);
 		}
 
 		#endregion
-
 		#region Properties
 
-		/// <summary>Gets or sets <see cref="ArgumentCollection"/>
+		/// <summary>Gets the <see cref="ArgumentCollection"/>
 		/// available for use in the expression.</summary>
 		public ArgumentCollection Arguments
 		{
-			[DebuggerHidden]
-			get
-			{
-				if (this.arguments == null)
-				{
-					this.arguments = new ArgumentCollection();
-				}
-
-				return this.arguments;
-			}
-
-			[DebuggerHidden]
-			set
-			{
-				this.arguments = value;
-				if (this.parser != null)
-				{
-					this.parser.InitIdens();
-				}
-			}
+			get { return this.arguments; }
 		}
 
-		/// <summary>Gets or sets <see cref="ConstantDictionary"/>
+		/// <summary>Gets the <see cref="ConstantDictionary"/>
 		/// available for use in the expression.</summary>
 		public ConstantDictionary Constants
 		{
-			[DebuggerHidden]
-			get
-			{
-				if (this.constants == null)
-				{
-					this.constants = new ConstantDictionary();
-				}
-
-				return this.constants;
-				}
-
-			[DebuggerHidden]
-			set
-			{
-				this.constants = value;
-				if (this.parser != null)
-				{
-					this.parser.InitIdens();
-				}
-			}
+			get { return this.constants; }
 		}
 
-		/// <summary>Gets or sets <see cref="FunctionDictionary"/>
+		/// <summary>Gets the <see cref="FunctionCollection"/>
 		/// available for use in the expression.</summary>
-		public FunctionDictionary Functions
+		public FunctionCollection Functions
 		{
-			[DebuggerHidden]
-			get
-			{
-				if (this.functions == null)
-				{
-					this.functions = new FunctionDictionary();
-				}
-
-				return this.functions;
-			}
-
-			[DebuggerHidden]
-			set
-			{
-				this.functions = value;
-				if (this.parser != null)
-				{
-					this.parser.InitIdens();
-				}
-			}
+			get { return this.functions; }
 		}
 
 		/// <summary>
@@ -154,19 +127,10 @@ namespace ILCalc
 		/// characters and using ordinal compare for strings.</remarks>
 		public CultureInfo Culture
 		{
-			[DebuggerHidden]
-			get
-			{
-				return this.parseCulture;
-			}
-
-			[DebuggerHidden]
+			get { return this.parseCulture; }
 			set
 			{
-				if (value != null)
-				{
-					CheckNeutral(value);
-				}
+				if (value != null) CheckNeutral(value);
 
 				this.parseCulture = value;
 				if (this.parser != null)
@@ -181,18 +145,18 @@ namespace ILCalc
 		/// <value><b>true</b> by default.</value>
 		public bool IgnoreCase
 		{
-			[DebuggerHidden] get { return this.ignoreCase; }
-			[DebuggerHidden] set { this.ignoreCase = value; }
+			get { return this.ignoreCase; }
+			set { this.ignoreCase = value; }
 		}
 
 		/// <summary>Gets or sets a value indicating whether implicit
 		/// multiplication will be allowed in the expression.</summary>
 		/// <value><b>true</b> by default.</value>
 		public bool ImplicitMul
-			{
-			[DebuggerHidden] get { return this.implicitMul; }
-			[DebuggerHidden] set { this.implicitMul = value; }
-			}
+		{
+			get { return this.implicitMul; }
+			set { this.implicitMul = value; }
+		}
 
 		/// <summary>Gets or sets a value indicating whether arithmetic
 		/// checks are enabled while the expression evaluation.</summary>
@@ -200,8 +164,8 @@ namespace ILCalc
 		/// <value><b>false</b> by default.</value>
 		public bool OverflowCheck
 		{
-			[DebuggerHidden] get { return this.checkedMode; }
-			[DebuggerHidden] set { this.checkedMode = value; }
+			get { return this.checkedMode; }
+			set { this.checkedMode = value; }
 		}
 
 		/// <summary>Gets or sets a bitwise OR combination
@@ -210,8 +174,13 @@ namespace ILCalc
 		/// <value><see cref="OptimizeModes.None"/> by default.</value>
 		public OptimizeModes Optimization
 		{
-			[DebuggerHidden] get { return this.optimizeMode; }
-			[DebuggerHidden] set { this.optimizeMode = value; }
+			get { return this.optimizeMode; }
+			set { this.optimizeMode = value; }
+		}
+
+		internal IQuickEnumerable[] Literals
+		{
+			get { return this.literalsList; }
 		}
 
 		#endregion
@@ -234,21 +203,17 @@ namespace ILCalc
 		/// <returns>Evaluated value.</returns>
 		public double Evaluate(string expression, params double[] arguments)
 		{
-			if (expression == null)
-				throw new ArgumentNullException("expression");
-			if (arguments == null)
-				throw new ArgumentNullException("arguments");
+			if (expression == null) throw new ArgumentNullException("expression");
+			if (arguments  == null) throw new ArgumentNullException("arguments");
 
-			if (arguments.Length != this.ArgsCount)
-			{
-				throw WrongArgsCount(arguments.Length, this.ArgsCount);
-			}
+			if (arguments.Length != ArgsCount)
+				throw WrongArgsCount(arguments.Length, ArgsCount);
 
-			var intr = new QuickInterpret(arguments, this.checkedMode);
-			this.ExecuteParse(expression, intr);
-			
-			return intr.Result;
-			}
+			var interp = new QuickInterpret(arguments, OverflowCheck);
+			ParseSimple(expression, interp);
+
+			return interp.Result;
+		}
 
 		/// <summary>Generates the <see cref="Interpret"/> object
 		/// for evaluating the specified <paramref name="expression"/>.</summary>
@@ -266,10 +231,10 @@ namespace ILCalc
 				throw new ArgumentNullException("expression");
 
 			var creator = new InterpretCreator();
-			this.OptimizedParse(expression, creator);
-			
-			return new Interpret(expression, this.ArgsCount, this.checkedMode, creator);
-			}
+			ParseOptimized(expression, creator);
+
+			return new Interpret(expression, ArgsCount, OverflowCheck, creator);
+		}
 
 		/// <summary>Validates the specified <paramref name="expression"/>.</summary>
 		/// <param name="expression">Expression to validate.</param>
@@ -282,22 +247,17 @@ namespace ILCalc
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			this.ExecuteParse(expression, new NullWriter());
-			}
+			ParseSimple(expression, new NullWriter());
+		}
 
 		#endregion
 		#region Helpers
 
-		[DebuggerHidden]
 		private int ArgsCount
 		{
-			get
-			{
-				return this.arguments == null ? 0 : this.arguments.Count;
-			}
+			get { return this.arguments.Count; }
 		}
 
-		[DebuggerHidden]
 		private static void CheckNeutral(CultureInfo culture)
 		{
 			if (culture.IsNeutralCulture)
@@ -308,12 +268,12 @@ namespace ILCalc
 		}
 
 		private static ArgumentException WrongArgsCount(int actual, int expected)
-			{
+		{
 			return new ArgumentException(
 				string.Format(Resource.errWrongArgsCount, actual, expected));
-			}
+		}
 
-		private void ExecuteParse(string expression, IExpressionOutput output)
+		private void ParseSimple(string expression, IExpressionOutput output)
 		{
 			if (this.parser == null)
 			{
@@ -323,8 +283,7 @@ namespace ILCalc
 			this.parser.Parse(expression, output);
 		}
 
-		// TODO: away?
-		private void OptimizedParse(string expression, IExpressionOutput output)
+		private void ParseOptimized(string expression, IExpressionOutput output)
 		{
 			if (this.parser == null)
 			{

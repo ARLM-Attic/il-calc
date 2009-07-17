@@ -289,9 +289,7 @@ Public Class MainForm
 		MyGreenExpression = MyContext.CompileGeneric(Of Double)(preset.MyGreen)
 		MyBlueExpression = MyContext.CompileGeneric(Of Double)(preset.MyBlue)
 
-		sw.Stop()
-
-		ShowStatus(Me.lbStatus, "Presets compiled in {0:n0}ms", sw.ElapsedMilliseconds)
+		ShowStatus(Me.lbStatus, "Presets compiled in {0}", sw.Elapsed)
 
 		sw = Stopwatch.StartNew()
 
@@ -299,9 +297,7 @@ Public Class MainForm
 		MyGreenTabulator = MyILCalcContext.CreateTabulator(preset.MyGreen)
 		MyBlueTabulator = MyILCalcContext.CreateTabulator(preset.MyBlue)
 
-		sw.Stop()
-
-		ShowStatus(Me.lbStatus2, "Presets compiled in {0:n0}ms", sw.ElapsedMilliseconds)
+		ShowStatus(Me.lbStatus2, "Presets compiled in {0}", sw.Elapsed)
 
 	End Sub
 

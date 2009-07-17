@@ -59,34 +59,33 @@ namespace ILCalc
 		{
 			Debug.Assert(Code.IsOperator(oper));
 
-			if (this.ConstantFolding)
+			if (ConstantFolding)
 			{
 				// Unary operator optimize ======================
-				if (oper == Code.Neg && this.IsLastKnown())
+				if (oper == Code.Neg && IsLastKnown())
 				{
-					this.PerformNegate();
+					PerformNegate();
 					return;
 				}
 
 				// Binary operator optimize =====================
-				if (this.IsLastTwoKnown())
+				if (IsLastTwoKnown())
 				{
-					this.PerformBinaryOp(oper);
+					PerformBinaryOp(oper);
 					return;
 				}
 
 				// Power operator optimize ======================
 				Debug.Assert(this.code.Count >= 2);
 
-				if (oper == Code.Pow
-				 && this.PowOptimize
+				if (oper == Code.Pow && PowOptimize
 				 && LastValue(code, 1) == Code.Number
 				 && LastValue(code, 2) == Code.Argument)
 				{
-					int value = GetIntegerValue(this.LastNumber);
+					int value = GetIntegerValue(LastNumber);
 					if (value > 0 && value < 16)
 					{
-						this.OptimizePow(value);
+						OptimizePow(value);
 						return;
 					}
 				}
@@ -97,12 +96,12 @@ namespace ILCalc
 
 		public new void PutFunction(FunctionItem func, int argsCount)
 		{
-			if (this.FuncionFolding)
+			if (FuncionFolding)
 			{
 				int pos = code.Count - 1;
 				bool allArgsKnown = true;
 
-				while (!this.IsCallBegin(pos))
+				while (!IsCallBegin(pos))
 				{
 					if (code[pos--] == Code.Number)
 					{
@@ -120,7 +119,7 @@ namespace ILCalc
 
 				if (allArgsKnown)
 				{
-					this.FoldFunction(pos, func, argsCount);
+					FoldFunction(pos, func, argsCount);
 					return;
 				}
 			}
@@ -130,7 +129,8 @@ namespace ILCalc
 
 		public new void PutExprEnd()
 		{
-			this.WriteTo(this.output);
+			base.PutExprEnd();
+			WriteTo(this.output);
 			this.output.PutExprEnd();
 		}
 
@@ -190,10 +190,10 @@ namespace ILCalc
 		{
 			Debug.Assert(this.numbers.Count >= 1);
 
-			this.interp.PutNumber(this.LastNumber);
+			this.interp.PutNumber(LastNumber);
 			this.interp.PutOperator(Code.Neg);
 
-			this.LastNumber = this.interp.Result;
+			LastNumber = this.interp.Result;
 
 			this.interp.Reset();
 		}
@@ -210,7 +210,7 @@ namespace ILCalc
 			RemoveLast(this.numbers);
 			RemoveLast(code);
 
-			this.LastNumber = this.interp.Result;
+			LastNumber = this.interp.Result;
 
 			this.interp.Reset();
 		}
@@ -241,7 +241,7 @@ namespace ILCalc
 				this.numbers.RemoveRange(numIndex, argsCount);
 			}
 
-			this.PutNumber(func.Invoke(stack, argsCount));
+			PutNumber(func.Invoke(stack, argsCount));
 		}
 
 		private void OptimizePow(int value)

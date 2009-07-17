@@ -10,27 +10,43 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ILCalc.Tests
 {
 	[TestClass]
-	public class MainTests
+	[Serializable]
+	public sealed class MainTests
 	{
 		#region Initialize
 
+		[NonSerialized]
 		private readonly CalcContext calc;
+		private readonly double x;
 
 		public MainTests()
 		{
 			this.calc = new CalcContext("x");
+			this.x = new Random().NextDouble();
 
-			this.calc.Culture = CultureInfo.CurrentCulture;
+			Calc.Culture = CultureInfo.CurrentCulture;
 
-			this.calc.Constants.Add("pi", Math.PI);
-			this.calc.Constants.Add("e", Math.E);
-			this.calc.Constants.Add("fi", 1.234);
+			Calc.Constants.Add("pi", Math.PI);
+			Calc.Constants.Add("e", Math.E);
+			Calc.Constants.Add("fi", 1.234);
 
-			this.calc.Functions.ImportBuiltIn();
-			this.calc.Functions.Add("Params", typeof(MainTests));
-			this.calc.Functions.Add("Params2", typeof(MainTests));
-			this.calc.Functions.Add("Params3", typeof(MainTests));
+			Calc.Functions.ImportBuiltIn();
+			Calc.Functions.Import("Params", typeof(MainTests));
+			Calc.Functions.Import("Params2", typeof(MainTests));
+			Calc.Functions.Import("Params3", typeof(MainTests));
+
+			Calc.Functions.Add(Inst0);
+			Calc.Functions.Add(Inst1);
+			Calc.Functions.Add(Inst2);
+			Calc.Functions.Add(InstP);
 		}
+
+		private CalcContext Calc
+		{
+			get { return this.calc; }
+		}
+
+		// ReSharper disable UnusedMember.Global
 
 		public static double Params(double arg, params double[] args)
 		{
@@ -53,6 +69,34 @@ namespace ILCalc.Tests
 			return a + b;
 		}
 
+		private double Inst0()
+		{
+			return this.x;
+		}
+
+		private double Inst1(double arg)
+		{
+			return this.x + arg;
+		}
+
+		private double Inst2(double arg1, double arg2)
+		{
+			return this.x + arg1 / arg2;
+		}
+
+		private double InstP(params double[] args)
+		{
+			if (args == null)
+				throw new ArgumentNullException("args");
+
+			double res = this.x;
+			foreach (double d in args) res += d;
+
+			return res;
+		}
+
+		// ReSharper restore UnusedMember.Global
+
 		#endregion
 		#region SyntaxTest
 
@@ -60,60 +104,60 @@ namespace ILCalc.Tests
 		public void SyntaxTest()
 		{
 			// numbers:
-			this.TestErr("(2+2)2+3", 4, 2);
-			this.TestErr("(2+2 2+3", 3, 3);
-			this.TestErr("(2+pi2+3", 3, 3);
-			this.TestGood("123+(23+4)");
-			this.TestGood("2+4-5");
-			this.TestGood("max(1;2)");
+			TestErr("(2+2)2+3", 4, 2);
+			TestErr("(2+2 2+3", 3, 3);
+			TestErr("(2+pi2+3", 3, 3);
+			TestGood("123+(23+4)");
+			TestGood("2+4-5");
+			TestGood("max(1;2)");
 
 			// operators:
-			this.TestGood("(1+1)*2");
-			this.TestGood("1+1*2");
-			this.TestGood("pi+2");
+			TestGood("(1+1)*2");
+			TestGood("1+1*2");
+			TestGood("pi+2");
 
-			this.TestErr("+12", 0, 1);
-			this.TestErr("2**3", 1, 2);
-			this.TestErr("max(1;*5)", 5, 2);
+			TestErr("+12", 0, 1);
+			TestErr("2**3", 1, 2);
+			TestErr("max(1;*5)", 5, 2);
 
-			this.TestGood("-2+Max(-1;-2)");
-			this.TestGood("2*(-32)");
-			this.TestGood("2*-3 + 2/-6 + 2^-3");
-			this.TestGood("--2+ 3---4 + 5+-3");
+			TestGood("-2+Max(-1;-2)");
+			TestGood("2*(-32)");
+			TestGood("2*-3 + 2/-6 + 2^-3");
+			TestGood("--2+ 3---4 + 5+-3");
 
 			// separator:
-			this.TestErr(";", 0, 1);
-			this.TestErr("Max(2+;3)", 5, 2);
-			this.TestErr("Max(2;;3)", 5, 2);
-			this.TestErr("Max(;2)", 3, 2);
-			this.TestGood("Max(1;3)");
-			this.TestGood("Max(0;-1)");
-			this.TestGood("Max(0;Max(1;3))");
+			TestErr(";", 0, 1);
+			TestErr("Max(2+;3)", 5, 2);
+			TestErr("Max(2;;3)", 5, 2);
+			TestErr("Max(;2)", 3, 2);
+			TestGood("Max(1;3)");
+			TestGood("Max(0;-1)");
+			TestGood("Max(0;Max(1;3))");
 
 			// brace open:
-			this.TestGood("(2+2)(3+3)");
-			this.TestGood("3(3+3)");
-			this.TestGood("pi(3+3)");
-			this.TestGood("pi+(3+3)+Max(12;(34))");
+			TestGood("(2+2)(3+3)");
+			TestGood("3(3+3)");
+			TestGood("pi(3+3)");
+			TestGood("pi+(3+3)+Max(12;(34))");
 
 			// brace close:
-			this.TestErr("(2+)", 2, 2);
-			this.TestErr("3+()", 2, 2);
-			this.TestErr("Max(1;)", 5, 2);
-			this.TestGood("(2+2)");
-			this.TestGood("(2+pi)");
-			this.TestGood("(2+(3))");
+			TestErr("(2+)", 2, 2);
+			TestErr("3+()", 2, 2);
+			TestErr("Max(1;)", 5, 2);
+			TestGood("(2+2)");
+			TestGood("(2+pi)");
+			TestGood("(2+(3))");
 
 			// identifiers:
-			this.TestErr("pi pi", 0, 5);
-			this.TestGood("(2+2)pi");
-			this.TestGood("3pi");
-			this.TestGood("Max(pi;pi)");
-			this.TestGood("2+pi+3");
+			TestErr("pi pi", 0, 5);
+			TestGood("(2+2)pi");
+			TestGood("3pi");
+			TestGood("Max(pi;pi)");
+			TestGood("2+pi+3");
 
 			// brace disbalance:
-			this.TestErr("(3+(2+3)+3))+3", 11, 1);
-			this.TestErr("((3+(2+3)+3)+3", 0, 1);
+			TestErr("(3+(2+3)+3))+3", 11, 1);
+			TestErr("((3+(2+3)+3)+3", 0, 1);
 		}
 
 		#endregion
@@ -122,29 +166,29 @@ namespace ILCalc.Tests
 		[TestMethod]
 		public void EvaluationTest()
 		{
-			var gen = new ExprGenerator(this.calc);
+			var gen = new ExprGenerator(Calc);
 			string now = string.Empty;
 
 			foreach (var mode in Optimizer.Modes)
 			{
-				this.calc.Optimization = mode;
+				Calc.Optimization = mode;
 				foreach (string expr in gen.Generate(5000))
 				{
 					double eval, int1, int2;
 					try
 					{
 						now = "Evaluator";
-						eval = this.calc.CreateEvaluator(expr).Evaluate(1.0);
+						eval = Calc.CreateEvaluator(expr).Evaluate(1.0);
 						now = "Interpret";
-						int1 = this.calc.CreateInterpret(expr).Evaluate(1.0);
+						int1 = Calc.CreateInterpret(expr).Evaluate(1.0);
 						now = "Quick Interpret";
-						int2 = this.calc.Evaluate(expr, 1.0);
+						int2 = Calc.Evaluate(expr, 1.0);
 					}
-					catch (Exception e)
+					catch (Exception)
 					{
 						Trace.WriteLine(now);
 						Trace.WriteLine(expr);
-						throw e;
+						throw;
 					}
 
 					if (double.IsNaN(eval)
@@ -174,54 +218,54 @@ namespace ILCalc.Tests
 		[TestMethod]
 		public void IdentifiersTest()
 		{
-			this.TestErr("2+sinus(2+2)", 2, 5);
-			this.TestErr("2+dsdsd", 2, 5);
+			TestErr("2+sinus(2+2)", 2, 5);
+			TestErr("2+dsdsd", 2, 5);
 
 			// simple match:
-			this.TestErr("1+Sin+3", 2, 3);
-			this.TestErr("1+sin(1;2;3)", 2, 3);
-			this.TestErr("1+Params()", 2, 6);
+			TestErr("1+Sin+3", 2, 3);
+			TestErr("1+sin(1;2;3)", 2, 3);
+			TestErr("1+Params()", 2, 6);
 
 			// ambiguous match:
-			this.calc.Constants.Add("x", 123);
-			this.calc.Functions.Add("SIN", typeof(Math).GetMethod("Sin"));
-			this.calc.Functions.Add("sin", typeof(Math).GetMethod("Sin"));
+			Calc.Constants.Add("x", 123);
+			Calc.Functions.AddStatic("SIN", typeof(Math).GetMethod("Sin"));
+			Calc.Functions.AddStatic("sin", typeof(Math).GetMethod("Sin"));
 
-			this.TestErr("2+x+3", 2, 1);
-			this.TestErr("1-sIN+32", 2, 3);
-			this.TestErr("7+sin(1;2;3)", 2, 3);
-			this.TestErr("0+Sin(3)+4", 2, 3);
+			TestErr("2+x+3", 2, 1);
+			TestErr("1-sIN+32", 2, 3);
+			TestErr("7+sin(1;2;3)", 2, 3);
+			TestErr("0+Sin(3)+4", 2, 3);
 
-			this.calc.Arguments[0] = "sin";
-			this.TestGood("1+sin*4");
+			Calc.Arguments[0] = "sin";
+			TestGood("1+sin*4");
 
-			this.calc.Constants.Add("sin", 1.23);
-			this.TestErr("1+sin/4", 2, 3);
+			Calc.Constants.Add("sin", 1.23);
+			TestErr("1+sin/4", 2, 3);
 
-			this.calc.Constants.Remove("sin");
-			this.calc.Constants.Remove("x");
-			this.calc.Functions.Remove("SIN");
-			this.calc.Functions.Remove("sin");
+			Calc.Constants.Remove("sin");
+			Calc.Constants.Remove("x");
+			Calc.Functions.Remove("SIN");
+			Calc.Functions.Remove("sin");
 
-			this.calc.Functions.Add(
+			Calc.Functions.AddStatic(
 				"max",
 				typeof(Math).GetMethod("Max", new[] { typeof(double), typeof(double) }));
 
-			this.calc.Arguments[0] = "max";
-			this.TestGood("2+max(3+3)");
+			Calc.Arguments[0] = "max";
+			TestGood("2+max(3+3)");
 
-			this.calc.Constants.Add("max", double.MaxValue);
-			this.TestErr("2+max(3+3)", 2, 3);
+			Calc.Constants.Add("max", double.MaxValue);
+			TestErr("2+max(3+3)", 2, 3);
 
-			this.calc.Functions.Add("maX", typeof(Math).GetMethod("Sin"));
-			this.TestErr("2+max(3+3)", 2, 3);
+			Calc.Functions.AddStatic("maX", typeof(Math).GetMethod("Sin"));
+			TestErr("2+max(3+3)", 2, 3);
 
-			this.calc.Constants.Remove("max");
+			Calc.Constants.Remove("max");
 
-			this.TestErr("1+max(1;2;3)+4", 2, 3);
-			this.TestErr("2+max(1;2)/3", 2, 3);
-			this.calc.Functions.Remove("max", 2, false);
-			this.TestErr("2+max(1;2)/3", 2, 3);
+			TestErr("1+max(1;2;3)+4", 2, 3);
+			TestErr("2+max(1;2)/3", 2, 3);
+			Calc.Functions.Remove("max", 2, false);
+			TestErr("2+max(1;2)/3", 2, 3);
 
 			// TODO: append MAX & max situations
 		}
@@ -232,7 +276,7 @@ namespace ILCalc.Tests
 		[TestMethod]
 		public void OptimizerTest()
 		{
-			var gen = new ExprGenerator(this.calc);
+			var gen = new ExprGenerator(Calc);
 
 			foreach (string expr in gen.Generate(20000))
 			{
@@ -241,33 +285,26 @@ namespace ILCalc.Tests
 
 				try
 				{
-					this.calc.Optimization = OptimizeModes.None;
+					Calc.Optimization = OptimizeModes.None;
 					
-					res1N = this.calc.CreateInterpret(expr).Evaluate(1.0);
-					res2N = this.calc.Evaluate(expr, 1.0);
+					res1N = Calc.CreateInterpret(expr).Evaluate(1.0);
+					res2N = Calc.Evaluate(expr, 1.0);
 
-					this.calc.Optimization = OptimizeModes.PerformAll;
+					Calc.Optimization = OptimizeModes.PerformAll;
 
-					res1O = this.calc.CreateInterpret(expr).Evaluate(1.0);
-					res2O = this.calc.Evaluate(expr, 1.0);
+					res1O = Calc.CreateInterpret(expr).Evaluate(1.0);
+					res2O = Calc.Evaluate(expr, 1.0);
 				}
 				catch
 				{
-					Trace.WriteLine(expr);
-					throw;
+					Trace.WriteLine(expr); throw;
 				}
 
 				if (res1N == res1O
-				 && res2N == res2O)
-				{
-					continue;
-				}
+				 && res2N == res2O) continue;
 
 				if (double.IsNaN(res1N)
-				 || double.IsNaN(res2N))
-				{
-					continue;
-				}
+				 || double.IsNaN(res2N)) continue;
 
 				Trace.WriteLine(expr);
 				Trace.Indent();
@@ -286,7 +323,7 @@ namespace ILCalc.Tests
 		{
 			const int Count = 10000;
 			
-			var gen = new ExprGenerator(this.calc);
+			var gen = new ExprGenerator(Calc);
 			var list1 = new List<double>();
 			var list2 = new List<double>();
 			var binFormatter = new BinaryFormatter
@@ -299,7 +336,7 @@ namespace ILCalc.Tests
 			{
 				foreach (string expr in gen.Generate(Count))
 				{
-					Interpret a = this.calc.CreateInterpret(expr);
+					Interpret a = Calc.CreateInterpret(expr);
 
 					binFormatter.Serialize(tempMem, a);
 					list1.Add(a.Evaluate(1.23));
@@ -331,7 +368,7 @@ namespace ILCalc.Tests
 				var exception1 = new SyntaxException("hehe");
 				var exception2 = new InvalidRangeException("wtf?");
 
-				binFormatter.Serialize(tempMem, this.calc);
+				binFormatter.Serialize(tempMem, Calc);
 				binFormatter.Serialize(tempMem, range1);
 				binFormatter.Serialize(tempMem, exception1);
 				binFormatter.Serialize(tempMem, exception2);
@@ -340,13 +377,13 @@ namespace ILCalc.Tests
 
 				var other = (CalcContext) binFormatter.Deserialize(tempMem);
 
-				Assert.AreEqual(this.calc.Arguments.Count, other.Arguments.Count);
-				Assert.AreEqual(this.calc.Constants.Count, other.Constants.Count);
-				Assert.AreEqual(this.calc.Functions.Count, other.Functions.Count);
-				Assert.AreEqual(this.calc.OverflowCheck, other.OverflowCheck);
-				Assert.AreEqual(this.calc.Optimization, other.Optimization);
-				Assert.AreEqual(this.calc.IgnoreCase, other.IgnoreCase);
-				Assert.AreEqual(this.calc.Culture, this.calc.Culture);
+				Assert.AreEqual(Calc.Arguments.Count, other.Arguments.Count);
+				Assert.AreEqual(Calc.Constants.Count, other.Constants.Count);
+				Assert.AreEqual(Calc.Functions.Count, other.Functions.Count);
+				Assert.AreEqual(Calc.OverflowCheck, other.OverflowCheck);
+				Assert.AreEqual(Calc.Optimization, other.Optimization);
+				Assert.AreEqual(Calc.IgnoreCase, other.IgnoreCase);
+				Assert.AreEqual(Calc.Culture, other.Culture);
 
 				var range2 = (TabRange) binFormatter.Deserialize(tempMem);
 
@@ -411,7 +448,7 @@ namespace ILCalc.Tests
 			c.Functions.Add("f2", ClassForImport.JustFunc);
 			c.Functions.Add("f3", ClassForImport.StaticMethod);
 			c.Functions.Add("f4", ClassForImport.StaticMethod1);
-			}
+		}
 
 		#endregion
 		#region Helpers
@@ -420,7 +457,7 @@ namespace ILCalc.Tests
 		{
 			try
 			{
-				this.calc.Validate(expr);
+				Calc.Validate(expr);
 			}
 			catch (SyntaxException e)
 			{
@@ -431,21 +468,21 @@ namespace ILCalc.Tests
 
 		private void TestGood(string expr)
 		{
-			this.calc.Validate(expr);
+			Calc.Validate(expr);
 		}
 
 		// ReSharper disable UnusedMember.Local
 		// ReSharper disable UnusedParameter.Local
 		private class ClassForImport
 		{
-#pragma warning disable 169
+			#pragma warning disable 169
 
 			public const double Test = 0.123;
 			private const double Foo = 2323;
 			private const double Bar = 434343;
 			private static readonly double X = 5.55;
 
-#pragma warning restore 169
+			#pragma warning restore 169
 
 			public static double JustFunc()
 			{

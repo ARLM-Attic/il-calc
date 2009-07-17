@@ -19,8 +19,8 @@ namespace ILCalc
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			var compiler = new EvaluatorCompiler(this.ArgsCount, checkedMode);
-			this.OptimizedParse(expression, compiler);
+			var compiler = new EvaluatorCompiler(ArgsCount, OverflowCheck);
+			ParseOptimized(expression, compiler);
 
 			return compiler.CreateEvaluator(expression);
 		}
@@ -43,14 +43,11 @@ namespace ILCalc
 		{
 			if (expression == null)
 				throw new ArgumentNullException("expression");
-
-			if (this.ArgsCount == 0)
-			{
+			if (ArgsCount == 0)
 				throw new ArgumentException(Resource.errTabulatorWrongArgs);
-			}
 
-			var compiler = new TabulatorCompiler(this.ArgsCount, this.checkedMode);
-			this.OptimizedParse(expression, compiler);
+			var compiler = new TabulatorCompiler(ArgsCount, OverflowCheck);
+			ParseOptimized(expression, compiler);
 
 			return compiler.CreateTabulator(expression);
 		}
@@ -63,7 +60,8 @@ namespace ILCalc
 				throw new ArgumentNullException("expression");
 
 			var postfix = new PostfixWriter(arguments);
-			this.OptimizedParse(expression, postfix);
+			
+			ParseOptimized(expression, postfix);
 
 			return postfix.ToString();
 		}

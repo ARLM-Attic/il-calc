@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ILCalc.Tests
 {
 	[TestClass]
-	public class MultiThreadTests
+	public sealed class MultiThreadTests
 	{
 		#region Fields
 
@@ -27,19 +27,24 @@ namespace ILCalc.Tests
 		{
 			this.calc = new CalcContext("x", "y");
 
-			this.calc.Functions.ImportBuiltIn();
-			this.calc.Constants.ImportBuiltIn();
-			this.calc.Functions.Add("Sum", typeof(MultiThreadTests));
+			Calc.Functions.ImportBuiltIn();
+			Calc.Constants.ImportBuiltIn();
+			Calc.Functions.Import("Sum", typeof(MultiThreadTests));
 
-			this.calc.Optimization = OptimizeModes.PerformAll;
+			Calc.Optimization = OptimizeModes.PerformAll;
 
-			this.intr = this.calc.CreateInterpret(Expression);
-			this.eval = this.calc.CreateEvaluator(Expression);
+			this.intr = Calc.CreateInterpret(Expression);
+			this.eval = Calc.CreateEvaluator(Expression);
 
-			this.syncInterp = this.calc.CreateInterpret(Expression);
+			this.syncInterp = Calc.CreateInterpret(Expression);
 			this.syncRoot = new object();
 
 			this.rnd = new Random();
+		}
+
+		private CalcContext Calc
+		{
+			get { return this.calc; }
 		}
 
 		public static double Sum(double one, double two, double[] args)
@@ -92,11 +97,12 @@ namespace ILCalc.Tests
 		[TestMethod]
 		public void AsyncTabulateTest()
 		{
-			var oldArgs = this.calc.Arguments;
+			var oldArgs = Calc.Arguments;
 
-			this.calc.Arguments = new ArgumentCollection("x");
+			Calc.Arguments.Clear();
+			Calc.Arguments.Add("x");
 
-			var tab = this.calc.CreateTabulator("2sin(x) + cos(3x)");
+			var tab = Calc.CreateTabulator("2sin(x) + cos(3x)");
 			var range = new TabRange(0, 1000000, 0.1);
 
 			var async = tab.BeginTabulate(range, null, null);
@@ -106,7 +112,8 @@ namespace ILCalc.Tests
 
 			CollectionAssert.AreEqual(res1, res2);
 
-			this.calc.Arguments = oldArgs;
+			Calc.Arguments.Clear();
+			Calc.Arguments.AddRange(oldArgs);
 		}
 
 		#endregion
@@ -119,7 +126,7 @@ namespace ILCalc.Tests
 
 			for (int i = 0; i < Count; i++)
 			{
-				new Thread(this.ThreadMethod).Start();
+				new Thread(ThreadMethod).Start();
 			}
 		}
 

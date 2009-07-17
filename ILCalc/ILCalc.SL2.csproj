@@ -62,7 +62,7 @@
     <Compile Include="CalcContext.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
-    <Compile Include="Collections\FunctionDictionary.cs" />
+    <Compile Include="Collections\FunctionCollection.cs" />
     <Compile Include="Collections\FunctionFactory.cs" />
     <Compile Include="Collections\FunctionGroup.cs" />
     <Compile Include="Collections\FunctionItem.cs" />

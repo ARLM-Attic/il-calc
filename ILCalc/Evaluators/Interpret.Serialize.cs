@@ -1,14 +1,15 @@
 ﻿using System.Runtime.Serialization;
 
 namespace ILCalc
+{
+	public sealed partial class Interpret
+		: IEvaluator, IDeserializationCallback
 	{
-	public sealed partial class Interpret : IEvaluator, IDeserializationCallback
-		{
 		void IDeserializationCallback.OnDeserialization( object sender )
-			{
-			stackArray = new double[stackMax];
-			paramArray = new double[argsCount];
-			syncRoot = new object( );
-			}
+		{
+			this.stackArray = new double[stackMax];
+			this.paramArray = new double[argsCount];
+			this.syncRoot = new object();
 		}
 	}
+}

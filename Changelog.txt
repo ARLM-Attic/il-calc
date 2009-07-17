@@ -1,8 +1,27 @@
+v0.9.4.0 =================
+
+	* Engine: support for instance method calls!
+	* Engine: support for DynamicMethod calls!
+	* Engine: faster literals names lookup.
+	* Solution: global design improvements.
+	* CalcContext: collection properties now read-only.
+	* Collections: AddRange() methods.
+	* Collections: rename 'FunctionDictionary' =>
+		back to 'FunctionCollection' and now
+		doesn't implement IDictionary interface.
+	* Collections: FunctionCollections re-design.
+	* Collections: no public constructors in FunctionGroup.
+	* Engine: compilation is now 2-pass.
+	* Bugfix: not valid tabulation when >3 ranges.
+	* Bugfix: added some forgotten arguments checks.
+	* Solution: new pack of unit tests.
+
 v0.9.3.21 ================
 
 	* Solution: .NET Compact Framework 2.0 is now supported.
 	* Solution: code reformat, satisfy many of StyleCop rules.
 	* Solution: mass Debug.Assert usage => small fixes.
+	* Solution: rename Function => FunctionItem (VB keyword).
 	* Engine: performance improvements, less memory usage.
 	* Engine: some more decomposition, smaller code size.
 	* Optimizer: fixed folding of functions with params.
@@ -20,8 +39,8 @@ v0.9.2.1 =================
 	* FunctionCollection: completely rewritten.
 	* FunctionCollection: added small support for delegates.
 	* Engine: some improvements in method calls.
-	* Rename: FunctionCollection => FunctionDictionary.
-	* Rename: ConstantCollection => ConstantDictionary.
+	* Rename: 'FunctionCollection' => 'FunctionDictionary'.
+	* Rename: 'ConstantCollection' => 'ConstantDictionary'.
 	* Documentation: many fixes, added new Functions API.
 	* Interpret: all known bugs are fixed, serialization works now.
 	* Interpret: performance increase (replacing collections with arrays).

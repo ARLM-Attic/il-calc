@@ -412,6 +412,15 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Wrong target object type: {0} (not assignable to {1})..
+        /// </summary>
+        internal static string errWrongTargetType {
+            get {
+                return ResourceManager.GetString("errWrongTargetType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to and.
         /// </summary>
         internal static string sAnd {

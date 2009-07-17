@@ -12,32 +12,18 @@ namespace ILCalc
 			// numbers not like ".123"
 			if (c != dotSymbol)
 			{
-				// skip digits
-				while (i < this.exprLen
-					&& char.IsDigit(this.expr[i]))
-				{
-					i++;
-				}
-
-				// skip dot
-				if (i < this.exprLen
-				 && this.expr[i] == dotSymbol)
-				{
-					i++;
-				}
+				// skip digits and decimal dot
+				while (i < this.xlen && char.IsDigit(this.expr[i])) i++;
+				if    (i < this.xlen && this.expr[i] == dotSymbol)  i++;
 			}
 
 			// skip digits
-			while (i < this.exprLen
-				&& char.IsDigit(this.expr[i]))
-			{
-				i++;
-			}
+			while (i < this.xlen && char.IsDigit(this.expr[i])) i++;
 
 			// ================================ Exponental part ==
 
 			// at least 2 chars
-			if (i + 1 < this.exprLen)
+			if (i + 1 < this.xlen)
 			{
 				// E character
 				c = this.expr[i];
@@ -47,21 +33,14 @@ namespace ILCalc
 
 					// exponetal sign
 					c = this.expr[++j];
-					if (c == '-' || c == '+')
-					{
-						j++;
-					}
+					if (c == '-' || c == '+') j++;
 
 					// eponental part
-					if (i < this.exprLen
+					if (i < this.xlen
 					 && char.IsDigit(this.expr[j]))
 					{
 						j++;
-						while (j < this.exprLen
-							&& char.IsDigit(this.expr[j]))
-						{
-							j++;
-						}
+						while (j < this.xlen && char.IsDigit(this.expr[j])) j++;
 
 						i = j;
 					}
@@ -76,16 +55,19 @@ namespace ILCalc
 			{
 				return Double.Parse(
 					number,
-					NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent,
+					NumberStyles.AllowDecimalPoint |
+					NumberStyles.AllowExponent,
 					numFormat);
 			}
 			catch (FormatException e)
 			{
-				throw this.NumberFormat(Resource.errNumberFormat, number, e);
+				throw NumberFormatException(
+					Resource.errNumberFormat, number, e);
 			}
 			catch (OverflowException e)
 			{
-				throw this.NumberFormat(Resource.errNumberOverflow, number, e);
+				throw NumberFormatException(
+					Resource.errNumberOverflow, number, e);
 			}
 		}
 	}

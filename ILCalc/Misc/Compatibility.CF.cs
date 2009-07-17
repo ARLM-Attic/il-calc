@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace System.Runtime.CompilerServices
 {
+	[Conditional("NEVER")]
 	[AttributeUsage(
 		AttributeTargets.Method |
 		AttributeTargets.Class  |

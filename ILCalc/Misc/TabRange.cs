@@ -11,6 +11,9 @@ namespace ILCalc
 
 	// TODO: no laziness?
 	// TODO: faster Count
+	// TODO: immutable! can't be invalid
+	// TODO: SetBegin() => new TabRange
+	// TODO: TabRange.FromCount(begin, end, count)
 
 	/// <summary>
 	/// Defines a set of (begin, end, step) values,
@@ -60,51 +63,33 @@ namespace ILCalc
 		/// <summary>Gets or sets the begining value of the range.</summary>
 		public double Begin
 		{
-			[DebuggerHidden]
-			get
-			{
-				return this.begin;
-			}
-
-			[DebuggerHidden]
+			get { return this.begin; }
 			set
 			{
 				this.begin = value;
-				this.RangeChanged();
+				RangeChanged();
 			}
 		}
 
 		/// <summary>Gets or sets the ending value of the range.</summary>
 		public double End
 		{
-			[DebuggerHidden]
-			get
-			{
-				return this.end;
-			}
-
-			[DebuggerHidden]
+			get { return this.end; }
 			set
 			{
 				this.end = value;
-				this.RangeChanged();
+				RangeChanged();
 			}
 		}
 
 		/// <summary>Gets or sets the step value of the range.</summary>
 		public double Step
 		{
-			[DebuggerHidden]
-			get
-			{
-				return this.step;
-			}
-
-			[DebuggerHidden]
+			get { return this.step; }
 			set
 			{
 				this.step = value;
-				this.RangeChanged();
+				RangeChanged();
 			}
 		}
 
@@ -118,31 +103,28 @@ namespace ILCalc
 		/// for any setted <see cref="Count"/> value.</remarks>
 		public int Count
 		{
-			[DebuggerHidden]
 			get
 			{
 				return this.count > 0 ?
 					this.count :
-					this.InternalGetCount(false);
+					InternalGetCount(false);
 			}
 
-			[DebuggerHidden]
 			set
 			{
-				this.InternalSetCount(value);
-				this.RangeChanged();
+				InternalSetCount(value);
+				RangeChanged();
 			}
 		}
 
 		[Browsable(State.Never)]
 		internal int ValidCount
 		{
-			[DebuggerHidden]
 			get
 			{
 				return this.count > 0 ?
 					this.count :
-					this.InternalGetCount(true);
+					InternalGetCount(true);
 			}
 		}
 
@@ -202,7 +184,7 @@ namespace ILCalc
 		public override bool Equals(object obj)
 		{
 			return obj is TabRange
-				&& this.Equals((TabRange) obj);
+				&& Equals((TabRange) obj);
 		}
 
 		#endregion
@@ -243,32 +225,32 @@ namespace ILCalc
 		/// from this <see cref="TabRange"/>.</returns>
 		public Enumerator GetEnumerator()
 		{
-			this.Validate();
+			Validate();
 			return new Enumerator(this);
 		}
 
 		IEnumerator<double> IEnumerable<double>.GetEnumerator()
 		{
-			this.Validate();
+			Validate();
 			return new Enumerator(this);
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return this.GetEnumerator();
+			return GetEnumerator();
 		}
 
 		#endregion
 		#region Validate
 
 		private enum InvalidateReason
-			{
+		{
 			None,
 			NotFiniteRange,
 			EndlessRange,
 			WrongStepSign,
 			RangeTooLoong
-			}
+		}
 
 		/// <summary>
 		/// Throws an <see cref="InvalidRangeException"/> if this
@@ -284,7 +266,7 @@ namespace ILCalc
 			}
 
 			string msg = string.Empty;
-			InvalidateReason reason = this.InternalValidate();
+			InvalidateReason reason = InternalValidate();
 
 			switch (reason)
 			{
@@ -314,7 +296,7 @@ namespace ILCalc
 		public bool IsValid()
 			{
 			return this.isChecked
-				|| this.InternalValidate() == InvalidateReason.None;
+				|| InternalValidate() == InvalidateReason.None;
 			}
 
 		private InvalidateReason InternalValidate()
@@ -324,9 +306,9 @@ namespace ILCalc
 			if (double.IsInfinity(this.begin) || double.IsNaN(this.begin)
 			 || double.IsInfinity(this.step)  || double.IsNaN(this.step)
 			 || double.IsInfinity(this.end)   || double.IsNaN(this.end))
-				{
+			{
 				return InvalidateReason.NotFiniteRange;
-				}
+			}
 
 			if (this.begin + this.step == this.begin)
 			{
@@ -345,7 +327,7 @@ namespace ILCalc
 
 			this.isChecked = true;
 			return InvalidateReason.None;
-			}
+		}
 
 		#endregion
 		#region Internals
@@ -376,9 +358,9 @@ namespace ILCalc
 		{
 			if (needValid)
 			{
-				this.Validate();
+				Validate();
 			}
-			else if (!this.IsValid())
+			else if (!IsValid())
 			{
 				return 0;
 			}

@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Changelog.txt = Changelog.txt
 		ILCalc.testrunconfig = ILCalc.testrunconfig
-		ILCalc.vsmdi = ILCalc.vsmdi
+		ILCalc1.vsmdi = ILCalc1.vsmdi
 		License.txt = License.txt
 		ReadMe.txt = ReadMe.txt
 		TODO List.txt = TODO List.txt
@@ -26,8 +26,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.CF3", "ILCalc\ILCalc.CF3.csproj", "{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.CF2", "ILCalc\ILCalc.CF2.csproj", "{7E968142-67B6-4394-AA11-A0270EB5490A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workplace", "Workplace\Workplace.csproj", "{9FA46FCB-7EEC-498F-85E6-E2360C258593}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests", "ILCalc.Tests\ILCalc.Tests.csproj", "{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}"
 EndProject
@@ -68,10 +66,6 @@ Global
 		{7E968142-67B6-4394-AA11-A0270EB5490A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E968142-67B6-4394-AA11-A0270EB5490A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E968142-67B6-4394-AA11-A0270EB5490A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.Build.0 = Release|Any CPU
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7}.Release|Any CPU.ActiveCfg = Release|Any CPU

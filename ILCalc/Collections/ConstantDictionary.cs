@@ -19,7 +19,9 @@ namespace ILCalc
 	[DebuggerTypeProxy(typeof(ConstantsDebugView))]
 	[Serializable]
 
-	public sealed class ConstantDictionary : IDictionary<string, double>, ICollection
+	public sealed class ConstantDictionary
+			: IDictionary<string, double>, ICollection,
+			  IQuickEnumerable
 		{
 		#region Fields
 
@@ -29,8 +31,7 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		private readonly List<double> valuesList;
 
-		[DebuggerBrowsable(State.Never)]
-		[NonSerialized]
+		[DebuggerBrowsable(State.Never), NonSerialized]
 		private object syncRoot;
 
 		#endregion
@@ -42,7 +43,6 @@ namespace ILCalc
 		/// <overloads>
 		/// Initializes a new instance of the <see cref="ConstantDictionary"/> class.
 		/// </overloads>
-		[DebuggerHidden]
 		public ConstantDictionary()
 		{
 			this.namesList  = new List<string>();
@@ -53,12 +53,15 @@ namespace ILCalc
 		/// Initializes a new instance of the <see cref="ConstantDictionary"/>
 		/// class from the instance of <see cref="ICollection{T}"/> containing
 		/// pairs of constant names and values.</summary>
-		/// <param name="collection"><see cref="ICollection"/> of the name/value pairs.</param>
-		/// <exception cref="ArgumentNullException"><paramref name="collection"/> is null.</exception>
+		/// <param name="collection"><see cref="ICollection"/>
+		/// of the name/value pairs.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="collection"/> is null.</exception>
 		/// <exception cref="ArgumentException">
-		/// Some name of <paramref name="collection"/> is not valid identifier name.<br/>-or-<br/>
-		/// Some name of <paramref name="collection"/> is already exist in the dictionary.
-		/// </exception>
+		/// Some name of <paramref name="collection"/>
+		/// is not valid identifier name.<br/>-or-<br/>
+		/// Some name of <paramref name="collection"/>
+		/// is already exist in the dictionary.</exception>
 		public ConstantDictionary(ICollection<ConstPair> collection)
 		{
 			if (collection == null)
@@ -67,9 +70,9 @@ namespace ILCalc
 			this.namesList  = new List<string>(collection.Count);
 			this.valuesList = new List<double>(collection.Count);
 
-			foreach (ConstPair pair in collection)
+			foreach (var pair in collection)
 			{
-				this.Add(pair.Key, pair.Value);
+				Add(pair.Key, pair.Value);
 			}
 		}
 
@@ -79,15 +82,14 @@ namespace ILCalc
 		/// <param name="dictionary"><see cref="ConstantDictionary"/> instance.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="dictionary"/> is null.</exception>
-		[DebuggerHidden]
 		public ConstantDictionary(ConstantDictionary dictionary)
 		{
 			if (dictionary == null)
 				throw new ArgumentNullException("dictionary");
 
-			this.namesList  = new List<string>(dictionary.namesList);
+			this. namesList = new List<string>(dictionary. namesList);
 			this.valuesList = new List<double>(dictionary.valuesList);
-			}
+		}
 
 		#endregion
 		#region Properties
@@ -98,7 +100,6 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public ICollection<string> Keys
 		{
-			[DebuggerHidden]
 			get { return this.namesList.AsReadOnly(); }
 		}
 
@@ -108,7 +109,6 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public ICollection<double> Values
 		{
-			[DebuggerHidden]
 			get { return this.valuesList.AsReadOnly(); }
 		}
 
@@ -119,7 +119,7 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public bool IsReadOnly
 		{
-			[DebuggerHidden] get { return false; }
+			get { return false; }
 		}
 
 		/// <summary>
@@ -128,7 +128,6 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public int Count
 		{
-			[DebuggerHidden]
 			get { return this.namesList.Count; }
 		}
 
@@ -143,13 +142,13 @@ namespace ILCalc
 		{
 			get
 			{
-			if (this.syncRoot == null)
+				if (this.syncRoot == null)
 				{
-				System.Threading.Interlocked
-					.CompareExchange(ref this.syncRoot, new object(), null);
+					System.Threading.Interlocked.CompareExchange(
+						ref this.syncRoot, new object(), null);
 				}
 
-			return this.syncRoot;
+				return this.syncRoot;
 			}
 		}
 
@@ -173,34 +172,27 @@ namespace ILCalc
 		[DebuggerBrowsable(State.Never)]
 		public double this[string key]
 		{
-			[DebuggerHidden]
 			get
 			{
 				if (key == null)
 					throw new ArgumentNullException("key");
 
 				int index = this.namesList.IndexOf(key);
-				if (index >= 0)
+				if (index < 0)
 				{
-					return this.valuesList[index];
+					throw new KeyNotFoundException(
+						string.Format(Resource.errConstantNotExist, key));
 				}
 
-				throw new KeyNotFoundException(
-					string.Format(Resource.errConstantNotExist, key));
+				return this.valuesList[index];
 			}
 
-			[DebuggerHidden]
 			set
 			{
 				int index = this.namesList.IndexOf(key);
-				if (index < 0)
-				{
-					this.Add(key, value);
-				}
-				else
-				{
-					this.valuesList[index] = value;
-				}
+
+				if (index < 0) Add(key, value);
+				else this.valuesList[index] = value;
 			}
 		}
 
@@ -213,10 +205,10 @@ namespace ILCalc
 		/// </exception>
 		/// <returns>The constant value at the specified index.</returns>
 		public double this[int index]
-			{
-			[DebuggerHidden] get { return this.valuesList[index]; }
-			[DebuggerHidden] set { this.valuesList[index] = value; }
-			}
+		{
+			get { return this.valuesList[index]; }
+			set { this.valuesList[index] = value; }
+		}
 
 		#endregion
 		#region Methods
@@ -241,7 +233,29 @@ namespace ILCalc
 
 			this. namesList.Add(key);
 			this.valuesList.Add(value);
+		}
+
+		/// <summary>
+		/// Adds the elements of the specified collection
+		/// to the end of the <see cref="ConstantDictionary"/>.</summary>
+		/// <param name="collection">Enumerable of the name and value pairs.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="collection"/> is null.</exception>
+		/// <exception cref="ArgumentException">
+		/// Some name of <paramref name="collection"/>
+		/// is not valid identifier name.<br/>-or-<br/>
+		/// Some name of <paramref name="collection"/>
+		/// is already exist in the dictionary.</exception>
+		public void AddRange(IEnumerable<ConstPair> collection)
+		{
+			if (collection == null)
+				throw new ArgumentNullException("collection");
+
+			foreach (ConstPair pair in collection)
+			{
+				Add(pair.Key, pair.Value);
 			}
+		}
 
 		/// <summary>
 		/// Determines whether the <see cref="ConstantDictionary"/>
@@ -250,7 +264,6 @@ namespace ILCalc
 		/// <see cref="ConstantDictionary"/>.</param>
 		/// <returns><b>true</b> if name is found in the dictionary;
 		/// otherwise, <b>false</b>.</returns>
-		[DebuggerHidden]
 		public bool ContainsKey(string key)
 		{
 			return this.namesList.Contains(key);
@@ -292,35 +305,29 @@ namespace ILCalc
 				throw new ArgumentNullException("key");
 
 			int index = this.namesList.IndexOf(key);
-			if (index >= 0)
+			if (index < 0)
 			{
-				value = this.valuesList[index];
-				return true;
+				value = default(double);
+				return false;
 			}
 
-			value = default(double);
-			return false;
+			value = this.valuesList[index];
+			return true;
 		}
 
-		[DebuggerHidden]
 		void ICollection<ConstPair>.Add(ConstPair item)
 		{
-			this.Add(item.Key, item.Value);
+			Add(item.Key, item.Value);
 		}
 
-		[DebuggerHidden]
 		bool ICollection<ConstPair>.Contains(ConstPair item)
 		{
 			int index = this.namesList.IndexOf(item.Key);
-			if (index >= 0)
-			{
-				return this.valuesList[index] == item.Value;
-			}
 
-			return false;
+			return index >= 0
+				&& this.valuesList[index] == item.Value;
 		}
 
-		[DebuggerHidden]
 		void ICollection<ConstPair>.CopyTo(ConstPair[] array, int arrayIndex)
 		{
 			if (array == null)
@@ -329,36 +336,35 @@ namespace ILCalc
 			if (arrayIndex < 0 || arrayIndex > array.Length)
 				throw new ArgumentOutOfRangeException("arrayIndex");
 
-			if (array.Length - arrayIndex < this.Count)
-			{
-				throw new ArithmeticException();
-			}
+			if (array.Length - arrayIndex < Count)
+				throw new ArgumentOutOfRangeException("arrayIndex");
 
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < Count; i++)
 			{
-				array[arrayIndex + i] = new ConstPair(this.namesList[i], this.valuesList[i]);
+				array[arrayIndex + i] = new ConstPair(
+					this.namesList[i], this.valuesList[i]);
 			}
 		}
 
 		void ICollection.CopyTo(Array array, int index)
 		{
-			((ICollection<ConstPair>) this).CopyTo((ConstPair[]) array, index);
+			((ICollection<ConstPair>) this)
+				.CopyTo((ConstPair[]) array, index);
 		}
 
 		/// <summary>
 		/// Removes all constants from
 		/// the <see cref="ConstantDictionary"/>.</summary>
-		[DebuggerHidden]
 		public void Clear()
 		{
 			this. namesList.Clear();
 			this.valuesList.Clear();
 		}
 
-		[DebuggerHidden]
 		bool ICollection<ConstPair>.Remove(ConstPair item)
 		{
 			int index = this.namesList.IndexOf(item.Key);
+
 			if (index >= 0 &&
 				this.valuesList[index] == item.Value)
 			{
@@ -375,19 +381,18 @@ namespace ILCalc
 		/// and values in <see cref="ConstantDictionary"/>.</summary>
 		/// <returns>An enumerator object for the pair items
 		/// in the <see cref="ConstantDictionary"/>.</returns>
-		[DebuggerHidden]
 		IEnumerator<ConstPair> IEnumerable<ConstPair>.GetEnumerator()
 		{
-			for (int i = 0; i < this.Count; i++)
+			for (int i = 0; i < Count; i++)
 			{
-				yield return new
-					ConstPair(this.namesList[i], this.valuesList[i]);
+				yield return new ConstPair(
+					this. namesList[i],
+					this.valuesList[i]);
 			}
 
 			yield break;
 		}
 
-		[DebuggerHidden]
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return ((IEnumerable<ConstPair>) this).GetEnumerator();
@@ -402,12 +407,12 @@ namespace ILCalc
 		/// Some of names is already exist in the dictionary.</exception>
 		public void ImportBuiltIn()
 		{
-			this.Add("E", Math.E);
-			this.Add("Pi", Math.PI);
+			Add("E", Math.E);
+			Add("Pi", Math.PI);
 
-			this.Add("NaN", Double.NaN);
-			this.Add("Inf", Double.PositiveInfinity);
-			}
+			Add("NaN", Double.NaN);
+			Add("Inf", Double.PositiveInfinity);
+		}
 
 		/// <summary>
 		/// Imports all public static fields of the specified type
@@ -431,7 +436,7 @@ namespace ILCalc
 				BindingFlags.Public |
 				BindingFlags.FlattenHierarchy;
 
-			this.InternalImport(type, Flags);
+			InternalImport(type, Flags);
 		}
 
 		/// <summary>
@@ -455,9 +460,8 @@ namespace ILCalc
 				BindingFlags.Public |
 				BindingFlags.FlattenHierarchy;
 
-			this.InternalImport(
-				type,
-				nonpublic ? Flags | BindingFlags.NonPublic : Flags);
+			InternalImport(
+				type, Flags | (nonpublic ? BindingFlags.NonPublic : 0));
 		}
 
 		/// <summary>
@@ -483,7 +487,7 @@ namespace ILCalc
 
 			foreach (Type type in types)
 			{
-				this.InternalImport(type, Flags);
+				InternalImport(type, Flags);
 			}
 		}
 
@@ -494,14 +498,22 @@ namespace ILCalc
 
 			foreach (FieldInfo field in type.GetFields(flags))
 			{
-				// Look for "const double" fields:
+				// look for "const double" fields:
 				if (field.IsLiteral &&
 				    field.FieldType == TypeHelper.ValueType)
 				{
 					var value = (double) field.GetValue(null);
-					this.Add(field.Name, value);
+					Add(field.Name, value);
 				}
 			}
+		}
+
+		#endregion
+		#region Internals
+
+		List<string>.Enumerator IQuickEnumerable.GetEnumerator()
+		{
+			return this.namesList.GetEnumerator();
 		}
 
 		#endregion
@@ -528,6 +540,7 @@ namespace ILCalc
 			private struct ViewItem
 			{
 				// ReSharper disable UnaccessedField.Local
+
 				[DebuggerBrowsable(State.Never)] public string Name;
 				[DebuggerBrowsable(State.Never)] public double Value;
 

@@ -17,13 +17,15 @@ namespace ILCalc
 		#endregion
 		#region Methods
 
+		// TODO: one lock over loop
+		// TODO: reduce nesting
 		public static Type GetArrayType(int rank)
 		{
 			Debug.Assert(rank > 0);
 
-			if( rank >= TypesList.Count )
+			if (rank >= TypesList.Count)
 			{
-				lock(((ICollection) TypesList).SyncRoot)
+				lock (((ICollection) TypesList).SyncRoot)
 				{
 					int count = rank - TypesList.Count;
 					Type last = TypesList[TypesList.Count - 1];

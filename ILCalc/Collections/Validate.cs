@@ -7,10 +7,10 @@ namespace ILCalc
 	{
 		public static void Name(string name)
 		{
+			// TODO: perform nullness check in callers?
+
 			if (string.IsNullOrEmpty(name))
-			{
 				throw new ArgumentException(Resource.errIdentifierEmpty);
-			}
 
 			char first = name[0];
 			if (!char.IsLetter(first) && first != '_')
@@ -36,8 +36,7 @@ namespace ILCalc
 
 			if (first == '<')
 			{
-				buf.Append(' ');
-				buf.Append(Resource.errIdentifierFromLambda);
+				buf.Append(' ').Append(Resource.errIdentifierFromLambda);
 			}
 
 			return new ArgumentException(buf.ToString());

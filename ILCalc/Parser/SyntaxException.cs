@@ -72,7 +72,7 @@ namespace ILCalc
 		{
 			Debug.Assert(message != null);
 			Debug.Assert(expression != null);
-			Debug.Assert(expression.Length > pos && pos >= 0);
+			Debug.Assert(expression.Length >= pos && pos >= 0);
 			Debug.Assert(expression.Length >= pos + len && len >= 0);
 
 			this.exprString = expression;

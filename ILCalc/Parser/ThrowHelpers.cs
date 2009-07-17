@@ -7,7 +7,6 @@ namespace ILCalc
 {
 	internal sealed partial class Parser
 	{
-		[DebuggerHidden]
 		private Exception IncorrectConstr(Item prev, Item next, int i)
 		{
 			int len = i - this.prePos;
@@ -16,17 +15,17 @@ namespace ILCalc
 			Debug.Assert(len >= 0);
 
 			buf.Append(" (");
-			buf.Append(prev.ToString());
+			buf.Append(prev);
 			buf.Append(")(");
-			buf.Append(next.ToString());
+			buf.Append(next);
 			buf.Append("): \"");
 			buf.Append(this.expr, this.prePos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString(), this.expr, this.prePos, len);
+			return new SyntaxException(
+				buf.ToString(), this.expr, this.prePos, len);
 		}
 
-		[DebuggerHidden]
 		private Exception BraceDisbalance(int pos, bool mode)
 		{
 			string message = mode ?
@@ -36,10 +35,9 @@ namespace ILCalc
 			return new SyntaxException(message, this.expr, pos, 1);
 		}
 
-		[DebuggerHidden]
 		private Exception IncorrectIden(int i)
 		{
-			for (i++; i < this.exprLen; i++)
+			for (i++; i < this.xlen; i++)
 			{
 				char c = this.expr[i];
 				if (!char.IsLetterOrDigit(c) && c != '_')
@@ -48,11 +46,10 @@ namespace ILCalc
 				}
 			}
 
-			return this.IncorrectConstr(Item.Identifier, Item.Identifier, i);
+			return IncorrectConstr(Item.Identifier, Item.Identifier, i);
 		}
 
-		[DebuggerHidden]
-		private Exception NumberFormat(string message, string text, Exception inner)
+		private Exception NumberFormatException(string message, string text, Exception inner)
 		{
 			var buf = new StringBuilder(message);
 
@@ -64,36 +61,32 @@ namespace ILCalc
 				buf.ToString(), this.expr, this.curPos, text.Length, inner);
 		}
 
-		[DebuggerHidden]
 		private Exception NoOpenBrace(int pos, int len)
 		{
-			var buf = new StringBuilder(Resource.errFunctionNoBrace);
+			var buf = new StringBuilder(
+				Resource.errFunctionNoBrace);
 
 			buf.Append(" \"");
 			buf.Append(this.expr, pos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString(), this.expr, pos, len);
+			return new SyntaxException(
+				buf.ToString(), this.expr, pos, len);
 		}
 
-		[DebuggerHidden]
 		private Exception InvalidSeparator()
 		{
 			return new SyntaxException(
 				Resource.errInvalidSeparator, this.expr, this.curPos, 1);
 		}
 
-		[DebuggerHidden]
 		private Exception UnresolvedIdentifier(int shift)
 		{
 			int end = this.curPos;
-			for (end += shift; end < this.exprLen; end++)
+			for (end += shift; end < this.xlen; end++)
 			{
 				char c = this.expr[end];
-				if (!Char.IsLetterOrDigit(c) && c != '_')
-				{
-					break;
-				}
+				if (!Char.IsLetterOrDigit(c) && c != '_') break;
 			}
 
 			var buf = new StringBuilder(Resource.errUnresolvedIdentifier);
@@ -103,10 +96,10 @@ namespace ILCalc
 			buf.Append(this.expr, this.curPos, len);
 			buf.Append("\".");
 
-			return new SyntaxException(buf.ToString(), this.expr, this.curPos, len);
+			return new SyntaxException(
+				buf.ToString(), this.expr, this.curPos, len);
 		}
 
-		[DebuggerHidden]
 		private Exception UnresolvedSymbol(int i)
 		{
 			var buf = new StringBuilder(Resource.errUnresolvedSymbol);
@@ -115,10 +108,10 @@ namespace ILCalc
 			buf.Append(this.expr[i]);
 			buf.Append("'.");
 
-			return new SyntaxException(buf.ToString(), this.expr, i, 1);
+			return new SyntaxException(
+				buf.ToString(), this.expr, i, 1);
 		}
 
-		[DebuggerHidden]
 		private Exception WrongArgsCount(
 			int pos, int len, int args, FunctionGroup group)
 		{
@@ -140,11 +133,11 @@ namespace ILCalc
 					group.MakeMethodsArgsList());
 			}
 
-			return new SyntaxException(buf.ToString(), this.expr, pos, len);
+			return new SyntaxException(
+				buf.ToString(), this.expr, pos, len);
 		}
 
-		[DebuggerHidden]
-		private Exception AmbiguousMatch(int pos, List<Capture> matches)
+		private Exception AmbiguousMatchException(int pos, List<Capture> matches)
 		{
 			Debug.Assert(matches != null);
 			Debug.Assert(matches.Count > 0);
@@ -153,12 +146,13 @@ namespace ILCalc
 
 			foreach (Capture match in matches)
 			{
-				foreach (SearchItem list in idenList)
+				IdenType idenType = IdenType.Argument;
+				foreach (var list in Context.Literals)
 				{
-					if (list.Type == match.Type)
+					if (idenType == match.Type)
 					{
 						int i = 0, id = match.Index;
-						foreach (string name in list.Names)
+						foreach (string name in list)
 						{
 							if (i++ == id)
 							{
@@ -167,6 +161,8 @@ namespace ILCalc
 							}
 						}
 					}
+
+					idenType++;
 				}
 			}
 
@@ -179,15 +175,9 @@ namespace ILCalc
 
 				switch (matches[i].Type)
 				{
-					case IdenType.Argument:
-						type = Resource.sArgument;
-						break;
-					case IdenType.Constant:
-						type = Resource.sConstant;
-						break;
-					case IdenType.Function:
-						type = Resource.sFunction;
-						break;
+					case IdenType.Argument: type = Resource.sArgument; break;
+					case IdenType.Constant: type = Resource.sConstant; break;
+					case IdenType.Function: type = Resource.sFunction; break;
 				}
 
 				buf.Append(' ');
@@ -208,7 +198,8 @@ namespace ILCalc
 			}
 
 			int len = names[0].Length;
-			return new SyntaxException(buf.ToString(), this.expr, pos, len);
+			return new SyntaxException(
+				buf.ToString(), this.expr, pos, len);
 		}
 	}
 }

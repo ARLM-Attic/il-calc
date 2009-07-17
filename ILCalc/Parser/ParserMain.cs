@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 
 namespace ILCalc
 {
+	// TODO: Parser should not know about CalcContext
+	// TODO: Trigger to use|not use output
+
 	internal sealed partial class Parser
 	{
 		#region Fields
@@ -13,12 +15,11 @@ namespace ILCalc
 		private IExpressionOutput output;
 
 		private string expr;
-		private int exprLen;
+		private int xlen;
 
 		private char dotSymbol;
 		private char sepSymbol;
 
-		private List<SearchItem> idenList;
 		private NumberFormatInfo numFormat;
 		
 		#endregion
@@ -29,30 +30,30 @@ namespace ILCalc
 			Debug.Assert(context != null);
 
 			this.context = context;
-			
-			this.InitCulture();
-			this.InitIdens();
+			InitCulture();
 		}
 
-		// TODO: put optimizer logic here
+		private CalcContext Context      { get { return this.context; } }
+		private IExpressionOutput Output { get { return this.output;  } }
+
 		public void Parse(string expression, IExpressionOutput exprOutput)
 		{
 			Debug.Assert(expression != null);
 			Debug.Assert(exprOutput != null);
 
 			this.expr = expression;
-			this.exprLen = expression.Length;
+			this.xlen = expression.Length;
 			this.output = exprOutput;
 			this.exprDepth = 0;
 			this.prePos = 0;
 
 			int i = 0;
-			this.Parse(ref i, false);
+			Parse(ref i, false);
 		}
 
 		public void InitCulture()
 		{
-			CultureInfo culture = this.context.parseCulture;
+			CultureInfo culture = Context.Culture;
 			if (culture == null)
 			{
 				this.dotSymbol = '.';
@@ -73,31 +74,6 @@ namespace ILCalc
 
 				this.numFormat = culture.NumberFormat;
 			}
-		}
-
-		public void InitIdens()
-		{
-			var list = new List<SearchItem>(2);
-
-			if (this.context.arguments != null)
-			{
-				list.Add(new SearchItem(
-					IdenType.Argument, this.context.arguments));
-			}
-
-			if (this.context.constants != null)
-			{
-				list.Add(new SearchItem(
-					IdenType.Constant, this.context.constants.Keys));
-			}
-
-			if (this.context.functions != null)
-			{
-				list.Add(new SearchItem(
-					IdenType.Function, this.context.functions.Keys));
-			}
-
-			this.idenList = list;
 		}
 
 		#endregion

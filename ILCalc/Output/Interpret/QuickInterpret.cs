@@ -69,9 +69,8 @@ namespace ILCalc
 			this.stack[this.pos] = this.arguments[id];
 		}
 
-		public void PutSeparator()
-		{
-		}
+		public void PutBeginCall() { }
+		public void PutSeparator() { }
 
 		public void PutOperator(int oper)
 		{
@@ -116,14 +115,6 @@ namespace ILCalc
 					this.stack[++this.pos] = -value;
 				}
 			}
-		}
-
-		public void PutBeginCall()
-		{
-		}
-
-		public void PutBeginParams(int fixCount, int varCount)
-		{
 		}
 
 		public void PutFunction(FunctionItem func, int argsCount)

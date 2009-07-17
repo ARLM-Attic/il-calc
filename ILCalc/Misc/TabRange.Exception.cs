@@ -63,5 +63,5 @@ namespace ILCalc
 #endif
 
 		#endregion
-		}
 	}
+}

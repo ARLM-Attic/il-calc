@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace ILCalc
 {
@@ -35,35 +34,17 @@ namespace ILCalc
 		#endregion
 		#region Properties
 
-		public int[] Codes
-		{
-			[DebuggerHidden]
-			get { return this.code.ToArray(); }
-		}
-
-		public double[] Numbers
-		{
-			[DebuggerHidden]
-			get { return this.numbers.ToArray(); }
-		}
-
-		public FuncCall[] Functions
-		{
-			[DebuggerHidden]
-			get { return this.funcs.ToArray(); }
-		}
+		public int[]      GetCodes()     { return this.code.ToArray(); }
+		public double[]   GetNumbers()   { return this.numbers.ToArray(); }
+		public FuncCall[] GetFunctions() { return this.funcs.ToArray(); }
 
 #if !CF2
-		public Delegate[] Delegates
-		{
-			[DebuggerHidden]
-			get { return this.delegates.ToArray(); }
-		}
+
+		public Delegate[] GetDelegates() { return this.delegates.ToArray(); }
 #endif
 
 		public int StackMax
 		{
-			[DebuggerHidden]
 			get { return this.stackMax; }
 		}
 
@@ -106,17 +87,8 @@ namespace ILCalc
 			}
 		}
 
-		public void PutSeparator()
-		{
-		}
-
-		public void PutBeginCall()
-		{
-		}
-
-		public void PutBeginParams(int fixCount, int varCount)
-		{
-		}
+		public void PutSeparator() { }
+		public void PutBeginCall() { }
 
 		// TODO: reuse code!
 		public void PutFunction(FunctionItem func, int argsCount)
@@ -196,17 +168,16 @@ namespace ILCalc
 			Debug.Assert(func != null);
 			Debug.Assert(delegateType != null);
 
-			MethodInfo method = func.Method;
 			for (int i = 0; i < this.delegates.Count; i++)
 			{
-				if (this.delegates[i].Method == method)
+				if (this.delegates[i].Method == func.Method)
 				{
 					return i;
 				}
 			}
 
 			this.delegates.Add(
-				Delegate.CreateDelegate(delegateType, null, method));
+				Delegate.CreateDelegate(delegateType, func.Target, func.Method));
 
 			return this.delegates.Count - 1;
 		}
@@ -239,5 +210,10 @@ namespace ILCalc
 		private static readonly Type EvalType2 = typeof(EvalFunc2);
 
 		#endregion
+
+		public Interpret Create(string expression, int argsCount, bool checks)
+		{
+			return new Interpret(expression, argsCount, checks, this);
+		}
 	}
 }

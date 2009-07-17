@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 namespace ILCalc
@@ -16,7 +17,7 @@ namespace ILCalc
 
 namespace System.Runtime.CompilerServices
 {
-	[Serializable]
+	[Conditional("NEVER")]
 	[AttributeUsage(AttributeTargets.All, Inherited = true)]
 	internal sealed class CompilerGeneratedAttribute : Attribute
 	{

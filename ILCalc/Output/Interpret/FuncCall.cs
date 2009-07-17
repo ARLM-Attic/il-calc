@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 
 // NOTE: maybe struct => more lightweight? Test.
+// TODO: rename to CallAccel?
 namespace ILCalc
 {
 	[Serializable]
