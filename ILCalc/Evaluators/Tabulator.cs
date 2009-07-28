@@ -127,15 +127,18 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// Argument range from <paramref name="begin"/>, <paramref name="end"/>
 		/// and <paramref name="step"/> is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with one ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>One-dimensional array of the evaluated values.</returns>
 		public double[] Tabulate(double begin, double end, double step)
 		{
-			return Tabulate(
-				new TabRange(begin, end, step));
+			return this.tabulator1(
+				new double[new ValueRange(begin, end, step).ValidCount],
+				step,
+				begin);
 		}
 
 		/// <summary>
@@ -144,12 +147,13 @@ namespace ILCalc
 		/// <param name="range">Argument range.</param>
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range"/> is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with one ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>One-dimensional array of the evaluated values.</returns>
-		public double[] Tabulate(TabRange range)
+		public double[] Tabulate(ValueRange range)
 		{
 			return this.tabulator1(
 				new double[range.ValidCount],
@@ -165,27 +169,26 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 2.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with two ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>Two-dimensional jagged array of the evaluated values.</returns>
-		public double[][] Tabulate(TabRange range1, TabRange range2)
+		public double[][] Tabulate(ValueRange range1, ValueRange range2)
 		{
 			var array = new double[range1.ValidCount][];
 			int count = range2.ValidCount;
 
-			for(int i = 0; i < array.Length; i++)
+			for (int i = 0; i < array.Length; i++)
 			{
 				array[i] = new double[count];
 			}
 
 			return this.tabulator2(
 				array,
-				range1.Step,
-				range2.Step,
-				range1.Begin,
-				range2.Begin);
+				range1.Step,  range2.Step,
+				range1.Begin, range2.Begin);
 		}
 
 		/// <summary>
@@ -197,31 +200,27 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException"><paramref name="range1"/>,
 		/// <paramref name="range2"/> or <paramref name="range3"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 3.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with three ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>Three-dimensional jagged array of the evaluated values
 		/// casted to <see cref="Array"/> type.</returns>
-		public Array Tabulate(TabRange range1, TabRange range2, TabRange range3)
+		public Array Tabulate(
+			ValueRange range1, ValueRange range2, ValueRange range3)
 		{
-			if (this.argsCount != 3)
-				throw WrongRanges(3);
+			if (this.argsCount != 3) throw WrongRangesCount(3);
 
 			return this.tabulatorN(
 				this.allocator(
 					range1.ValidCount,
 					range2.ValidCount,
 					range3.ValidCount),
-				range1.Step,
-				range2.Step,
-				range3.Step,
-				range1.Begin,
-				range2.Begin,
-				range3.Begin);
+				range1.Step,  range2.Step,  range3.Step,
+				range1.Begin, range2.Begin, range3.Begin);
 		}
 
-		//TODO: remarks & example!
 		/// <summary>
 		/// Invokes the compiled expression tabulation
 		/// with the specified argument <paramref name="ranges"/>.</summary>
@@ -231,18 +230,19 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// Some instance of <paramref name="ranges"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal
-		/// to specified <paramref name="ranges"/> count.</exception>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="ranges"/> doesn't specify needed
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
-		public Array Tabulate(params TabRange[] ranges)
+		public Array Tabulate(params ValueRange[] ranges)
 		{
-			if (ranges == null || ranges.Length != this.argsCount)
+			if (ranges == null
+			 || ranges.Length != this.argsCount)
 			{
-				throw WrongRanges(ranges);
+				throw WrongRangesCount(ranges);
 			}
 
 			var lengths = new int[ranges.Length];
@@ -250,7 +250,7 @@ namespace ILCalc
 
 			for(int i = 0; i < ranges.Length; i++)
 			{
-				TabRange range = ranges[i];
+				ValueRange range = ranges[i];
 
 				lengths[i] = range.ValidCount;
 				data[i] = range.Step;
@@ -274,11 +274,9 @@ namespace ILCalc
 		/// <param name="step">Argument range step value.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
-		/// <exception cref="InvalidRangeException">Argument range
-		/// from <paramref name="begin"/> and <paramref name="step"/>
-		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with one range is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		public void TabulateToArray(double[] array, double begin, double step)
@@ -297,13 +295,12 @@ namespace ILCalc
 		/// <param name="range">Argument range.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
-		/// <exception cref="InvalidRangeException"><paramref name="range"/>
-		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with one range is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
-		public void TabulateToArray(double[] array, TabRange range)
+		public void TabulateToArray(double[] array, ValueRange range)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
@@ -320,16 +317,16 @@ namespace ILCalc
 		/// <param name="range2">Second argument range.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
-		/// <exception cref="InvalidRangeException"><paramref name="range1"/>
-		/// or <paramref name="range2"/> is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 2.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with two ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <remarks>Pre-allocated array should be correctly evaluated (by the
-		/// attached <see cref="Tabulator.Allocate(TabRange, TabRange)"/> method),
+		/// attached <see cref="Tabulator.Allocate(ILCalc.ValueRange, ILCalc.ValueRange)"/> method),
 		/// or tabulator may throw <see cref="NullReferenceException"/>.</remarks>
-		public void TabulateToArray(double[][] array, TabRange range1, TabRange range2)
+		public void TabulateToArray(
+			double[][] array, ValueRange range1, ValueRange range2)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
@@ -352,18 +349,17 @@ namespace ILCalc
 		/// <param name="range3">Third argument range.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
-		/// <exception cref="InvalidRangeException"><paramref name="range1"/>,
-		/// <paramref name="range2"/> or <paramref name="range3"/> is not valid
-		/// for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 3.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with three ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <remarks>Pre-allocated array should be correctly allocated by using the attached
-		/// <see cref="Tabulator.Allocate(TabRange, TabRange, TabRange)"/> method.<br/>
+		/// <see cref="Tabulator.Allocate(ILCalc.ValueRange, ILCalc.ValueRange, ILCalc.ValueRange)"/> method.<br/>
 		/// Otherwise this tabulator may throw <see cref="NullReferenceException"/>
 		/// or <see cref="InvalidCastException"/>.</remarks>
-		public void TabulateToArray(Array array, TabRange range1, TabRange range2, TabRange range3)
+		public void TabulateToArray(
+			Array array, ValueRange range1, ValueRange range2, ValueRange range3)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
@@ -387,29 +383,29 @@ namespace ILCalc
 		/// <param name="ranges">Argument ranges.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
-		/// <exception cref="InvalidRangeException">Some instance
-		/// of <paramref name="ranges"/> is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">Expression's <see cref="RangesCount"/>
-		/// is not equal to the specified <paramref name="ranges"/> count.</exception>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="ranges"/> doesn't specify needed
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <remarks>Pre-allocated array should be correctly allocated by using
-		/// the attached <see cref="Tabulator.Allocate(TabRange[])"/> method.<br/>
+		/// the attached <see cref="Tabulator.Allocate(ILCalc.ValueRange[])"/> method.<br/>
 		/// Otherwise this tabulator may throw <see cref="NullReferenceException"/>
 		/// or <see cref="InvalidCastException"/>.</remarks>
-		public void TabulateToArray(Array array, params TabRange[] ranges)
+		public void TabulateToArray(Array array, params ValueRange[] ranges)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
+
 			if (ranges == null || ranges.Length != this.argsCount)
 			{
-				throw WrongRanges(ranges);
+				throw WrongRangesCount(ranges);
 			}
 
 			var data = new double[ranges.Length * 2];
 			for(int i = 0; i < ranges.Length; i++)
 			{
-				TabRange range = ranges[i];
+				ValueRange range = ranges[i];
 				range.Validate();
 
 				data[i] = range.Step;
@@ -434,14 +430,15 @@ namespace ILCalc
 		/// state information for this tabulation.</param>
 		/// <exception cref="InvalidRangeException"><paramref name="range"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 1.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with one range is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>An <see cref="IAsyncResult"/> that references
 		/// the asynchronous tabulation result.</returns>
 		public IAsyncResult BeginTabulate(
-			TabRange range, AsyncCallback callback, object state)
+			ValueRange range, AsyncCallback callback, object state)
 		{
 			if (this.argsCount != 1)
 				throw InvalidArgs(1);
@@ -466,14 +463,18 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 2.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with two ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>An <see cref="IAsyncResult"/> that references
 		/// the asynchronous tabulation result.</returns>
 		public IAsyncResult BeginTabulate(
-			TabRange range1, TabRange range2, AsyncCallback callback, object state)
+			ValueRange range1,
+			ValueRange range2,
+			AsyncCallback callback,
+			object state)
 		{
 			if( this.argsCount != 2 )
 				throw InvalidArgs(2);
@@ -509,17 +510,22 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException"><paramref name="range1"/>,
 		/// <paramref name="range2"/> or <paramref name="range3"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal 3.</exception>
+		/// <exception cref="ArgumentException"><see cref="Tabulator"/>
+		/// with three ranges is not compiled, you should specify valid
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns>An <see cref="IAsyncResult"/> that references
 		/// the asynchronous tabulation result.</returns>
 		public IAsyncResult BeginTabulate(
-			TabRange range1, TabRange range2, TabRange range3, AsyncCallback callback, object state)
+			ValueRange range1,
+			ValueRange range2,
+			ValueRange range3,
+			AsyncCallback callback,
+			object state)
 		{
 			if (this.argsCount != 3)
-				throw WrongRanges(3);
+				throw WrongRangesCount(3);
 
 			return ((TabFuncN) this.asyncTab).BeginInvoke(
 				this.allocator(
@@ -548,19 +554,19 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// Some instance of <paramref name="ranges"/>
 		/// is not valid for iteration over it.</exception>
-		/// <exception cref="InvalidOperationException">
-		/// Expression's <see cref="RangesCount"/> is not equal
-		/// to specified <paramref name="ranges"/> count.</exception>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="ranges"/> doesn't specify needed
+		/// <see cref="RangesCount">ranges count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
 		public IAsyncResult BeginTabulate(
-			TabRange[] ranges, AsyncCallback callback, object state)
+			ValueRange[] ranges, AsyncCallback callback, object state)
 		{
 			if (ranges == null || ranges.Length != this.argsCount)
 			{
-				throw WrongRanges(ranges);
+				throw WrongRangesCount(ranges);
 			}
 
 			var lengths = new int[ranges.Length];
@@ -568,7 +574,7 @@ namespace ILCalc
 
 			for(int i = 0; i < ranges.Length; i++)
 			{
-				TabRange range = ranges[i];
+				ValueRange range = ranges[i];
 
 				lengths[i] = range.ValidCount;
 				data[i] = range.Step;
@@ -579,7 +585,6 @@ namespace ILCalc
 				this.allocator(lengths), data, callback, state);
 		}
 
-
 		/// <summary>
 		/// Ends a pending asynchronous tabulation task.</summary>
 		/// <param name="result">An <see cref="IAsyncResult"/>
@@ -587,7 +592,7 @@ namespace ILCalc
 		/// data for this asynchronous operation.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="result"/> is null.</exception>
-		/// <exception cref="InvalidOperationException"><see cref="EndTabulate"/>
+		/// <exception cref="ArgumentException"><see cref="EndTabulate"/>
 		/// was previously called for the asynchronous tabulation.</exception>
 		/// <returns><see cref="RangesCount">N</see>-dimensional jagged array
 		/// of the evaluated values casted to <see cref="Array"/> type.</returns>
@@ -623,7 +628,7 @@ namespace ILCalc
 		public static double[] Allocate(double begin, double end, double step)
 		{
 			return new double[
-				new TabRange(begin, end, step).ValidCount];
+				new ValueRange(begin, end, step).ValidCount];
 		}
 
 		/// <summary>
@@ -633,7 +638,7 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range"/> is not valid for iteration over it.</exception>
 		/// <returns>Allocated one-dimensional array.</returns>
-		public static double[] Allocate(TabRange range)
+		public static double[] Allocate(ValueRange range)
 		{
 			return new double[range.ValidCount];
 		}
@@ -647,7 +652,7 @@ namespace ILCalc
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated two-dimensional jagged array.</returns>
-		public static double[][] Allocate(TabRange range1, TabRange range2)
+		public static double[][] Allocate(ValueRange range1, ValueRange range2)
 		{
 			var array = new double[range1.ValidCount][];
 			int count = range2.ValidCount;
@@ -671,9 +676,10 @@ namespace ILCalc
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated three-dimensional jagged array
 		/// casted to <see cref="Array"/> type.</returns>
-		public static Array Allocate(TabRange range1, TabRange range2, TabRange range3)
+		public static Array Allocate(ValueRange range1, ValueRange range2, ValueRange range3)
 		{
-			Allocator alloc = TabulatorCompiler.AllocCompiler.Resolve(3);
+			Allocator alloc =
+				TabulatorCompiler.AllocCompiler.Resolve(3);
 
 			return alloc(
 				range1.ValidCount,
@@ -693,7 +699,7 @@ namespace ILCalc
 		/// is not valid for iteration over it.</exception>
 		/// <returns>Allocated <paramref name="ranges"/>-dimensional
 		/// jagged array casted to <see cref="Array"/> type.</returns>
-		public static Array Allocate(params TabRange[] ranges)
+		public static Array Allocate(params ValueRange[] ranges)
 		{
 			if (ranges == null)
 				throw new ArgumentNullException("ranges");
@@ -701,14 +707,14 @@ namespace ILCalc
 			if (ranges.Length == 1) return new double[ranges[0].ValidCount];
 			if (ranges.Length == 2) return Allocate(ranges[0], ranges[1]);
 
-			var lenghts = new int[ranges.Length];
+			var sizes = new int[ranges.Length];
 			for (int i = 0; i < ranges.Length; i++)
 			{
-				lenghts[i] = ranges[i].ValidCount;
+				sizes[i] = ranges[i].ValidCount;
 			}
 
 			Allocator alloc = TabulatorCompiler.AllocCompiler.Resolve(ranges.Length);
-			return alloc(lenghts);
+			return alloc(sizes);
 		}
 
 		#endregion
@@ -717,7 +723,7 @@ namespace ILCalc
 		private double[] ThrowMethod1(
 			double[] array, double step, double begin)
 		{
-			throw new InvalidOperationException(string.Format(
+			throw new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, 1, this.argsCount));
 		}
 
@@ -726,24 +732,24 @@ namespace ILCalc
 			double step1,  double step2,
 			double begin1, double begin2)
 		{
-			throw new InvalidOperationException(string.Format(
+			throw new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, 2, this.argsCount));
 		}
 
 		// NOTE: unused?
 		private Array ThrowAlloc(int[] length)
 		{
-			throw new InvalidOperationException(string.Format(
+			throw new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, length.Length, this.argsCount));
 		}
 
 		private Exception InvalidArgs(int actualCount)
 		{
-			return new InvalidOperationException(string.Format(
+			return new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, actualCount, this.argsCount));
 		}
 
-		private Exception WrongRanges(TabRange[] ranges)
+		private Exception WrongRangesCount(ValueRange[] ranges)
 		{
 			if (ranges == null)
 				return new ArgumentNullException("ranges");
@@ -752,7 +758,7 @@ namespace ILCalc
 				Resource.errWrongRangesCount, ranges.Length, this.argsCount));
 		}
 
-		private Exception WrongRanges(int actualCount)
+		private Exception WrongRangesCount(int actualCount)
 		{
 			return new ArgumentException(string.Format(
 				Resource.errWrongRangesCount, actualCount, this.argsCount));

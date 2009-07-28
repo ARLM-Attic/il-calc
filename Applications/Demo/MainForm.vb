@@ -46,8 +46,10 @@ Public Class MainForm
 	' The tabulators for red, green and blue expressions
 	Private MyRedTabulator, MyGreenTabulator, MyBlueTabulator As Tabulator
 	' The tabulators range
-	Private MyRangeX As TabRange = New TabRange(-Math.PI, Math.PI, 2 * Math.PI / 240)
-	Private MyRangeY As TabRange = New TabRange(-Math.PI, Math.PI, 2 * Math.PI / 240)
+	Private MyRangeX As ValueRange = New ValueRange(-Math.PI, Math.PI, 2 * Math.PI / 240)
+	Private MyRangeY As ValueRange = New ValueRange(-Math.PI, Math.PI, 2 * Math.PI / 240)
+	' The pre-acclocated arrays for values
+	Dim MyArrayBlue, MyArrayGreen, MyArrayRed As Double()()
 
 	Private Shared MyRandom As Random = New Random()
 
@@ -87,7 +89,8 @@ Public Class MainForm
 		Me.cmdGenerate.Enabled = False
 		Me.PopulatePresets()
 		Me.HookTextboxes()
-		AddHandler ddPresets.SelectedIndexChanged, AddressOf ddPresets_FirstSelectedIndexChanged
+		AddHandler ddPresets.SelectedIndexChanged, _
+		 AddressOf ddPresets_FirstSelectedIndexChanged
 
 	End Sub
 
@@ -111,8 +114,14 @@ Public Class MainForm
 		MyImageHalfHeight = Height \ 2
 		MyImageBitmapSize = Width * Height * 3
 
-		MyRangeX.Step = 2 * Math.PI / (MyImageWidth + 1)
-		MyRangeY.Step = 2 * Math.PI / (MyImageHeight + 1)
+		MyRangeX = MyRangeX.SetStep(2 * Math.PI / (MyImageWidth + 1))
+		MyRangeY = MyRangeY.SetStep(2 * Math.PI / (MyImageHeight + 1))
+
+		Dim x As Integer = MyRangeX.Count
+
+		MyArrayBlue = Tabulator.Allocate(MyRangeX, MyRangeY)
+		MyArrayGreen = Tabulator.Allocate(MyRangeX, MyRangeY)
+		MyArrayRed = Tabulator.Allocate(MyRangeX, MyRangeY)
 
 	End Sub
 
@@ -197,17 +206,20 @@ Public Class MainForm
 
 		Dim index As Integer
 
-		Dim arrBlue As Double()() = MyBlueTabulator.Tabulate(MyRangeX, MyRangeY)
-		Dim arrGreen As Double()() = MyGreenTabulator.Tabulate(MyRangeX, MyRangeY)
-		Dim arrRed As Double()() = MyRedTabulator.Tabulate(MyRangeX, MyRangeY)
+		Dim BlueArray As Double()() = MyArrayBlue
+		Dim GreenArray As Double()() = MyArrayGreen
+		Dim RedArray As Double()() = MyArrayRed
 
-		For Yi As Integer = 0 To MyImageHeight - 1
+		MyBlueTabulator.TabulateToArray(BlueArray, MyRangeX, MyRangeY)
+		MyGreenTabulator.TabulateToArray(GreenArray, MyRangeX, MyRangeY)
+		MyRedTabulator.TabulateToArray(RedArray, MyRangeX, MyRangeY)
 
-			For Xi As Integer = 0 To MyImageWidth - 1
+		For y As Integer = 0 To MyImageHeight - 1
+			For x As Integer = 0 To MyImageWidth - 1
 
-				Me.SetColorComponent(MyImageData2, arrBlue(Xi)(Yi), index)
-				Me.SetColorComponent(MyImageData2, arrGreen(Xi)(Yi), index + 1)
-				Me.SetColorComponent(MyImageData2, arrRed(Xi)(Yi), index + 2)
+				Me.SetColorComponent(MyImageData2, BlueArray(x)(y), index)
+				Me.SetColorComponent(MyImageData2, GreenArray(x)(y), index + 1)
+				Me.SetColorComponent(MyImageData2, RedArray(x)(y), index + 2)
 				index += 3
 
 			Next

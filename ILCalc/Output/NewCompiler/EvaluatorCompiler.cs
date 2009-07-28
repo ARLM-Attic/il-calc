@@ -43,9 +43,17 @@ namespace ILCalc
 			int count = this.argsCount;
 			if (count > 3) count = 3;
 
-			Type[] argsTypes = !OwnerUsed ?
-				ArgsTypes1[count] :
-				ArgsTypes2[count] ;
+			Type[] argsTypes = ArgsTypes[count];
+			object owner = GetOwnerFull();
+
+			if (OwnerUsed)
+			{
+				var withOwner = new Type[argsTypes.Length + 1];
+				Array.Copy(argsTypes, 0, withOwner, 1, argsTypes.Length);
+
+				withOwner[0] = OwnerType;
+				argsTypes = withOwner;
+			}
 
 			var method = new DynamicMethod(
 				"evaluator", TypeHelper.ValueType, argsTypes, OwnerType, true);
@@ -62,7 +70,7 @@ namespace ILCalc
 			Type delType = DelegateTypes[count];
 
 			Delegate delg = OwnerUsed ?
-				method.CreateDelegate(delType, GetClosure()) :
+				method.CreateDelegate(delType, owner) :
 				method.CreateDelegate(delType);
 
 			//DynamicMethodVisualizer.Visualizer.Show(method);
@@ -74,20 +82,12 @@ namespace ILCalc
 		#region Static Data
 
 		// Types ==================================================
-		private static readonly Type[][] ArgsTypes1 =
+		private static readonly Type[][] ArgsTypes =
 			{
 				null,
 				new[] { TypeHelper.ValueType },
 				new[] { TypeHelper.ValueType, TypeHelper.ValueType },
 				new[] { TypeHelper.ArrayType }
-			};
-
-		private static readonly Type[][] ArgsTypes2 =
-			{
-				new[] { OwnerType },
-				new[] { OwnerType, TypeHelper.ValueType },
-				new[] { OwnerType, TypeHelper.ValueType, TypeHelper.ValueType },
-				new[] { OwnerType, TypeHelper.ArrayType }
 			};
 
 		private static readonly Type[] DelegateTypes = 

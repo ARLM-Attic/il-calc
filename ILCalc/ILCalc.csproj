@@ -64,8 +64,8 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Misc\Codes.cs" />
     <Compile Include="Misc\Delegates.cs" />
-    <Compile Include="Misc\TabRange.cs" />
-    <Compile Include="Misc\TabRange.Exception.cs" />
+    <Compile Include="Misc\ValueRange.Exception.cs" />
+    <Compile Include="Misc\ValueRange.cs" />
     <Compile Include="Output\NewCompiler\CompilerBase.cs" />
     <Compile Include="Output\NewCompiler\EvaluatorCompiler.cs" />
     <Compile Include="Output\NewCompiler\TabulatorCompiler.cs" />

@@ -22,7 +22,8 @@ namespace ILCalc.Tests
 			double arg3, double arg4);
 
 		private static double[] Tabulate1D(
-			EvalFunc1 func, TabRange range)
+			EvalFunc1 func,
+			ValueRange range)
 		{
 			var array = new double[range.Count];
 			double x = range.Begin;
@@ -37,7 +38,9 @@ namespace ILCalc.Tests
 		}
 
 		private static double[][] Tabulate2D(
-			EvalFunc2 func, TabRange r1, TabRange r2)
+			EvalFunc2 func,
+			ValueRange r1,
+			ValueRange r2)
 		{
 			var array = new double[r1.Count][];
 			double x = r1.Begin;
@@ -59,7 +62,10 @@ namespace ILCalc.Tests
 		}
 
 		private static double[][][] Tabulate3D(
-			EvalFunc3 func, TabRange r1, TabRange r2, TabRange r3)
+			EvalFunc3 func,
+			ValueRange r1,
+			ValueRange r2,
+			ValueRange r3)
 		{
 			var array3D = new double[r1.Count][][];
 			double x = r1.Begin;
@@ -90,8 +96,8 @@ namespace ILCalc.Tests
 
 		private static double[][][][] Tabulate4D(
 			EvalFunc4 func,
-			TabRange r1, TabRange r2, 
-			TabRange r3, TabRange r4)
+			ValueRange r1, ValueRange r2, 
+			ValueRange r3, ValueRange r4)
 		{
 			var array4D = new double[r1.Count][][][];
 			double x = r1.Begin;
@@ -165,24 +171,25 @@ namespace ILCalc.Tests
 			}
 		}
 
-		private static TabRange GetRandomRange()
+		private static ValueRange GetRandomRange()
 		{
 			int from = Random.Next(-100, 100);
-			int to   = Random.Next(50, 100) + from;
+			int to   = Random.Next(10, 50) + from;
 			int step = Random.Next(1, 4);
 
-			return new TabRange(from, to, step);
+			return new ValueRange(from, to, step);
 		}
 
 		#endregion
+		#region Tests
 
 		[TestMethod]
-		public void TabulateTest1D()
+		public void TabulatorTest1D()
 		{
 			var calc = new CalcContext("x");
 			calc.Functions.Add(Math.Sin);
 
-			TabRange range = GetRandomRange();
+			ValueRange range = GetRandomRange();
 
 			Tabulator tab = calc.CreateTabulator("2sin(x)");
 			IAsyncResult async = tab.BeginTabulate(range, null, null);
@@ -198,17 +205,18 @@ namespace ILCalc.Tests
 		}
 
 		[TestMethod]
-		public void TabulateTest2D()
+		public void TabulatorTest2D()
 		{
 			var calc = new CalcContext("x", "y");
 			calc.Functions.Add(Math.Sin);
 			calc.Functions.Add(Math.Cos);
 
-			TabRange rangeX = GetRandomRange();
-			TabRange rangeY = GetRandomRange();
+			ValueRange rangeX = GetRandomRange();
+			ValueRange rangeY = GetRandomRange();
 
 			Tabulator tab = calc.CreateTabulator("cos(x) * sin(y)");
-			IAsyncResult async = tab.BeginTabulate(rangeX, rangeY, null, null);
+			IAsyncResult async =
+				tab.BeginTabulate(rangeX, rangeY, null, null);
 
 			var expected = Tabulate2D(
 				(x, y) => Math.Cos(x) * Math.Sin(y),
@@ -223,21 +231,21 @@ namespace ILCalc.Tests
 		}
 
 		[TestMethod]
-		public void TabulateTest3D()
+		public void TabulatorTest3D()
 		{
 			var calc = new CalcContext("x", "y", "z");
 			calc.Functions.Add(Math.Sin);
 			calc.Functions.Add(Math.Cos);
 			calc.Functions.Add(Math.Tan);
 
-			TabRange
+			ValueRange
 				rangeX = GetRandomRange(),
 				rangeY = GetRandomRange(),
 				rangeZ = GetRandomRange();
 
 			Tabulator tab = calc.CreateTabulator("cos(x) * sin(y) * tan(z)");
-			IAsyncResult async = tab.BeginTabulate(
-				rangeX, rangeY, rangeZ, null, null);
+			IAsyncResult async =
+				tab.BeginTabulate(rangeX, rangeY, rangeZ, null, null);
 
 			var expected = Tabulate3D(
 				(x, y, z) => Math.Cos(x) * Math.Sin(y) * Math.Tan(z),
@@ -252,15 +260,16 @@ namespace ILCalc.Tests
 		}
 
 		[TestMethod]
-		public void TabulateTest4D()
+		public void TabulatorTest4D()
 		{
 			var calc = new CalcContext("x", "y", "z", "w");
 			calc.Functions.Add(Math.Sin);
 			calc.Functions.Add(Math.Cos);
 			calc.Functions.Add(Math.Tan);
 
-			TabRange rX = GetRandomRange(), rY = GetRandomRange(),
-			         rZ = GetRandomRange(), rW = GetRandomRange();
+			ValueRange
+				rX = GetRandomRange(), rY = GetRandomRange(),
+				rZ = GetRandomRange(), rW = GetRandomRange();
 
 			Tabulator tab = calc.CreateTabulator(
 				"cos(x) * sin(y) * tan(z) * sin(w)");
@@ -285,8 +294,129 @@ namespace ILCalc.Tests
 
 			for(int i = 0; i < expected.Length; i++)
 			{
-				AssertEquality(expected[i], actual1[i], actual2[i], actual3[i]);
+				AssertEquality(
+					expected[i], actual1[i],
+					 actual2[i], actual3[i]);
 			}
 		}
+
+		[TestMethod]
+		public void InterpretTest1D()
+		{
+			var calc = new CalcContext("x");
+			calc.Functions.Add(Math.Sin);
+
+			ValueRange range = GetRandomRange();
+
+			Interpret tab = calc.CreateInterpret("2sin(x)");
+			IAsyncResult async = tab.BeginTabulate(range, null, null);
+
+			var expected = Tabulate1D(x => 2 * Math.Sin(x), range);
+
+			var actual1 = tab.Tabulate(range);
+			var actual2 = (double[]) tab.EndTabulate(async);
+			var actual3 = Tabulator.Allocate(range);
+			tab.TabulateToArray(actual3, range);
+
+			AssertEquality(expected, actual1, actual2, actual3);
+		}
+
+		[TestMethod]
+		public void InterpretTest2D()
+		{
+			var calc = new CalcContext("x", "y");
+			calc.Functions.Add(Math.Sin);
+			calc.Functions.Add(Math.Cos);
+
+			ValueRange rangeX = GetRandomRange();
+			ValueRange rangeY = GetRandomRange();
+
+			Interpret tab = calc.CreateInterpret("cos(x) * sin(y)");
+			IAsyncResult async =
+				tab.BeginTabulate(rangeX, rangeY, null, null);
+
+			var expected = Tabulate2D(
+				(x, y) => Math.Cos(x) * Math.Sin(y),
+				rangeX, rangeY);
+
+			var actual1 = tab.Tabulate(rangeX, rangeY);
+			var actual2 = (double[][]) tab.EndTabulate(async);
+			var actual3 = Tabulator.Allocate(rangeX, rangeY);
+			tab.TabulateToArray(actual3, rangeX, rangeY);
+
+			AssertEquality(expected, actual1, actual2, actual3);
+		}
+
+		[TestMethod]
+		public void InterpretTest3D()
+		{
+			var calc = new CalcContext("x", "y", "z");
+			calc.Functions.Add(Math.Sin);
+			calc.Functions.Add(Math.Cos);
+			calc.Functions.Add(Math.Tan);
+
+			ValueRange
+				rangeX = GetRandomRange(),
+				rangeY = GetRandomRange(),
+				rangeZ = GetRandomRange();
+
+			Interpret tab = calc.CreateInterpret("cos(x) * sin(y) * tan(z)");
+			IAsyncResult async =
+				tab.BeginTabulate(rangeX, rangeY, rangeZ, null, null);
+
+			var expected = Tabulate3D(
+				(x, y, z) => Math.Cos(x) * Math.Sin(y) * Math.Tan(z),
+				rangeX, rangeY, rangeZ);
+
+			var actual1 = (double[][][]) tab.Tabulate(rangeX, rangeY, rangeZ);
+			var actual2 = (double[][][]) tab.EndTabulate(async);
+			var actual3 = (double[][][]) Tabulator.Allocate(rangeX, rangeY, rangeZ);
+			tab.TabulateToArray(actual3, rangeX, rangeY, rangeZ);
+
+			AssertEquality(expected, actual1, actual2, actual3);
+		}
+
+		[TestMethod]
+		public void InterpretTest4D()
+		{
+			var calc = new CalcContext("x", "y", "z", "w");
+			calc.Functions.Add(Math.Sin);
+			calc.Functions.Add(Math.Cos);
+			calc.Functions.Add(Math.Tan);
+
+			ValueRange
+				rX = GetRandomRange(), rY = GetRandomRange(),
+				rZ = GetRandomRange(), rW = GetRandomRange();
+
+			Interpret tab = calc.CreateInterpret(
+				"cos(x) * sin(y) * tan(z) * sin(w)");
+
+			IAsyncResult async = tab.BeginTabulate(
+				new[] { rX, rY, rZ, rW }, null, null);
+
+			var expected = Tabulate4D(
+				(x,y,z,w) => Math.Cos(x) * Math.Sin(y)
+				           * Math.Tan(z) * Math.Sin(w),
+				rX, rY, rZ, rW);
+
+			var actual1 = (double[][][][]) tab.Tabulate(rX, rY, rZ, rW);
+			var actual2 = (double[][][][]) tab.EndTabulate(async);
+			var actual3 = (double[][][][]) Tabulator.Allocate(rX, rY, rZ, rW);
+
+			tab.TabulateToArray(actual3, rX, rY, rZ, rW);
+
+			Assert.AreEqual(expected.Length, actual1.Length);
+			Assert.AreEqual(expected.Length, actual2.Length);
+			Assert.AreEqual(expected.Length, actual3.Length);
+
+			for(int i = 0; i < expected.Length; i++)
+			{
+				AssertEquality(
+					expected[i], actual1[i],
+					 actual2[i], actual3[i]);
+			}
+		}
+
+		#endregion
 	}
 }

@@ -1217,6 +1217,12 @@ discovered errors</exception>
 </member><member name="T:Ciloci.Flee.ExpressionAnalyzer">
 	<remarks>A class providing callback methods for the
 parser.</remarks>
+</member><member name="M:Ciloci.Flee.IExpression.Clone">
+	<summary>
+        Creates a clone of the current expression
+      </summary>
+	<returns>A copy of the current expression with its own set of variables</returns>
+	<remarks>Use this method when you need to create a copy of an existing expression without the parsing/compilation overhead</remarks>
 </member><member name="P:Ciloci.Flee.IExpression.Text">
 	<summary>Gets the text the expression was created with</summary>
 	<value>A string with the expression's text</value>
@@ -1395,6 +1401,20 @@ parser.</remarks>
         Provides the data for the InvokeFunction event.
       </summary>
 	<remarks>Use this class to provide the return value of an on-demand function.</remarks>
+</member><member name="F:Ciloci.Flee.RealLiteralDataType.Single">
+	<summary>Specifies that real literals will be stored using the <see cref="T:System.Single"/> data type.</summary>
+</member><member name="F:Ciloci.Flee.RealLiteralDataType.Double">
+	<summary>
+        Specifies that real literals will be stored using the <see cref="T:System.Double"/> data type.
+      </summary>
+</member><member name="F:Ciloci.Flee.RealLiteralDataType.Decimal">
+	<summary>
+        Specifies that real literals will be stored using the <see cref="T:System.Decimal"/> data type.
+      </summary>
+</member><member name="T:Ciloci.Flee.RealLiteralDataType">
+	<summary>
+        Defines values to indicate the data type to use for storing real literals.
+      </summary>
 </member><member name="P:Ciloci.Flee.ExpressionOptions.ResultType">
 	<summary>Gets or sets the type of the expression's result.</summary>
 	<value>
@@ -1470,6 +1490,13 @@ parser.</remarks>
 	<remarks>
         Use this property to allow for parsing of expressions using culture-specific tokens.  This is useful, for example, when you
         wish to parse numbers using a culture-specific decimal separator.
+      </remarks>
+</member><member name="P:Ciloci.Flee.ExpressionOptions.RealLiteralDataType">
+	<summary>Gets or sets the data type used for real literals when no explicit type is specified.</summary>
+	<value>A value specifying the type to use</value>
+	<remarks>
+        Use this property to set the data type that will be used to represent real literals.  For example: if set to Decimal, all real literals (ie: 100.45) will be parsed into 
+        a System.Decimal value.
       </remarks>
 </member><member name="T:Ciloci.Flee.ExpressionOptions">
 	<summary>
@@ -2032,20 +2059,6 @@ result = engine.GetResult&lt;int&gt;("c");
 	<summary>
  Length of the Br_s opcode
  </summary>
-</member><member name="M:Ciloci.Flee.ILLocation.GetShortBranchPosition(System.Int32)">
-	<summary>
- Get the actual position for a short branch instruction
- </summary>
-	<param name="position">The initial position</param>
-	<returns>The adjusted position</returns>
-	<remarks>The start of a branch opcode's jump is the position after the opcode.</remarks>
-</member><member name="M:Ciloci.Flee.ILLocation.AdjustShortToLongBranch(System.Int32)">
-	<summary>
- Adjust a position that was for a short branch to be correct for a long branch
- </summary>
-	<param name="position"></param>
-	<returns></returns>
-	<remarks></remarks>
 </member><member name="M:Ciloci.Flee.ILLocation.AdjustForLongBranch(System.Int32)">
 	<summary>
  Adjust our position by a certain amount of long branches

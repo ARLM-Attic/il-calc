@@ -22,18 +22,8 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields", Scope = "member", Target = "ILCalc.Evaluator.#Evaluate2")]
 [assembly: SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields", Scope = "member", Target = "ILCalc.Evaluator.#EvaluateN")]
 
-//[assembly: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "ILCalc.FunctionGroup")]
-
 [assembly: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "ILCalc.Parser.#AmbiguousMatch(System.Int32,System.Collections.Generic.ICollection`1<ILCalc.Parser+Capture>)")]
 [assembly: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "ILCalc.Parser.#IncorrectConstr(ILCalc.Parser+Item,ILCalc.Parser+Item,System.Int32)")]
-
-[assembly: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "ILCalc.TabRange")]
-[assembly: SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes", Scope = "type", Target = "ILCalc.TabRange+Enumerator")]
-
-[assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "a", Scope = "member", Target = "ILCalc.TabRange.#op_Equality(ILCalc.TabRange,ILCalc.TabRange)")]
-[assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "b", Scope = "member", Target = "ILCalc.TabRange.#op_Equality(ILCalc.TabRange,ILCalc.TabRange)")]
-[assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "a", Scope = "member", Target = "ILCalc.TabRange.#op_Inequality(ILCalc.TabRange,ILCalc.TabRange)")]
-[assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "b", Scope = "member", Target = "ILCalc.TabRange.#op_Inequality(ILCalc.TabRange,ILCalc.TabRange)")]
 
 [assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Eval", Scope = "type", Target = "ILCalc.EvalFunc0")]
 [assembly: SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Eval", Scope = "type", Target = "ILCalc.EvalFunc1")]

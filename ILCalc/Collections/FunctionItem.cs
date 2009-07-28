@@ -19,7 +19,6 @@ namespace ILCalc
 	[DebuggerDisplay("{ArgsCount} args", Name = "{Method}")]
 	[Serializable]
 
-	// TODO: maybe speed up target|non_target calls using virtual
 	// TODO: derived for targeting functions?
 
 	public sealed class FunctionItem
@@ -56,7 +55,6 @@ namespace ILCalc
 			get { return this.fixCount; }
 		}
 
-		// TODO: remove???
 		/// <summary>Gets a value indicating whether
 		/// function has an parameters array.</summary>
 		public bool HasParamArray

@@ -54,9 +54,9 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ciloci.Flee, Version=0.9.24.0, Culture=neutral, PublicKeyToken=c8526a021ef298ed, processorArchitecture=MSIL">
+    <Reference Include="Ciloci.Flee, Version=0.9.26.0, Culture=neutral, PublicKeyToken=c8526a021ef298ed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Flee-0.9.24.0\Ciloci.Flee.dll</HintPath>
+      <HintPath>..\..\3rd Party\Ciloci.Flee.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

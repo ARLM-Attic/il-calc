@@ -70,6 +70,8 @@
     <Compile Include="Evaluators\Interpret.cs" />
     <Compile Include="Misc\Codes.cs" />
     <Compile Include="Misc\Delegates.cs" />
+    <Compile Include="Misc\ValueRange.cs" />
+    <Compile Include="Misc\ValueRange.Exception.cs" />
     <Compile Include="Output\IExpressionOutput.cs" />
     <Compile Include="Output\Interpret\FuncCall.cs" />
     <Compile Include="Output\Interpret\InterpretCreator.cs" />

@@ -31,7 +31,7 @@ namespace ILCalc_Console
 			calc.Constants.Add("max", 1.23);
 
 			Mode mode = Mode.Interpret;
-			var range = new TabRange(-100, 100, 2);
+			var range = new ValueRange(-100, 100, 2);
 
 			#endregion
 
@@ -68,9 +68,9 @@ namespace ILCalc_Console
 				else if(input == "range")
 				{
 					Console.WriteLine();
-					Console.Write(" begin = "); range.Begin = InputDouble(calc.Culture);
-					Console.Write(" end   = "); range.End   = InputDouble(calc.Culture);
-					Console.Write(" step  = "); range.Step  = InputDouble(calc.Culture);
+					Console.Write(" begin = "); range = range.SetBegin(InputDouble(calc.Culture));
+					Console.Write(" end   = "); range = range.SetEnd(InputDouble(calc.Culture));
+					Console.Write(" step  = "); range = range.SetStep(InputDouble(calc.Culture));
 				}
 				else if( input == "gc" )
 				{
@@ -188,8 +188,8 @@ namespace ILCalc_Console
 			}
 		}
 
-		private static void ShowHelp( )
-			{
+		private static void ShowHelp()
+		{
 			Console.WriteLine("\nAvalible Commands:");
 			Console.WriteLine(" exit                 - quit from application");
 			Console.WriteLine(" args, consts, funcs  - list available items");
@@ -198,42 +198,42 @@ namespace ILCalc_Console
 			Console.WriteLine(" compile, interp, tab - select evaluation mode");
 			Console.WriteLine(" load, save           - context serialization");
 			Console.WriteLine(" culture              - set parse culture");
-			}
+		}
 
-		private static void AddConstant( CalcContext A )
-			{
+		private static void AddConstant(CalcContext A)
+		{
 			Console.WriteLine( );
 			Console.Write(" name  = "); string name  = InputLine();
 			Console.Write(" value = "); double value = InputDouble(A.Culture);
 					
 			try 
-				{
+			{
 				A.Constants.Add(name, value);
-				}
+			}
 			catch( Exception e )
-				{
+			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(e.Message);
-				}
 			}
+		}
 
-		private static void ShowSyntaxException( string input, SyntaxException e )
-			{
+		private static void ShowSyntaxException(string input, SyntaxException e)
+		{
 			if( e.Length != 0 )
-				{
+			{
 				Console.CursorLeft = e.Position;
 				Console.BackgroundColor = ConsoleColor.Red;
 				Console.ForegroundColor = ConsoleColor.Black;
 				Console.Write(e.Substring);
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.CursorLeft = input.Length % Console.WindowWidth;
-				}
+			}
 			
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine(" => syntax error");
 			Console.ForegroundColor = ConsoleColor.DarkGray;
 			Console.WriteLine(e.Message);
-			}
+		}
 
 		private static void SetCulture( CalcContext A )
 			{
@@ -292,74 +292,76 @@ namespace ILCalc_Console
 			}
 
 		private static void SaveCalc( CalcContext A )
-			{
+		{
 			var formatter = new BinaryFormatter
-				{
+			{
 					AssemblyFormat = FormatterAssemblyStyle.Simple,
 					TypeFormat = FormatterTypeStyle.TypesWhenNeeded
-				};
+			};
 
 			using(var file = new FileStream("ilcalc.dat", FileMode.Create, FileAccess.Write))
-				{
+			{
 				formatter.Serialize(file, A);
-				}
+			}
 
 			Console.WriteLine(": saved!");
-			}
+		}
 
-		private static void ShowCollection( IEnumerable<string> list, char separator )
-			{
+		private static void ShowCollection(IEnumerable<string> list, char separator)
+		{
 			Console.WriteLine(':');
 			foreach( string name in list )
-				{
+			{
 				Console.Write(name);
 				Console.Write(separator);
-				}
-			Console.WriteLine();
 			}
+
+			Console.WriteLine();
+		}
 
 		private static string InputLine( )
-			{
+		{
 			return Console.ReadLine() ?? string.Empty;
-			}
+		}
 
-		private static double InputDouble( IFormatProvider culture )
-			{
+		private static double InputDouble(IFormatProvider culture)
+		{
 			double value;
 			bool res;
 			int left = Console.CursorLeft;
 			int top  = Console.CursorTop;
 
-			do	{
+			do
+			{
 				string str = Console.ReadLine() ?? string.Empty;
 
 				res = (culture == null)?
 					double.TryParse(str, out value):
 					double.TryParse(str, NumberStyles.Float, culture, out value);
 
-				if( res ) continue;
+				if (res) continue;
 
 				Console.CursorTop  = top;
 				Console.CursorLeft = left;
 
 				for(int i = 0; i < str.Length; i++)
-					{
+				{
 					Console.Write(' ');
-					}
+				}
 				
 				Console.CursorTop = top;
 				Console.CursorLeft = left;
-				}
-			while( !res );
+			}
+			while(!res);
 			
 			return value;
-			}
+		}
 
 		private enum Mode
-			{
+		{
 			Interpret,
 			Compile,
 			Tabulate
-			}
 		}
 	}
+}

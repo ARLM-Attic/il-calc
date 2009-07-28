@@ -2,9 +2,6 @@
 
 namespace ILCalc
 {
-	// TODO: add to other targets
-	// TODO: test!!!!!!
-
 	public sealed partial class CalcContext : IDeserializationCallback
 	{
 		void IDeserializationCallback.OnDeserialization(object sender)

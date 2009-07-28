@@ -246,22 +246,35 @@ namespace ILCalc
 		/// <summary>
 		/// Adds the elements of the specified collection
 		/// to the end of the <see cref="ArgumentCollection"/>.</summary>
-		/// <param name="names">Enumerable with arguments names.</param>
+		/// <param name="names">Enumerable with argument names.</param>
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="names"/> is null.</exception>
 		/// <exception cref="ArgumentException">
 		/// Some item of <paramref name="names"/> is not valid identifier name.<br/>-or-<br/>
 		/// Some item of <paramref name="names"/> is already exist in the list.</exception>
-		// TODO: overload with params?
 		public void AddRange(IEnumerable<string> names)
 		{
 			if (names == null)
 				throw new ArgumentNullException("names");
 
-			foreach(string name in names)
-			{
-				Add(name);
-			}
+			foreach (string name in names) Add(name);
+		}
+
+		/// <summary>
+		/// Adds the specified elements to the end
+		/// of the <see cref="ArgumentCollection"/>.</summary>
+		/// <param name="names">Array of the argument names.</param>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="names"/> is null.</exception>
+		/// <exception cref="ArgumentException">
+		/// Some item of <paramref name="names"/> is not valid identifier name.<br/>-or-<br/>
+		/// Some item of <paramref name="names"/> is already exist in the list.</exception>
+		public void AddRange(params string[] names)
+		{
+			if (names == null)
+				throw new ArgumentNullException("names");
+
+			foreach (string name in names) Add(name);
 		}
 
 		/// <summary>

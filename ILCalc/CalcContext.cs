@@ -8,6 +8,7 @@ namespace ILCalc
 	using State = DebuggerBrowsableState;
 
 	// TODO: away from here
+	// TODO: rename => IListEnumerable?
 	internal interface IQuickEnumerable
 	{
 		List<string>.Enumerator GetEnumerator();
@@ -15,10 +16,7 @@ namespace ILCalc
 
 	// TODO: ImportBuiltIn( ) => FunctionCollection.GetBuiltIn( )
 	// TODO: Syncronize Create methods (parser sync)?
-	// TODO: try to make structs somewhere =)
 	// TODO: extract comments from code
-
-	// TODO: OnDeserialize fill namesList
 
 	/// <summary>
 	/// Represents the expression context (arguments, constants and functions
@@ -32,8 +30,6 @@ namespace ILCalc
 	public sealed partial class CalcContext
 	{
 		#region Fields
-
-		// TODO: check all usages for null comparsion
 
 		// Imports collections
 		[DebuggerBrowsable(State.Never)] private readonly ArgumentCollection arguments;

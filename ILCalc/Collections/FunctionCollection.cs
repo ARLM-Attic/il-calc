@@ -89,7 +89,7 @@ namespace ILCalc
 		/// groups of the <see cref="FunctionCollection"/>.
 		/// </summary>
 		[DebuggerBrowsable(State.Never)]
-		public ReadOnlyCollection<FunctionGroup> Funcs
+		public ReadOnlyCollection<FunctionGroup> Functions
 		{
 			get { return this.funcsList.AsReadOnly(); }
 		}

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ILCalc
@@ -8,11 +7,25 @@ namespace ILCalc
 	{
 		#region Fields
 
-		private readonly List<int> code;
-		private readonly List<double> numbers;
-		private readonly List<FuncCall> funcs;
+		private int numsPos;
+		private int codesPos;
+		private int funcsPos;
+
+		private int[] codes;
+		private double[] nums;
+		private FuncCall[] funcs;
+
+		private static readonly
+			FuncCall[] EmptyCalls = new FuncCall[0];
+
 #if !CF2
-		private readonly List<Delegate> delegates;
+
+		private Delegate[] delegs;
+		private int delegsPos;
+
+		private static readonly
+			Delegate[] EmptyDelegs = new Delegate[0];
+
 #endif
 
 		private int stackMax;
@@ -23,38 +36,40 @@ namespace ILCalc
 
 		public InterpretCreator()
 		{
-			this.code = new List<int>(8);
-			this.funcs = new List<FuncCall>();
-			this.numbers = new List<double>(4);
+			this.codes = new int[8];
+			this.nums  = new double[4];
+
+			this.funcs = EmptyCalls;
 #if !CF2
-			this.delegates = new List<Delegate>();
+			this.delegs = EmptyDelegs;
 #endif
 		}
 
 		#endregion
 		#region Properties
 
-		public int[]      GetCodes()     { return this.code.ToArray(); }
-		public double[]   GetNumbers()   { return this.numbers.ToArray(); }
-		public FuncCall[] GetFunctions() { return this.funcs.ToArray(); }
-
+		public int[] Codes { get { return this.codes; } }
+		public double[] Numbers { get { return this.nums; } }
+		public FuncCall[] Functions { get { return this.funcs; } }
 #if !CF2
-
-		public Delegate[] GetDelegates() { return this.delegates.ToArray(); }
+		public Delegate[] Delegates { get { return this.delegs; } }
 #endif
 
-		public int StackMax
-		{
-			get { return this.stackMax; }
-		}
+		public int StackMax { get { return this.stackMax; } }
 
 		#endregion
 		#region IExpressionOutput
 
 		public void PutNumber(double value)
 		{
-			this.numbers.Add(value);
-			this.code.Add(Code.Number);
+			AddCode(Code.Number);
+
+			if (this.numsPos == this.nums.Length)
+			{
+				ExpandArray(ref this.nums);
+			}
+
+			this.nums[this.numsPos++] = value;
 
 			if (++this.stackSize > this.stackMax)
 			{
@@ -65,9 +80,7 @@ namespace ILCalc
 		public void PutArgument(int id)
 		{
 			Debug.Assert(id >= 0);
-
-			this.code.Add(Code.Argument);
-			this.code.Add(id);
+			AddCodes(Code.Argument, id);
 
 			if (++this.stackSize > this.stackMax)
 			{
@@ -78,8 +91,7 @@ namespace ILCalc
 		public void PutOperator(int oper)
 		{
 			Debug.Assert(Code.IsOperator(oper));
-
-			this.code.Add(oper);
+			AddCode(oper);
 
 			if (oper != Code.Neg)
 			{
@@ -90,30 +102,31 @@ namespace ILCalc
 		public void PutSeparator() { }
 		public void PutBeginCall() { }
 
-		// TODO: reuse code!
 		public void PutFunction(FunctionItem func, int argsCount)
 		{
 			Debug.Assert(func != null);
 			Debug.Assert(argsCount >= 0);
 
+			int index;
 #if CF2
-			this.code.Add(Code.Function);
-			this.code.Add(this.AppendFunc(func, argsCount));
-			this.RecalcStackSize(argsCount);
+			index = AppendFunc(func, argsCount);
+			AddCodes(Code.Function, index);
+			RecalcStackSize(argsCount);
 #else
 			if (func.HasParamArray || func.ArgsCount > 2)
 			{
-				this.code.Add(Code.Function);
-				this.code.Add(this.AppendFunc(func, argsCount));
-				this.RecalcStackSize(argsCount);
+				index = AppendFunc(func, argsCount);
+				AddCodes(Code.Function, index);
+				RecalcStackSize(argsCount);
 				return;
 			}
 
 			switch (func.ArgsCount)
 			{
 				case 0:
-					this.code.Add(Code.Delegate0);
-					this.code.Add(this.AppendDelegate(func, EvalType0));
+					index = AppendDelegate(func, EvalType0);
+					AddCodes(Code.Delegate0, index);
+
 					if (++this.stackSize > this.stackMax)
 					{
 						this.stackMax = this.stackSize;
@@ -122,13 +135,13 @@ namespace ILCalc
 					break;
 
 				case 1:
-					this.code.Add(Code.Delegate1);
-					this.code.Add(this.AppendDelegate(func, EvalType1));
+					index = AppendDelegate(func, EvalType1);
+					AddCodes(Code.Delegate1, index);
 					break;
 
 				case 2:
-					this.code.Add(Code.Delegate2);
-					this.code.Add(this.AppendDelegate(func, EvalType2));
+					index = AppendDelegate(func, EvalType2);
+					AddCodes(Code.Delegate2, index);
 					this.stackSize--;
 					break;
 			}
@@ -137,12 +150,46 @@ namespace ILCalc
 
 		public void PutExprEnd()
 		{
-			this.code.Add(Code.Return);
-			this.code.Add(0); // fictive code
+			AddCodes(Code.Return, 0);
+			// 0 - fictive code
 		}
 
 		#endregion
 		#region Helpers
+
+		private void AddCode(int c)
+		{
+			if (this.codesPos == this.codes.Length)
+			{
+				ExpandArray(ref this.codes);
+			}
+
+			this.codes[this.codesPos++] = c;
+		}
+
+		private void AddCodes(int a, int b)
+		{
+			if (this.codesPos + 1 >= this.codes.Length)
+			{
+				ExpandArray(ref this.codes);
+			}
+
+			this.codes[this.codesPos++] = a;
+			this.codes[this.codesPos++] = b;
+		}
+
+		private static void ExpandArray<T>(ref T[] src)
+		{
+			int size = (src.Length == 0) ? 4 : src.Length * 2;
+			var dest = new T[size];
+
+			if (src.Length > 0)
+			{
+				Array.Copy(src, 0, dest, 0, src.Length);
+			}
+
+			src = dest;
+		}
 
 		private void RecalcStackSize(int argsCount)
 		{
@@ -163,23 +210,28 @@ namespace ILCalc
 
 #if !CF2
 
-		private int AppendDelegate(FunctionItem func, Type delegateType)
+		private int AppendDelegate(FunctionItem func, Type delegType)
 		{
 			Debug.Assert(func != null);
-			Debug.Assert(delegateType != null);
+			Debug.Assert(delegType != null);
 
-			for (int i = 0; i < this.delegates.Count; i++)
+			for (int i = 0; i < this.delegsPos; i++)
 			{
-				if (this.delegates[i].Method == func.Method)
-				{
+				//TODO: wrong????
+				if (this.delegs[i].Method == func.Method)
 					return i;
-				}
 			}
 
-			this.delegates.Add(
-				Delegate.CreateDelegate(delegateType, func.Target, func.Method));
+			if (this.delegsPos == this.delegs.Length)
+			{
+				ExpandArray(ref this.delegs);
+			}
 
-			return this.delegates.Count - 1;
+			this.delegs[this.delegsPos] =
+				Delegate.CreateDelegate(
+					delegType, func.Target, func.Method);
+
+			return this.delegsPos++;
 		}
 
 #endif
@@ -189,31 +241,31 @@ namespace ILCalc
 			Debug.Assert(func != null);
 			Debug.Assert(argsCount >= 0);
 
-			for (int i = 0; i < this.funcs.Count; i++)
+			for (int i = 0; i < this.funcsPos; i++)
 			{
+				// TODO: wrong???
 				if (this.funcs[i].IsReusable(func, argsCount))
-				{
 					return i;
-				}
 			}
 
-			this.funcs.Add(new FuncCall(func, argsCount));
-			return this.funcs.Count - 1;
+			if (this.funcsPos == this.funcs.Length)
+			{
+				ExpandArray(ref this.funcs);
+			}
+
+			this.funcs[this.funcsPos] =
+				new FuncCall(func, argsCount);
+
+			return this.funcsPos++;
 		}
 
 		#endregion
 		#region Static Data
 
-		// Types ==================================================
 		private static readonly Type EvalType0 = typeof(EvalFunc0);
 		private static readonly Type EvalType1 = typeof(EvalFunc1);
 		private static readonly Type EvalType2 = typeof(EvalFunc2);
 
 		#endregion
-
-		public Interpret Create(string expression, int argsCount, bool checks)
-		{
-			return new Interpret(expression, argsCount, checks, this);
-		}
 	}
 }

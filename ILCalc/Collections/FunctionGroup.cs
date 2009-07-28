@@ -64,14 +64,6 @@ namespace ILCalc
 			get { return this.funcList.Count; }
 		}
 
-		// TODO: destroy it!!
-
-		[DebuggerBrowsable(State.Never)]
-		internal bool HasParamsFunctions
-		{
-			get { return this.paramsFuncsCount > 0; }
-		}
-
 		/// <summary>
 		/// Gets the <see cref="FunctionItem"/> at the specified index.</summary>
 		/// <param name="index">The index of the <see cref="FunctionItem"/> to get.</param>
@@ -248,9 +240,9 @@ namespace ILCalc
 		{
 			Debug.Assert(argsCount >= 0);
 
-			if (this.HasParamsFunctions)
+			if (this.paramsFuncsCount > 0)
 			{
-				return this.GetParamsOverload(argsCount);
+				return GetParamsOverload(argsCount);
 			}
 
 			foreach (FunctionItem func in this.funcList)

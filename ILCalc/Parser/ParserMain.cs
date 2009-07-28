@@ -4,7 +4,6 @@ using System.Globalization;
 
 namespace ILCalc
 {
-	// TODO: Parser should not know about CalcContext
 	// TODO: Trigger to use|not use output
 
 	internal sealed partial class Parser

@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ILCalc.Tests")]
-[assembly: AssemblyDescription("Unit tests assembly for ILCalc.")]
+[assembly: AssemblyTitle("ILCalc.Bench")]
+[assembly: AssemblyDescription("Benchmarks for ILCalc.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Pelmen Software")]
-[assembly: AssemblyProduct("ILCalc.Tests")]
+[assembly: AssemblyProduct("ILCalc.Bench")]
 [assembly: AssemblyCopyright("Shvedov A. V. © 2008-2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

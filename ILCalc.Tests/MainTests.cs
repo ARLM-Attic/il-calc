@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -18,6 +19,8 @@ namespace ILCalc.Tests
 		[NonSerialized]
 		private readonly CalcContext calc;
 		private readonly double x;
+
+		private static readonly Random Rnd = new Random();
 
 		public MainTests()
 		{
@@ -177,12 +180,28 @@ namespace ILCalc.Tests
 					double eval, int1, int2;
 					try
 					{
-						now = "Evaluator";
-						eval = Calc.CreateEvaluator(expr).Evaluate(1.0);
-						now = "Interpret";
-						int1 = Calc.CreateInterpret(expr).Evaluate(1.0);
 						now = "Quick Interpret";
 						int2 = Calc.Evaluate(expr, 1.0);
+						now = "Evaluator";
+						Evaluator evl = Calc.CreateEvaluator(expr);
+						eval = evl.Evaluate(1.0);
+						now = "Interpret";
+						Interpret itr = Calc.CreateInterpret(expr);
+						int1 = itr.Evaluate(1.0);
+
+						// yeeah!
+						if (Rnd.Next() % 25 == 0)
+						{
+							string name = GenRandomName();
+							now = "Add " + name + " func";
+
+							Trace.WriteLine(name);
+
+							if (Rnd.Next() % 2 == 0)
+								Calc.Functions.Add(name, evl.Evaluate1);
+							else
+								Calc.Functions.Add(name, (EvalFunc1) itr.Evaluate);
+						}
 					}
 					catch (Exception)
 					{
@@ -364,7 +383,7 @@ namespace ILCalc.Tests
 
 			using (var tempMem = new MemoryStream())
 			{
-				var range1 = new TabRange(1, 200, 1.50);
+				var range1 = new ValueRange(1, 200, 1.50);
 				var exception1 = new SyntaxException("hehe");
 				var exception2 = new InvalidRangeException("wtf?");
 
@@ -385,7 +404,7 @@ namespace ILCalc.Tests
 				Assert.AreEqual(Calc.IgnoreCase, other.IgnoreCase);
 				Assert.AreEqual(Calc.Culture, other.Culture);
 
-				var range2 = (TabRange) binFormatter.Deserialize(tempMem);
+				var range2 = (ValueRange) binFormatter.Deserialize(tempMem);
 
 				Assert.AreEqual(range1, range2);
 
@@ -464,6 +483,23 @@ namespace ILCalc.Tests
 				Assert.AreEqual(e.Position, pos);
 				Assert.AreEqual(e.Length, len);
 			}
+		}
+
+		private static string GenRandomName()
+		{
+			var buf = new StringBuilder(30);
+
+			for (int i = 0; i < 30; i++)
+			{
+				char c = (char)('a' + Rnd.Next(0, 26));
+
+				if (Rnd.Next() % 2 == 0)
+					c = char.ToUpper(c);
+
+				buf.Append(c);
+			}
+
+			return buf.ToString();
 		}
 
 		private void TestGood(string expr)

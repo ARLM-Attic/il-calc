@@ -4,7 +4,6 @@ using System.Diagnostics;
 namespace ILCalc
 {
 	using State = DebuggerBrowsableState;
-	using Browsable = DebuggerBrowsableAttribute;
 
 	// TODO: Serialization! 
 	// bool IsSerializible { get; }
@@ -30,31 +29,31 @@ namespace ILCalc
 		/// <summary>
 		/// Directly invokes the compiled expression with giving no arguments.
 		/// This field is readonly.</summary>
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		public readonly EvalFunc0 Evaluate0;
 
 		/// <summary>
 		/// Directly invokes the compiled expression with giving one argument.
 		/// This field is readonly.</summary>
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		public readonly EvalFunc1 Evaluate1;
 
 		/// <summary>
 		/// Directly invokes the compiled expression with giving two arguments.
 		/// This field is readonly.</summary>
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		public readonly EvalFunc2 Evaluate2;
 
 		/// <summary>
 		/// Directly invokes the compiled expression with specified arguments.
 		/// This field is readonly.</summary>
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		public readonly EvalFuncN EvaluateN;
 		
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		private readonly string expression;
 
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		private readonly int argsCount;
 
 		#endregion
@@ -100,7 +99,7 @@ namespace ILCalc
 		/// <summary>
 		/// Gets the arguments count, that this
 		/// <see cref="Evaluator"/> implemented for.</summary>
-		[Browsable(State.Never)]
+		[DebuggerBrowsable(State.Never)]
 		public int ArgumentsCount
 		{
 			get { return this.argsCount; }
@@ -123,8 +122,9 @@ namespace ILCalc
 		/// with giving no arguments.</summary>
 		/// <overloads>Invokes the compiled expression evaluation.</overloads>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
-		/// with no arguments is not compiled.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with no arguments is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		public double Evaluate()
@@ -137,8 +137,9 @@ namespace ILCalc
 		/// with giving one argument.</summary>
 		/// <param name="arg">Expression argument.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException"><see cref="Evaluator"/>
-		/// with one argument is not compiled.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with one argument is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		public double Evaluate(double arg)
@@ -152,8 +153,9 @@ namespace ILCalc
 		/// <param name="arg1">First expression argument.</param>
 		/// <param name="arg2">Second expression argument.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="InvalidOperationException">
-		/// <see cref="Evaluator"/> with two arguments is not compiled.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with two arguments is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		public double Evaluate(double arg1, double arg2)
@@ -168,9 +170,9 @@ namespace ILCalc
 		/// <param name="arg2">Second expression argument.</param>
 		/// <param name="arg3">Third expression argument.</param>
 		/// <returns>Evaluated value.</returns>
-		/// <exception cref="ArgumentException">
-		/// <see cref="Evaluator"/> can't be evaluated
-		/// with giving three arguments.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with three arguments is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
 		public double Evaluate(double arg1, double arg2, double arg3)
@@ -203,25 +205,25 @@ namespace ILCalc
 
 		private double Throw0()
 		{
-			throw new InvalidOperationException(
+			throw new ArgumentException(
 				string.Format(Resource.errWrongArgsCount, 0, this.argsCount));
 		}
 
 		private double Throw1(double arg)
 		{
-			throw new InvalidOperationException(
+			throw new ArgumentException(
 				string.Format(Resource.errWrongArgsCount, 1, this.argsCount));
 		}
 
 		private double Throw2(double arg1, double arg2)
 		{
-			throw new InvalidOperationException(
+			throw new ArgumentException(
 				string.Format(Resource.errWrongArgsCount, 2, this.argsCount));
 		}
 
 		private void WrongArgs(double[] args)
 		{
-			if( args == null )
+			if (args == null)
 				throw new ArgumentNullException("args");
 
 			throw new ArgumentException(

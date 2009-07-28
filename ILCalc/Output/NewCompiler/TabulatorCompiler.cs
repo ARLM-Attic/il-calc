@@ -70,9 +70,17 @@ namespace ILCalc
 			int count = ArgsCount - 1;
 			if (count > 2) count = 2;
 
-			Type[] argsTypes = OwnerUsed ?
-				ArgsTypes2[count] :
-				ArgsTypes1[count] ;
+			Type[] argsTypes = ArgsTypes1[count];
+			object owner = GetOwnerFull();
+
+			if (OwnerUsed)
+			{
+				var withOwner = new Type[argsTypes.Length + 1];
+				Array.Copy(argsTypes, 0, withOwner, 1, argsTypes.Length);
+
+				withOwner[0] = OwnerType;
+				argsTypes = withOwner;
+			}
 
 			Type returnType = ArgsTypes1[count][0];
 
@@ -106,7 +114,7 @@ namespace ILCalc
 			Type delType = DelegateTypes[count];
 
 			Delegate delg = OwnerUsed ?
-				method.CreateDelegate(delType, GetClosure()) :
+				method.CreateDelegate(delType, owner) :
 				method.CreateDelegate(delType);
 
 			//DynamicMethodVisualizer.Visualizer.Show(method);
@@ -387,32 +395,6 @@ namespace ILCalc
 			},
 			new[]
 			{
-				SystemArrayType,
-				TypeHelper.ArrayType
-			}
-		};
-
-		private static readonly Type[][] ArgsTypes2 = new[]
-		{
-			new[]
-			{
-				OwnerType,
-				TypeHelper.ArrayType,
-				TypeHelper.ValueType,
-				TypeHelper.ValueType
-			},
-			new[]
-			{
-				OwnerType,
-				Array2DType,
-				TypeHelper.ValueType,
-				TypeHelper.ValueType,
-				TypeHelper.ValueType,
-				TypeHelper.ValueType
-			},
-			new[]
-			{
-				OwnerType,
 				SystemArrayType,
 				TypeHelper.ArrayType
 			}

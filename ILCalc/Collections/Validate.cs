@@ -7,7 +7,7 @@ namespace ILCalc
 	{
 		public static void Name(string name)
 		{
-			// TODO: perform nullness check in callers?
+			// NOTE: perform nullness check in callers?
 
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentException(Resource.errIdentifierEmpty);

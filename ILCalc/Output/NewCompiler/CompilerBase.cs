@@ -7,21 +7,25 @@ using System.Reflection.Emit;
 namespace ILCalc
 {
 	// TODO: Reuse BufferWriter if Compiler + Optimizer
-	// TODO: merge with Optimizer?
-	// TODO: do not write this.functions at all
-
+	
 	internal abstract class CompilerBase : BufferOutput, IExpressionOutput
 	{
 		#region Fields
 
 		private readonly List<FuncCall> calls;
 		private readonly bool emitChecks;
-		private List<object> closure;
-		private bool useOwner;
+		private int targetsCount;
+
+		private Type ownerType;
 
 		protected bool OwnerUsed
 		{
-			get { return useOwner; }
+			get { return this.targetsCount > 0; }
+		}
+
+		protected Type OwnerType
+		{
+			get { return this.ownerType; }
 		}
 
 		#endregion
@@ -41,6 +45,8 @@ namespace ILCalc
 			int n = 0, d = 0, c = 0;
 			Stack<FuncCall> stack = null;
 			FuncCall current = null;
+
+			int targetIndex = 0;
 
 			for(int i = 0;; i++)
 			{
@@ -97,7 +103,7 @@ namespace ILCalc
 
 					if (current.Target != null)
 					{
-						EmitLoadTarget(il, current.Target);
+						EmitLoadTarget(il, current.Target, targetIndex++);
 					}
 
 					if (current.Current == 0
@@ -122,27 +128,43 @@ namespace ILCalc
 		#endregion
 		#region Emitters
 
-		private void EmitLoadTarget(ILGenerator il, object target)
+		private void EmitLoadTarget(ILGenerator il, object target, int targetIndex)
 		{
 			Debug.Assert(il != null);
 			Debug.Assert(target != null);
-
-			if (this.closure == null)
-				this.closure = new List<object>();
+			Debug.Assert(targetIndex < this.targetsCount);
 
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, ClosureField);
-			il_EmitLoadI4(il, this.closure.Count);
-			il.Emit(OpCodes.Ldelem_Ref);
 
-			Type targetType = target.GetType();
+			if (this.targetsCount == 1) {}
+			else if (this.targetsCount <= 3)
+			{
+				Debug.Assert(this.ownerType != null);
 
-			if (targetType.IsValueType)
-				il.Emit(OpCodes.Unbox_Any, targetType);
+				FieldInfo field = OwnerType
+					.GetField("obj" + targetIndex, InstNonPublic);
+
+				Debug.Assert(field != null);
+				if (field.FieldType.IsValueType)
+				{
+					// 2 hours of debugging to solve this!
+					il.Emit(OpCodes.Ldflda, field);
+				}
+				else il.Emit(OpCodes.Ldfld, field);
+			}
 			else
-				il.Emit(OpCodes.Castclass, targetType);
+			{
+				il.Emit(OpCodes.Ldfld, ClosureArray);
+				il_EmitLoadI4(il, targetIndex);
+				il.Emit(OpCodes.Ldelem_Ref);
 
-			this.closure.Add(target);
+				Type targetType = target.GetType();
+
+				if (targetType.IsValueType)
+					il.Emit(OpCodes.Unbox_Any, targetType);
+				else
+					il.Emit(OpCodes.Castclass, targetType);
+			}
 		}
 
 		private static void EmitLoadConst(ILGenerator il, double value)
@@ -299,7 +321,7 @@ namespace ILCalc
 			}
 
 			this.calls[i] = new FuncCall(func, argzCount);
-			this.useOwner |= (func.Target != null);
+			if (func.Target != null) this.targetsCount++;
 
 			this.code.Add(Code.Function);
 			// NOTE: do not call base impl!
@@ -314,13 +336,56 @@ namespace ILCalc
 		#endregion
 		#region ILCalcClosure
 
-		protected ILCalcClosure GetClosure()
+		protected object GetOwnerFull()
 		{
-			return new ILCalcClosure(this.closure.ToArray());
+			this.ownerType = OwnerNType;
+
+			if (this.targetsCount == 0) return null;
+
+			var closure = new object[this.targetsCount];
+			int i = 0;
+
+			foreach(FuncCall call in this.calls)
+			{
+				if (call.Target != null)
+					closure[i++] = call.Target;
+			}
+
+			if (closure.Length == 1)
+			{
+				this.ownerType = closure[0].GetType();
+				return closure[0];
+			}
+
+			if (closure.Length <= 3)
+			{
+				object o1 = closure[0],
+				       o2 = closure[1];
+
+				if (closure.Length == 2)
+				{
+					this.ownerType = Owner2Type.MakeGenericType(
+						o1.GetType(),
+						o2.GetType());
+
+					return Activator.CreateInstance(this.ownerType, o1, o2);
+				}
+				
+				object o3 = closure[2];
+
+				this.ownerType = Owner3Type.MakeGenericType(
+					o1.GetType(),
+					o2.GetType(),
+					o3.GetType());
+
+				return Activator.CreateInstance(this.ownerType, o1, o2, o3);
+			}
+
+			return new ILCalcClosure(closure);
 		}
 
 		// TODO: try to make it struct?
-		internal sealed class ILCalcClosure
+		private sealed class ILCalcClosure
 		{
 			private object[] closure;
 
@@ -331,15 +396,46 @@ namespace ILCalc
 			}
 		}
 
+		private class ILCalcClosure<T1, T2>
+		{
+			private readonly T1 obj0;
+			private readonly T2 obj1;
+
+			public ILCalcClosure(T1 obj0, T2 obj1)
+			{
+				this.obj0 = obj0;
+				this.obj1 = obj1;
+			}
+		}
+
+		private sealed class ILCalcClosure<T1, T2, T3>
+		{
+			private readonly T1 obj0;
+			private readonly T2 obj1;
+			private readonly T3 obj2;
+
+			public ILCalcClosure(T1 obj0, T2 obj1, T3 obj2)
+			{
+				this.obj0 = obj0;
+				this.obj1 = obj1;
+				this.obj2 = obj2;
+			}
+		}
+
 		#endregion
 		#region Static Data
 
 		// Owner types =================================
 
-		protected static readonly Type OwnerType = typeof(ILCalcClosure);
+		private static readonly Type Owner2Type = typeof(ILCalcClosure<,>);
+		private static readonly Type Owner3Type = typeof(ILCalcClosure<,,>);
+		private static readonly Type OwnerNType = typeof(ILCalcClosure);
 
-		private static readonly FieldInfo ClosureField =
-			OwnerType.GetField("closure", BindingFlags.NonPublic | BindingFlags.Instance);
+		private const BindingFlags InstNonPublic =
+			BindingFlags.Instance | BindingFlags.NonPublic;
+
+		private static readonly FieldInfo ClosureArray =
+			OwnerNType.GetField("closure", InstNonPublic);
 
 		// OpCodes =====================================
 

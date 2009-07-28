@@ -137,7 +137,8 @@ namespace ILCalc
 		#endregion
 		#region Helpers
 
-		// NOTE: bring out of here
+		// NOTE: bring out of here?
+		// TODO: replace with IsIntegralPow() in generics?
 		private static int GetIntegerValue(double value)
 		{
 			var intVal = (int) value;

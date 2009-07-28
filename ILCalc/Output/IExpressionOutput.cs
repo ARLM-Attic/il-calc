@@ -11,7 +11,5 @@
 		// TODO: rename => PutCall?
 		void PutFunction(FunctionItem func, int argsCount);
 		void PutExprEnd();
-
-		// TODO: bool SendCallBegins { get; } is it needed?
 	}
 }

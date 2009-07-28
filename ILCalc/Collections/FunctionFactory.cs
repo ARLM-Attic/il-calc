@@ -5,6 +5,8 @@ using System.Text;
 
 namespace ILCalc
 {
+	// TODO: tests!
+
 	internal static class FunctionFactory
 	{
 		#region Fields
@@ -36,6 +38,8 @@ namespace ILCalc
 
 				return null;
 			}
+
+			// TODO: add checks and error messages
 
 			// validate target type:
 			if (target != null)

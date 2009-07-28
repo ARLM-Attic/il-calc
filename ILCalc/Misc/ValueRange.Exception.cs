@@ -1,12 +1,10 @@
 using System;
+using System.Diagnostics;
 
 namespace ILCalc
 {
-	// NOTE: enum for extended info?
-	// NOTE: override Message?
-
 	/// <summary>
-	/// The exception that is thrown when the <see cref="TabRange"/>
+	/// The exception that is thrown when the <see cref="ILCalc.ValueRange"/>
 	/// instance validation is failed.<br/>
 	/// This class cannot be inherited.
 	/// </summary>
@@ -16,15 +14,28 @@ namespace ILCalc
 	[Serializable]
 	public sealed class InvalidRangeException : Exception
 	{
+		#region Fields
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		private readonly ValueType range;
+
+		/// <summary>
+		/// Gets the range, that caused this exception.</summary>
+		/// <value>Range, that caused an exception,
+		/// if not avaliable - <c>null</c>.</value>
+		public ValueType Range
+		{
+			get { return this.range; }
+		}
+
+		#endregion
 		#region Constructors
 
 		/// <summary>Initializes a new instance of the
 		/// <see cref="InvalidRangeException"/> class.</summary>
 		/// <overloads>Initializes a new instance of the
 		/// <see cref="InvalidRangeException"/> class.</overloads>
-		public InvalidRangeException()
-		{
-		}
+		public InvalidRangeException() { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InvalidRangeException"/>
@@ -32,9 +43,7 @@ namespace ILCalc
 		/// </summary>
 		/// <param name="message">The message that describes the error.</param>
 		public InvalidRangeException(string message)
-			: base(message)
-		{
-		}
+			: base(message) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="InvalidRangeException"/>
@@ -47,8 +56,12 @@ namespace ILCalc
 		/// a <c>null</c> reference if no inner exception is specified.
 		/// </param>
 		public InvalidRangeException(string message, Exception innerException)
-			: base(message, innerException)
+			: base(message, innerException) { }
+
+		internal InvalidRangeException(string message, ValueType range)
+			: base(message)
 		{
+			this.range = range;
 		}
 
 #if SERIALIZE
@@ -56,9 +69,7 @@ namespace ILCalc
 		private InvalidRangeException(
 			System.Runtime.Serialization.SerializationInfo info,
 			System.Runtime.Serialization.StreamingContext context)
-			: base(info, context)
-		{
-		}
+			: base(info, context) { }
 
 #endif
 

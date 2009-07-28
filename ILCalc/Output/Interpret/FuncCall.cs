@@ -2,17 +2,17 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-// NOTE: maybe struct => more lightweight? Test.
-// TODO: rename to CallAccel?
 namespace ILCalc
 {
+	// TODO: rewrite to use range checks elimination
+
 	[Serializable]
 	internal sealed partial class FuncCall
 	{
 		#region Fields
 
 		private readonly FunctionItem func;
-		private readonly int lastIndex;
+		private readonly int lastIndex; // TODO: without it?
 
 		private readonly object[] fixArgs;
 		private readonly double[] varArgs;
@@ -26,9 +26,9 @@ namespace ILCalc
 		{
 			Debug.Assert(func != null);
 			Debug.Assert(argsCount >= 0);
-
-			Debug.Assert((func.HasParamArray && func.ArgsCount <= argsCount)
-			         || (!func.HasParamArray && func.ArgsCount == argsCount));
+			Debug.Assert(
+				( func.HasParamArray && func.ArgsCount <= argsCount) ||
+				(!func.HasParamArray && func.ArgsCount == argsCount));
 
 			int fixCount = func.ArgsCount;
 
@@ -60,6 +60,7 @@ namespace ILCalc
 			// NOTE: modify when impl instance calls
 			return this.func.Method == other.Method
 				&& this.argsCount == otherArgsCount;
+
 		}
 
 		public void Invoke(double[] stack, ref int pos)
@@ -74,7 +75,6 @@ namespace ILCalc
 					// fill parameters array:
 					if (this.varArgs != null)
 					{
-						// TODO: rewrite faster!
 						for (int i = this.varArgs.Length - 1; i >= 0; i--)
 						{
 							this.varArgs[i] = stack[pos--];

@@ -67,6 +67,8 @@
     <Compile Include="Misc\Compatibility.CF.cs" />
     <Compile Include="Misc\Compatibility.CF2.cs" />
     <Compile Include="Misc\Delegates.cs" />
+    <Compile Include="Misc\ValueRange.cs" />
+    <Compile Include="Misc\ValueRange.Exception.cs" />
     <Compile Include="Output\TypeHelper.cs" />
     <Compile Include="Output\IExpressionOutput.cs" />
     <Compile Include="Output\Interpret\FuncCall.cs" />

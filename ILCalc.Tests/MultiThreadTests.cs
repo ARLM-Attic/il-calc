@@ -103,7 +103,7 @@ namespace ILCalc.Tests
 			Calc.Arguments.Add("x");
 
 			var tab = Calc.CreateTabulator("2sin(x) + cos(3x)");
-			var range = new TabRange(0, 1000000, 0.1);
+			var range = new ValueRange(0, 1000000, 0.1);
 
 			var async = tab.BeginTabulate(range, null, null);
 

@@ -59,11 +59,6 @@ namespace ILCalc
 			this.buffer.Append("( ");
 		}
 
-		public void PutBeginParams(int fixCount, int varCount)
-		{
-			this.buffer.Append("( ");
-		}
-
 		public void PutFunction(FunctionItem func, int argsCount)
 		{
 			Debug.Assert(func != null);

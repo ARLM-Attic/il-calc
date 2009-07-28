@@ -1,7 +1,5 @@
 ﻿namespace ILCalc
 {
-	// TODO: struct?
-
 	internal sealed class NullWriter : IExpressionOutput
 	{
 		public void PutNumber(double value) { }
