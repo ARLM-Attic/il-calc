@@ -268,6 +268,15 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to must be instance method..
+        /// </summary>
+        internal static string errMethodNotInstance {
+            get {
+                return ResourceManager.GetString("errMethodNotInstance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to should be standard runtime method (DynamicMethod is not supported)..
         /// </summary>
         internal static string errMethodNotRuntimeMethod {
@@ -277,7 +286,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to must be static..
+        ///   Looks up a localized string similar to must be static method..
         /// </summary>
         internal static string errMethodNotStatic {
             get {

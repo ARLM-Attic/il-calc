@@ -92,6 +92,7 @@
     <None Include="CalcKey.snk" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resource.pl.resx" />
     <EmbeddedResource Include="Resource.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>

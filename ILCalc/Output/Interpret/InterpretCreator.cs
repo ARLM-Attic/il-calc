@@ -215,13 +215,6 @@ namespace ILCalc
 			Debug.Assert(func != null);
 			Debug.Assert(delegType != null);
 
-			for (int i = 0; i < this.delegsPos; i++)
-			{
-				//TODO: wrong????
-				if (this.delegs[i].Method == func.Method)
-					return i;
-			}
-
 			if (this.delegsPos == this.delegs.Length)
 			{
 				ExpandArray(ref this.delegs);
@@ -240,13 +233,6 @@ namespace ILCalc
 		{
 			Debug.Assert(func != null);
 			Debug.Assert(argsCount >= 0);
-
-			for (int i = 0; i < this.funcsPos; i++)
-			{
-				// TODO: wrong???
-				if (this.funcs[i].IsReusable(func, argsCount))
-					return i;
-			}
 
 			if (this.funcsPos == this.funcs.Length)
 			{

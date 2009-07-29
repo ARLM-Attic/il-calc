@@ -97,6 +97,7 @@
     <None Include="CalcKey.snk" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resource.pl.resx" />
     <EmbeddedResource Include="Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>

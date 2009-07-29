@@ -110,7 +110,7 @@ namespace ILCalc
 		/// <overloads>Invokes the expression interpreter.</overloads>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with no arguments given, you should specify
+		/// can't evaluate expression with no arguments given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -128,7 +128,7 @@ namespace ILCalc
 		/// <param name="arg">Expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with one arguments given, you should specify
+		/// can't evaluate expression with one arguments given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -149,7 +149,7 @@ namespace ILCalc
 		/// <param name="arg2">Second expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with two argument given, you should specify
+		/// can't evaluate expression with two argument given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -172,7 +172,7 @@ namespace ILCalc
 		/// <param name="arg3">Third expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with three arguments given, you should specify
+		/// can't evaluate expression with three arguments given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -215,7 +215,7 @@ namespace ILCalc
 		/// the expression interpreter.</overloads>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with no arguments given, you should specify
+		/// can't evaluate expression with no arguments given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -243,7 +243,7 @@ namespace ILCalc
 		/// <param name="arg">Expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with one argument given, you should specify
+		/// can't evaluate expression with one argument given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -273,7 +273,7 @@ namespace ILCalc
 		/// <param name="arg2">Second expression argument.</param>
 		/// <returns>Evaluated value.</returns>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be evaluated with two arguments given, you should specify
+		/// can't evaluate expression with two arguments given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -337,7 +337,7 @@ namespace ILCalc
 		/// Argument range from <paramref name="begin"/>, <paramref name="end"/>
 		/// and <paramref name="step"/> is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with one range given, you should specify
+		/// can't tabulate expression with one range given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -359,7 +359,7 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException">
 		/// <paramref name="range"/> is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with one range given, you should specify
+		/// can't tabulate expression with one range given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -382,7 +382,7 @@ namespace ILCalc
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with two ranges given, you should specify
+		/// can't tabulate expression with two ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -413,7 +413,7 @@ namespace ILCalc
 		/// <paramref name="range2"/> or <paramref name="range3"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with two ranges given, you should specify
+		/// can't tabulate expression with two ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -474,7 +474,7 @@ namespace ILCalc
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with one range given, you should specify
+		/// can't tabulate expression with one range given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -501,7 +501,7 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException"><paramref name="range"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with one range given, you should specify
+		/// can't tabulate expression with one range given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -526,7 +526,7 @@ namespace ILCalc
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with two ranges given, you should specify
+		/// can't tabulate expression with two ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -555,7 +555,7 @@ namespace ILCalc
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="array"/> is null.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with two ranges given, you should specify
+		/// can't tabulate expression with two ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -622,7 +622,7 @@ namespace ILCalc
 		/// <exception cref="InvalidRangeException"><paramref name="range"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with one range given, you should specify
+		/// can't tabulate expression with one range given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -653,7 +653,7 @@ namespace ILCalc
 		/// <paramref name="range1"/> or <paramref name="range2"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with two ranges given, you should specify
+		/// can't tabulate expression with two ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -694,7 +694,7 @@ namespace ILCalc
 		/// <paramref name="range2"/> or <paramref name="range3"/>
 		/// is not valid for iteration over it.</exception>
 		/// <exception cref="ArgumentException"><see cref="Interpret"/>
-		/// can't be tabulated with three ranges given, you should specify
+		/// can't tabulate expression with three ranges given, you should specify
 		/// valid <see cref="ArgumentsCount">arguments count</see>.</exception>
 		/// <exception cref="ArithmeticException">Expression evaluation
 		/// thrown the <see cref="ArithmeticException"/>.</exception>
@@ -970,7 +970,8 @@ namespace ILCalc
 			return array;
 		}
 
-		private double[][] Tab2Impl(double[][] array, ValueRange range1, ValueRange range2)
+		private double[][] Tab2Impl(
+			double[][] array, ValueRange range1, ValueRange range2)
 		{
 			var stack = new double[this.stackMax];
 			var args = new[] { range1.Begin, range2.Begin };

@@ -118,138 +118,138 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="errAmbiguousMatch" xml:space="preserve">
-    <value>Ambiguous match between</value>
+    <value>Niejednoznaczne dopasowanie pomiędzy</value>
   </data>
   <data name="errArgumentExist" xml:space="preserve">
-    <value>Argument "{0}" already exist in the list.</value>
+    <value>Argument "{0}" występuje już na liście.</value>
   </data>
   <data name="errConstantExist" xml:space="preserve">
-    <value>Constant "{0}" already exist in the list.</value>
+    <value>Stała "{0}" występuje już na liście.</value>
   </data>
   <data name="errConstantNotExist" xml:space="preserve">
-    <value>Constant "{0}" does not exist in collection.</value>
+    <value>Stała "{0}" nie występuje w kolekcji.</value>
   </data>
   <data name="errCultureExtract" xml:space="preserve">
-    <value>Can't extract culture-specified separators chars.</value>
+    <value>Nie można wyodrębnić separatorów specyficznych dla bieżących ustawień językowych .</value>
   </data>
   <data name="errDelegateInvCount" xml:space="preserve">
-    <value>Delegate's invocation list count should be equal one.</value>
+    <value>Liczność listy wywołań Delegate powinna być równa 1</value>
   </data>
   <data name="errDelegateWithTarget" xml:space="preserve">
-    <value>Delegates with target is not supported (maybe because of closure).</value>
+    <value>Delegates with target nie są wspierane (być może z powodu closure).</value>
   </data>
   <data name="errDisbalanceClose" xml:space="preserve">
-    <value>Brace disbalance (not closed).</value>
+    <value>Brak nawiasu zamykającego.</value>
   </data>
   <data name="errDisbalanceOpen" xml:space="preserve">
-    <value>Brace disbalance (not opened).</value>
+    <value>Brak nawiasu otwierającego.</value>
   </data>
   <data name="errEndlessLoop" xml:space="preserve">
-    <value>Wrong range step: endless loop.</value>
+    <value>Niewłaściwy krok zakresu: nieskończona pętla.</value>
   </data>
   <data name="errExistOverload" xml:space="preserve">
-    <value>There is overload(s) with {0} argument(s).</value>
+    <value>Istnieje przeciążenie(a) z {0} argumentem(ami).</value>
   </data>
   <data name="errFunctionNoBrace" xml:space="preserve">
-    <value>Opening brace should be after function name</value>
+    <value>Po nazwie funkcji należy umieścić nawias otwierający.</value>
   </data>
   <data name="errFunctionNotExist" xml:space="preserve">
-    <value>Function "{0}" does not exist in the collection.</value>
+    <value>Funkcja "{0}" nie występuje w kolekcji.</value>
   </data>
   <data name="errIdentifierEmpty" xml:space="preserve">
-    <value>Empty or null identifier name.</value>
+    <value>Pusta lub null nazwa identyfikatora.</value>
   </data>
   <data name="errIdentifierFromLambda" xml:space="preserve">
-    <value>Maybe trying to import lambda without specifying the name?</value>
+    <value>Być może próbujesz importować lambda bez podania nazwy?</value>
   </data>
   <data name="errIdentifierStartsWith" xml:space="preserve">
-    <value>Incorrect identifier name: "{0}". Name should begin with a letter or underscore.</value>
+    <value>Nieprawidłowa nazwa identyfikatora: "{0}". Nazwa powinna zaczynać się od litery lub podkreślenia.</value>
   </data>
   <data name="errIdentifierSymbol" xml:space="preserve">
-    <value>Incorrect symbol '{0}' in identifier name "{1}". Only letters, digits and underscore symbol are allowed.</value>
+    <value>Nieprawidłowy symbol "{0} 'w nazwie identyfikatora "{1} ". Tylko litery, cyfry i znak podkreślenia są dozwolone.</value>
   </data>
   <data name="errIncorrectConstr" xml:space="preserve">
-    <value>Incorrect construction</value>
+    <value>Nieprawidłowa konstrukcja</value>
   </data>
   <data name="errInvalidSeparator" xml:space="preserve">
-    <value>Invalid (separator) usage.</value>
+    <value>Nieprawidłowe użycie (separatora).</value>
   </data>
   <data name="errMethodBadParam" xml:space="preserve">
-    <value>parameter #{0} of '{1}' type. All parameters should be of '{2}' type.</value>
+    <value>parametr #{0} typu '{1}'. Wszystkie parametry powinny być typu '{2}'.</value>
   </data>
   <data name="errMethodBadReturn" xml:space="preserve">
-    <value>returns value of '{0}' type. Function should return '{1}' type.</value>
+    <value>zwraca wartość typu '{0}'. Funkcja powinna zwrócić wartość typu '{1}'.</value>
   </data>
   <data name="errMethodImportFailed" xml:space="preserve">
-    <value>Import failed: method</value>
+    <value>Import zakończony niepowodzeniem: metoda</value>
   </data>
   <data name="errMethodNotFounded" xml:space="preserve">
-    <value>Method "{0}" cannot be founded (non public / not static?).</value>
+    <value>Metoda "{0}" nie może zostać wywołana (upewnij się że jest public /  static).</value>
   </data>
   <data name="errMethodNotInstance" xml:space="preserve">
-    <value>must be instance method.</value>
+    <value>nie musi być static.</value>
   </data>
   <data name="errMethodNotRuntimeMethod" xml:space="preserve">
-    <value>should be standard runtime method (DynamicMethod is not supported).</value>
+    <value>oczekiwano metody standard runtime (DynamicMethod nie jest wspierana).</value>
   </data>
   <data name="errMethodNotStatic" xml:space="preserve">
-    <value>must be static method.</value>
+    <value>musi być static.</value>
   </data>
   <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported.</value>
+    <value>parametr #{0} jest Out lub Optional. Takie rodzaje parametrów nie są wspierane.</value>
   </data>
   <data name="errNeutralCulture" xml:space="preserve">
-    <value>Culture '{0}' is neutral culture. It cannot be used for parse and formatting .</value>
+    <value>Kultura językowa '{0}' jest neutralna. Nie może być użyta do parsowania i formatowania.</value>
   </data>
   <data name="errNumberFormat" xml:space="preserve">
-    <value>Incorrect number format:</value>
+    <value>Nieprawidłowy format liczby:</value>
   </data>
   <data name="errNumberOverflow" xml:space="preserve">
-    <value>Number constant overflow:</value>
+    <value>Overflow stałej liczbowej:</value>
   </data>
   <data name="errOverloadImpossible" xml:space="preserve">
-    <value>Function with same parameters ({0}) is already in the list (overload impossible).</value>
+    <value>Funkcja z tymi parametrami ({0}) jest już na liście (przeciążenie nie jest możliwe).</value>
   </data>
   <data name="errRangeNotFinite" xml:space="preserve">
-    <value>Wrong range: Begin, End or Step is not finite value.</value>
+    <value>Niewłaściwy zakres: Początek, Koniec lub Krok nie jest skończoną wartością.</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
-    <value>Tabulator object can be created only for the expressions with one or more arguments.</value>
+    <value>Obiekt Tabulator może być utworzony tylko dla wyrażeń z jednym lub większą liczbą argumentów.</value>
   </data>
   <data name="errTooLongRange" xml:space="preserve">
-    <value>Wrong range: iterations count doesn't fit in integer values range.</value>
+    <value>Niewłaściwy zakres: liczba iteracji nie mieści się w zakresie liczby całkowitej.</value>
   </data>
   <data name="errUnresolvedIdentifier" xml:space="preserve">
-    <value>Unresolved identifier:</value>
+    <value>Nieznany identyfikator:</value>
   </data>
   <data name="errUnresolvedSymbol" xml:space="preserve">
-    <value>Unresolved symbol:</value>
+    <value>Nieznany symbol:</value>
   </data>
   <data name="errWrongArgsCount" xml:space="preserve">
-    <value>Wrong arguments count: {0}. You should specify {1} argument(s) for the Evaluate() method.</value>
+    <value>Niewłaściwa liczba argumentów: {0}. Oczekiwano {1} argument(ów) dla metody Evaluate().</value>
   </data>
   <data name="errWrongOverload" xml:space="preserve">
-    <value>isn't got overload with {0} argument(s).</value>
+    <value>nie posiada przeciążenia z {0} argument(ami).</value>
   </data>
   <data name="errWrongRangesCount" xml:space="preserve">
-    <value>Wrong ranges count: {0}. You should specify {1} ranges(s) for the Tabulate() method.</value>
+    <value>Niewłaściwa liczba zakresów: {0}. Oczekiwano {1} zakres(ów) dla metody Tabulate().</value>
   </data>
   <data name="errWrongStepSign" xml:space="preserve">
-    <value>Wrong range step: invalid step sign.</value>
+    <value>Niewłaściwy krok zakresu: nieprawidłowy snak kroku.</value>
   </data>
   <data name="errWrongTargetType" xml:space="preserve">
-    <value>Wrong target object type: {0} (not assignable to {1}).</value>
+    <value>Niewłaściwy typ obiektu docelowego: {0} (nie jest możliwe przypisanie do {1}).</value>
   </data>
   <data name="sAnd" xml:space="preserve">
-    <value>and</value>
+    <value>oraz</value>
   </data>
   <data name="sArgument" xml:space="preserve">
     <value>Argument</value>
   </data>
   <data name="sConstant" xml:space="preserve">
-    <value>Constant</value>
+    <value>Stała</value>
   </data>
   <data name="sFunction" xml:space="preserve">
-    <value>Function</value>
+    <value>Funkcja</value>
   </data>
 </root>

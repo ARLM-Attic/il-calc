@@ -201,6 +201,71 @@ namespace ILCalc
 		}
 
 		#endregion
+		#region EvaluateMany
+
+		/// <summary>
+		/// Invokes the compiled expression evaluation with
+		/// giving each one argument from the specified array.</summary>
+		/// <param name="args">Expression arguments array.</param>
+		/// <returns>Array of evaluated values.</returns>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="args"/> is null.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with one arguments is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
+		public double[] EvaluateMany(params double[] args)
+		{
+			if (args == null)
+				throw new ArgumentNullException("args");
+
+			var res = new double[args.Length];
+			for (int i = 0; i < args.Length; i++)
+			{
+				res[i] = this.Evaluate1(args[i]);
+			}
+
+			return res;
+		}
+
+		/// <summary>
+		/// Invokes the compiled expression evaluation with
+		/// giving each two argument from the specified arrays.</summary>
+		/// <param name="args1">First expression arguments array.</param>
+		/// <param name="args2">Second expression arguments array.</param>
+		/// <returns>Two-dimensional jagged array
+		/// of evaluated values.</returns>
+		/// <exception cref="ArgumentNullException">
+		/// <paramref name="args1"/> is null.<br/>-or-<br/>
+		/// <paramref name="args2"/> is null.</exception>
+		/// <exception cref="ArgumentException"><see cref="Evaluator"/>
+		/// with two arguments is not compiled, you should specify valid
+		/// <see cref="ArgumentsCount">arguments count</see>.</exception>
+		/// <exception cref="ArithmeticException">Expression evaluation
+		/// thrown the <see cref="ArithmeticException"/>.</exception>
+		public double[][] EvaluateMany(double[] args1, double[] args2)
+		{
+			if (args1 == null) throw new ArgumentNullException("args1");
+			if (args2 == null) throw new ArgumentNullException("args2");
+
+			var res = new double[args1.Length][];
+			for (int i = 0; i < args1.Length; i++)
+			{
+				var row = new double[args2.Length];
+
+				for (int j = 0; j < args2.Length; j++)
+				{
+					row[j] = this.Evaluate2(args1[i], args2[j]);
+				}
+
+				res[i] = row;
+			}
+
+			return res;
+		}
+
+		#endregion
 		#region Throw Methods
 
 		private double Throw0()

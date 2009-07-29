@@ -52,16 +52,7 @@ namespace ILCalc
 		#endregion
 		#region Methods
 
-		public bool IsReusable(FunctionItem other, int otherArgsCount)
-		{
-			Debug.Assert(other != null);
-			Debug.Assert(otherArgsCount >= 0);
-
-			// NOTE: modify when impl instance calls
-			return this.func.Method == other.Method
-				&& this.argsCount == otherArgsCount;
-
-		}
+		//TODO: new IsReusable?
 
 		public void Invoke(double[] stack, ref int pos)
 		{

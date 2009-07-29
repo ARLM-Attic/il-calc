@@ -1,18 +1,22 @@
 v0.9.5.1 =================
 
-	* TabRange: replaced with immutable ValueRange.
-	* Interpret: less internal re-allocations.
-	* Demo App: no re-allocations while rendering.
-	* Interpret: small fixes for instance calls.
-	* Evaluator: instance calls performance increased.
-	* Interpret: new Evaluate() overload with 3 args.
-	* Solution: some exception redesign.
 	* Interpret: tabulation support!
 	* Interpret: async tabulation support!
 	* Interpret: Allocate() method support.
+	* Interpret: less re-allocations while creation.
+	* Interpret: small fixes for instance calls.
+	* TabRange: replaced with immutable ValueRange.
 	* Solution: ValueRange added to SL/CF projects.
-	
-	- Bugfix: missed checks in imports of methods.
+	* Demo App: no re-allocations while rendering.
+	* Evaluator: instance calls performance increased.
+	* Interpret: new Evaluate() overload with 3 args.
+	* Evaluator: new EvaluateMany() methods.
+	* Solution: a bit of exception redesign.
+	* Solution: added Polish resources (thx to Mariusz).
+	* Solution: added benchmarks project.
+	* Bugfix: missed checks in imports of methods.
+	* Bugfix: wront targets in instance calls in Interpret.
+	* Docs: small fix-ups and some generalizations.
 
 v0.9.4.0 =================
 

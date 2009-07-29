@@ -39,11 +39,18 @@ namespace ILCalc
 				return null;
 			}
 
-			// TODO: add checks and error messages
-
 			// validate target type:
 			if (target != null)
 			{
+				if (method.IsStatic)
+				{
+					if (throwOnFailure)
+						throw MethodImportFailure(method,
+							Resource.errMethodNotInstance);
+
+					return null;
+				}
+
 				Debug.Assert(!method.IsStatic);
 
 				Type thisType = method.DeclaringType;
@@ -52,10 +59,7 @@ namespace ILCalc
 				if (!thisType.IsAssignableFrom(targetType))
 				{
 					if (throwOnFailure)
-						throw new ArgumentException(string.Format(
-							Resource.errWrongTargetType,
-							targetType.FullName,
-							thisType.FullName));
+						throw InvalidMethodTarget(thisType, targetType);
 
 					return null;
 				}
@@ -105,8 +109,11 @@ namespace ILCalc
 #endif
 			}
 
-			return new FunctionItem(method, target, parameters.Length, false);
+			return new FunctionItem(
+				method, target, parameters.Length, false);
 		}
+
+		
 
 #if !CF2
 
@@ -197,8 +204,7 @@ namespace ILCalc
 				TypeHelper.ValueType.Name);
 		}
 
-		private static Exception InvalidParamType(
-			MethodInfo method, ParameterInfo param)
+		private static Exception InvalidParamType(MethodInfo method, ParameterInfo param)
 		{
 			Debug.Assert(method != null);
 			Debug.Assert(param  != null);
@@ -211,8 +217,7 @@ namespace ILCalc
 				TypeHelper.ValueType.Name);
 		}
 
-		private static Exception InvalidParameter(
-			MethodInfo method, ParameterInfo param)
+		private static Exception InvalidParameter(MethodInfo method, ParameterInfo param)
 		{
 			Debug.Assert(method != null);
 			Debug.Assert(param != null);
@@ -221,6 +226,14 @@ namespace ILCalc
 				method,
 				Resource.errMethodParamInvalid,
 				param.Position);
+		}
+
+		private static Exception InvalidMethodTarget(Type thisType, Type targetType)
+		{
+			return new ArgumentException(string.Format(
+				Resource.errWrongTargetType,
+				targetType.FullName,
+				thisType.FullName));
 		}
 
 		private static Exception MethodImportFailure(

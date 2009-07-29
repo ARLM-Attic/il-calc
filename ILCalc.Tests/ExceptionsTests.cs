@@ -244,8 +244,8 @@ namespace ILCalc.Tests
 			var func1 = typeof(ExceptionsTests).GetMethod("Func1");
 
 			Throws<ArgumentException>(
-				() => collection.AddStatic(func.Method));
-				//() => collection.AddInstance(func1, this)); // TODO: fix it!
+				() => collection.AddStatic(func.Method),
+				() => collection.AddInstance(func1, this));
 		}
 
 		public static double Func1() { return 0; }

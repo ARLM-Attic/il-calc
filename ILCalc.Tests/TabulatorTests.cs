@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -138,9 +139,14 @@ namespace ILCalc.Tests
 			double[] ex, double[] a1,
 			double[] a2, double[] a3)
 		{
-			CollectionAssert.AreEqual(ex, a1);
-			CollectionAssert.AreEqual(ex, a2);
-			CollectionAssert.AreEqual(ex, a3);
+			const double Delta = 1e-12;
+
+			for (int i = 0; i < ex.Length; i++)
+			{
+				Assert.AreEqual(ex[i], a1[i], Delta);
+				Assert.AreEqual(ex[i], a2[i], Delta);
+				Assert.AreEqual(ex[i], a3[i], Delta);
+			}
 		}
 
 		private static void AssertEquality(
@@ -315,7 +321,7 @@ namespace ILCalc.Tests
 
 			var actual1 = tab.Tabulate(range);
 			var actual2 = (double[]) tab.EndTabulate(async);
-			var actual3 = Tabulator.Allocate(range);
+			var actual3 = Interpret.Allocate(range);
 			tab.TabulateToArray(actual3, range);
 
 			AssertEquality(expected, actual1, actual2, actual3);
@@ -328,21 +334,20 @@ namespace ILCalc.Tests
 			calc.Functions.Add(Math.Sin);
 			calc.Functions.Add(Math.Cos);
 
-			ValueRange rangeX = GetRandomRange();
-			ValueRange rangeY = GetRandomRange();
+			ValueRange rX = GetRandomRange();
+			ValueRange rY = GetRandomRange();
 
 			Interpret tab = calc.CreateInterpret("cos(x) * sin(y)");
 			IAsyncResult async =
-				tab.BeginTabulate(rangeX, rangeY, null, null);
+				tab.BeginTabulate(rX, rY, null, null);
 
 			var expected = Tabulate2D(
-				(x, y) => Math.Cos(x) * Math.Sin(y),
-				rangeX, rangeY);
+				(x, y) => Math.Cos(x) * Math.Sin(y), rX, rY);
 
-			var actual1 = tab.Tabulate(rangeX, rangeY);
+			var actual1 = tab.Tabulate(rX, rY);
 			var actual2 = (double[][]) tab.EndTabulate(async);
-			var actual3 = Tabulator.Allocate(rangeX, rangeY);
-			tab.TabulateToArray(actual3, rangeX, rangeY);
+			var actual3 = Interpret.Allocate(rX, rY);
+			tab.TabulateToArray(actual3, rX, rY);
 
 			AssertEquality(expected, actual1, actual2, actual3);
 		}
@@ -370,7 +375,7 @@ namespace ILCalc.Tests
 
 			var actual1 = (double[][][]) tab.Tabulate(rangeX, rangeY, rangeZ);
 			var actual2 = (double[][][]) tab.EndTabulate(async);
-			var actual3 = (double[][][]) Tabulator.Allocate(rangeX, rangeY, rangeZ);
+			var actual3 = (double[][][]) Interpret.Allocate(rangeX, rangeY, rangeZ);
 			tab.TabulateToArray(actual3, rangeX, rangeY, rangeZ);
 
 			AssertEquality(expected, actual1, actual2, actual3);
@@ -401,7 +406,7 @@ namespace ILCalc.Tests
 
 			var actual1 = (double[][][][]) tab.Tabulate(rX, rY, rZ, rW);
 			var actual2 = (double[][][][]) tab.EndTabulate(async);
-			var actual3 = (double[][][][]) Tabulator.Allocate(rX, rY, rZ, rW);
+			var actual3 = (double[][][][]) Interpret.Allocate(rX, rY, rZ, rW);
 
 			tab.TabulateToArray(actual3, rX, rY, rZ, rW);
 

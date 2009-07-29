@@ -186,6 +186,9 @@
   <data name="errMethodNotFounded" xml:space="preserve">
     <value>Метод с именем "{0}" не может быть найден (не в публичном доступе или не статический?).</value>
   </data>
+  <data name="errMethodNotInstance" xml:space="preserve">
+    <value>должен быть методом экземпляра.</value>
+  </data>
   <data name="errMethodNotRuntimeMethod" xml:space="preserve">
     <value>должен быть стандартным методом (DynamicMethod не поддерживается).</value>
   </data>

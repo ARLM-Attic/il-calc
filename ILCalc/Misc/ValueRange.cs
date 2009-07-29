@@ -8,11 +8,9 @@ namespace ILCalc
 
 	/// <summary>
 	/// Defines a set of (begin, end, step) values,
-	/// that represents the range of values.</summary>
-	/// <remarks>
-	/// Not available in the .NET CF / Silverlight versions.
-	/// </remarks>
-	/// <threadsafety instance="false"/>
+	/// that represents the range of values.<br/>
+	/// This structure is immutable.</summary>
+	/// <threadsafety instance="true" static="true"/>
 	[DebuggerDisplay("[{Begin} - {End}] step {Step}")]
 	[Serializable]
 
@@ -31,7 +29,7 @@ namespace ILCalc
 		#region Constructor
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ILCalc.ValueRange"/>
+		/// Initializes a new instance of the <see cref="ValueRange"/>
 		/// structure with the specified begin, end and step values.</summary>
 		/// <param name="begin">Range begin value.</param>
 		/// <param name="end">Range end value.</param>
@@ -80,13 +78,8 @@ namespace ILCalc
 		public double Step { get { return this.step; } }
 
 		/// <summary>
-		/// Gets or sets the count of the steps, that would
+		/// Gets the count of the steps, that would
 		/// be taken while iteration over the range.</summary>
-		/// <remarks>
-		/// Is not guaranteed that by setting this property you will get
-		/// range with <see cref="Count"/> iterations - because of floating-point
-		/// numbers precision, needed range step cannot be rightly evaluated
-		/// for any setted <see cref="Count"/> value.</remarks>
 		public int Count { get { return this.count; } }
 
 		/// <summary>
@@ -110,35 +103,65 @@ namespace ILCalc
 
 		/// <summary>
 		/// Sets the begin value of the current range instance.</summary>
-		/// <param name="value">New beginning value.</param>
-		/// <returns>A new <see cref="ILCalc.ValueRange"/> whose begin
-		/// equals <paramref name="value"/>.</returns>
+		/// <param name="value">New range begin value.</param>
+		/// <returns>A new <see cref="ILCalc.ValueRange"/> whose range
+		/// <see cref="Begin"/> equals <paramref name="value"/>.</returns>
 		public ValueRange SetBegin(double value)
 		{
 			return new ValueRange(
 				value, this.end, this.step);
 		}
 
+		/// <summary>
+		/// Sets the end value of the current range instance.</summary>
+		/// <param name="value">New range end value.</param>
+		/// <returns>A new <see cref="ILCalc.ValueRange"/> whose range
+		/// <see cref="End"/> equals <paramref name="value"/>.</returns>
 		public ValueRange SetEnd(double value)
 		{
 			return new ValueRange(
 				this.begin, value, this.step);
 		}
 
+		/// <summary>
+		/// Sets the step value of the current range instance.</summary>
+		/// <param name="value">New range step value.</param>
+		/// <returns>A new <see cref="ILCalc.ValueRange"/> whose range
+		/// <see cref="Step"/> equals <paramref name="value"/>.</returns>
 		public ValueRange SetStep(double value)
 		{
 			return new ValueRange(
 				this.begin, this.end, value);
 		}
 
+		/// <summary>
+		/// Sets the count of the steps, that would
+		/// be taken while iteration over the range.</summary>
+		/// <param name="value">New iterations count value.</param>
+		/// <returns>A new <see cref="ILCalc.ValueRange"/> whose range
+		/// <see cref="Count"/> should be equal <paramref name="value"/>.</returns>
+		/// <remarks>Is not guaranteed that by using this method
+		/// you will get range with <see cref="Count"/> iterations -
+		/// because of floating-point numbers precision,
+		/// needed range step cannot be rightly evaluated for any
+		/// <paramref name="value">count</paramref> value.</remarks>
 		public ValueRange SetCount(int value)
 		{
 			return new ValueRange(
-				this.begin,
-				this.end,
-				InternalSetCount(value));
+				this.begin, this.end, InternalSetCount(value));
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ValueRange"/>
+		/// structure with the specified begin, end and count values.</summary>
+		/// <param name="begin">Range begin value.</param>
+		/// <param name="end">Range end value.</param>
+		/// <param name="count">Range iterations count value.</param>
+		/// <remarks>Is not guaranteed that by using this method
+		/// you will get range with <see cref="Count"/> iterations -
+		/// because of floating-point numbers precision,
+		/// needed range step cannot be rightly evaluated
+		/// for any <paramref name="count"/> value.</remarks>
 		public static ValueRange FromCount(double begin, double end, int count)
 		{
 			if (count <= 0)
