@@ -1,4 +1,19 @@
-v0.9.5.1 =================
+v0.9.6.9 beta ===========================================
+
+	* Solution: generics implemented!
+	* Generics: support for primitive types:
+		Int32, Double, Decimal
+	* Generics: integer literals support:
+		0xFFEA - hexamidal
+		065544 - octal
+		0b0010 - binary
+	* Interpret: more performance improvements.
+	* Solution: improved dependencies between classes.
+	* Solution: all projects moved to generics.
+	* Solution: complete code reformat (much better).
+	* Solution: folder structure re-done.
+
+v0.9.5.1 ================================================
 
 	* Interpret: tabulation support!
 	* Interpret: async tabulation support!
@@ -18,7 +33,7 @@ v0.9.5.1 =================
 	* Bugfix: wront targets in instance calls in Interpret.
 	* Docs: small fix-ups and some generalizations.
 
-v0.9.4.0 =================
+v0.9.4.0 ================================================
 
 	* Engine: support for instance method calls!
 	* Engine: support for DynamicMethod calls!
@@ -36,7 +51,7 @@ v0.9.4.0 =================
 	* Bugfix: added some forgotten arguments checks.
 	* Solution: new pack of unit tests.
 
-v0.9.3.21 ================
+v0.9.3.21 ===============================================
 
 	* Solution: .NET Compact Framework 2.0 is now supported.
 	* Solution: code reformat, satisfy many of StyleCop rules.
@@ -52,7 +67,7 @@ v0.9.3.21 ================
 	* Tabulator: asynchronously Tabulate() is now supported.
 	* TabRange: much better Count property calculation.
 
-v0.9.2.1 =================
+v0.9.2.1 ================================================
 
 	* Solution: this changelog included.
 	* Solution: directory structure redone.
@@ -72,6 +87,6 @@ v0.9.2.1 =================
 	* IEvaluator: was removed from SL/CF versions (no need for it).
 	* Unit Tests: improved + new (for thread-safety).
 
-v0.9.1.0 =================
+v0.9.1.0 ================================================
 
 	* Initial release.

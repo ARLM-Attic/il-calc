@@ -4,97 +4,111 @@ using System.Globalization;
 
 namespace ILCalc
 {
-	// TODO: Trigger to use|not use output
+  // TODO: Trigger to use|not use output
 
-	internal sealed partial class Parser
-	{
-		#region Fields
+  sealed partial class Parser<T>
+  {
+    #region Fields
 
-		private readonly CalcContext context;
-		private IExpressionOutput output;
+    readonly CalcContext<T> context;
+    IExpressionOutput<T> output;
 
-		private string expr;
-		private int xlen;
+    string expr;
+    int xlen;
 
-		private char dotSymbol;
-		private char sepSymbol;
+    char dotSymbol;
+    char sepSymbol;
 
-		private NumberFormatInfo numFormat;
-		
-		#endregion
-		#region Methods
+    NumberFormatInfo numFormat;
 
-		public Parser(CalcContext context)
-		{
-			Debug.Assert(context != null);
+    static readonly INewLiteralParser<T>
+      Literal = Parser.Resolve<T>();
 
-			this.context = context;
-			InitCulture();
-		}
+    #endregion
+    #region Methods
 
-		private CalcContext Context      { get { return this.context; } }
-		private IExpressionOutput Output { get { return this.output;  } }
+    public Parser(CalcContext<T> context)
+    {
+      Debug.Assert(context != null);
 
-		public void Parse(string expression, IExpressionOutput exprOutput)
-		{
-			Debug.Assert(expression != null);
-			Debug.Assert(exprOutput != null);
+      this.context = context;
+      InitCulture();
+    }
 
-			this.expr = expression;
-			this.xlen = expression.Length;
-			this.output = exprOutput;
-			this.exprDepth = 0;
-			this.prePos = 0;
+    CalcContext<T> Context
+    {
+      get { return this.context; }
+    }
 
-			int i = 0;
-			Parse(ref i, false);
-		}
+    IExpressionOutput<T> Output
+    {
+      get { return this.output; }
+    }
 
-		public void InitCulture()
-		{
-			CultureInfo culture = Context.Culture;
-			if (culture == null)
-			{
-				this.dotSymbol = '.';
-				this.sepSymbol = ',';
-				this.numFormat = new NumberFormatInfo();
-			}
-			else
-			{
-				try
-				{
-					this.dotSymbol = culture.NumberFormat.NumberDecimalSeparator[0];
-					this.sepSymbol = culture.TextInfo.ListSeparator[0];
-				}
-				catch (IndexOutOfRangeException)
-				{
-					throw new ArgumentException(Resource.errCultureExtract);
-				}
+    public void Parse(
+      string expression, IExpressionOutput<T> exprOutput)
+    {
+      Debug.Assert(expression != null);
+      Debug.Assert(exprOutput != null);
 
-				this.numFormat = culture.NumberFormat;
-			}
-		}
+      this.expr = expression;
+      this.xlen = expression.Length;
+      this.output = exprOutput;
+      this.exprDepth = 0;
+      this.prePos = 0;
 
-		#endregion
-		#region Static Data
+      int i = 0;
+      Parse(ref i, false);
+    }
 
-		/////////////////////////////////////////
-		// WARNING: do not modify items order! //
-		/////////////////////////////////////////
-		private enum Item
-			{
-			Operator	= 0,
-			Separator	= 1,
-			Begin		= 2,
-			Number		= 3,
-			End			= 4,
-			Identifier	= 5
-			}
-		
-		private const string Operators = "-+*/%^";
+    public void InitCulture()
+    {
+      CultureInfo culture = Context.Culture;
+      if (culture == null)
+      {
+        this.dotSymbol = '.';
+        this.sepSymbol = ',';
+        this.numFormat = new NumberFormatInfo();
+      }
+      else
+      {
+        try
+        {
+          this.dotSymbol =
+            culture.NumberFormat.NumberDecimalSeparator[0];
+          this.sepSymbol =
+            culture.TextInfo.ListSeparator[0];
+        }
+        catch (IndexOutOfRangeException)
+        {
+          throw new ArgumentException(
+            Resource.errCultureExtract);
+        }
 
-		private static readonly int[] Priority = { 0, 0, 1, 1, 1, 3, 2 };
+        this.numFormat = culture.NumberFormat;
+      }
+    }
 
-		#endregion
-	}
+    #endregion
+    #region Static Data
+
+    /////////////////////////////////////////
+    // WARNING: do not modify items order! //
+    /////////////////////////////////////////
+    enum Item
+    {
+      Operator = 0,
+      Separator = 1,
+      Begin = 2,
+      Number = 3,
+      End = 4,
+      Identifier = 5
+    }
+
+    const string Operators = "-+*/%^";
+
+    static readonly int[] Priority = { 0, 0, 1, 1, 1, 3, 2 };
+
+    #endregion
+  }
 }

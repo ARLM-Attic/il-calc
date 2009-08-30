@@ -6,8 +6,9 @@ namespace ILCalc
 	using State = DebuggerBrowsableState;
 
 	/// <summary>
-	/// The exception that is thrown when syntax error
-	/// occurs during expression parsing by <see cref="CalcContext"/>.<br/>
+	/// The exception that is thrown when syntax
+	/// error occurs during expression parsing
+	/// by <see cref="CalcContext{T}"/>.<br/>
 	/// This class cannot be inherited.
 	/// </summary>
 	[Serializable]

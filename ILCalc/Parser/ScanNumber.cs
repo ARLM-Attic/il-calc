@@ -1,74 +1,212 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 
 namespace ILCalc
 {
-	internal sealed partial class Parser
-	{
-		private double ScanNumber(char c, ref int i)
-		{
-			// =================================== Fractal part ==
+  interface IParserSupport<T>
+  {
+    string Expression { get; }
+    int BeginPos { get; }
+    char DecimalDot { get; }
+    NumberFormatInfo NumberFormat { get; }
 
-			// numbers not like ".123"
-			if (c != dotSymbol)
-			{
-				// skip digits and decimal dot
-				while (i < this.xlen && char.IsDigit(this.expr[i])) i++;
-				if    (i < this.xlen && this.expr[i] == dotSymbol)  i++;
-			}
+    T ParsedValue { set; }
 
-			// skip digits
-			while (i < this.xlen && char.IsDigit(this.expr[i])) i++;
+    Exception InvalidNumberFormat(
+      string message,
+      string badLiteral,
+      Exception innerException);
+  }
 
-			// ================================ Exponental part ==
+  interface INewLiteralParser<T>
+  {
+    int TryParse(int i, IParserSupport<T> p);
+  }
 
-			// at least 2 chars
-			if (i + 1 < this.xlen)
-			{
-				// E character
-				c = this.expr[i];
-				if (c == 'e' || c == 'E')
-				{
-					int j = i;
+  sealed class NewDoubleParser : INewLiteralParser<Double>
+  {
+    public int TryParse(int i, IParserSupport<double> p)
+    {
+      string expr = p.Expression;
 
-					// exponetal sign
-					c = this.expr[++j];
-					if (c == '-' || c == '+') j++;
+      if ((expr[i] < '0' || expr[i] > '9')
+        && expr[i] != p.DecimalDot)
+      {
+        return -1;
+      }
 
-					// eponental part
-					if (i < this.xlen
-					 && char.IsDigit(this.expr[j]))
-					{
-						j++;
-						while (j < this.xlen && char.IsDigit(this.expr[j])) j++;
+      //int begin = i;
+      // Fractal part: =====================
 
-						i = j;
-					}
-				}
-			}
+      // numbers not like ".123"
+      if (expr[i] != p.DecimalDot)
+      {
+        // skip digits and decimal point
+        for (; i < expr.Length; i++)
+        {
+          if (char.IsDigit(expr[i])) continue;
+          if (expr[i] == p.DecimalDot) i++;
+          break;
+        }
+      }
 
-			// =================================== Try to parse ==
+      // skip digits
+      while (i < expr.Length
+        && char.IsDigit(expr[i])) i++;
 
-			// extract number substring
-			string number = this.expr.Substring(this.curPos, i - this.curPos);
-			try
-			{
-				return Double.Parse(
-					number,
-					NumberStyles.AllowDecimalPoint |
-					NumberStyles.AllowExponent,
-					numFormat);
-			}
-			catch (FormatException e)
-			{
-				throw NumberFormatException(
-					Resource.errNumberFormat, number, e);
-			}
-			catch (OverflowException e)
-			{
-				throw NumberFormatException(
-					Resource.errNumberOverflow, number, e);
-			}
-		}
-	}
+      // Exponental part: ==================
+
+      // at least 2 chars
+      if (i + 1 < expr.Length)
+      {
+        // E character
+        char c = expr[i];
+        if (c == 'e' || c == 'E')
+        {
+          int j = i;
+
+          // exponetal sign
+          c = expr[++j];
+          if (c == '-' || c == '+') j++;
+
+          // eponental part
+          if (i < expr.Length && char.IsDigit(expr[j]))
+          {
+            j++;
+            while (j < expr.Length && char.IsDigit(expr[j])) j++;
+            i = j;
+          }
+        }
+      }
+
+      // Try to parse: =============
+
+      // extract number substring
+      string number = expr.Substring(p.BeginPos, i - p.BeginPos);
+      try
+      {
+        p.ParsedValue = Double.Parse(
+          number,
+          NumberStyles.AllowDecimalPoint |
+          NumberStyles.AllowExponent);
+
+        return number.Length;
+      }
+      catch (FormatException e)
+      {
+        throw p.InvalidNumberFormat(
+          Resource.errNumberFormat, number, e);
+      }
+      catch (OverflowException e)
+      {
+        throw p.InvalidNumberFormat(
+          Resource.errNumberOverflow, number, e);
+      }
+    }
+  }
+
+  sealed class Int32LiteralParser : INewLiteralParser<Int32>
+  {
+    public int TryParse(int i, IParserSupport<int> p)
+    {
+      string expr = p.Expression;
+
+      if (expr[i] < '0' || expr[i] > '9')
+      {
+        return -1;
+      }
+
+      // skip digits
+      while (i < expr.Length && char.IsDigit(expr[i])) i++;
+
+      // Try to parse: =============
+
+      // extract number substring
+      string number = expr.Substring(p.BeginPos, i - p.BeginPos);
+      try
+      {
+        p.ParsedValue = Int32.Parse(
+          number,
+          NumberStyles.AllowDecimalPoint |
+          NumberStyles.AllowExponent);
+
+        return number.Length;
+      }
+      catch (FormatException e)
+      {
+        throw p.InvalidNumberFormat(
+          Resource.errNumberFormat, number, e);
+      }
+      catch (OverflowException e)
+      {
+        throw p.InvalidNumberFormat(
+          Resource.errNumberOverflow, number, e);
+      }
+    }
+  }
+
+  static class Parser
+  {
+    static readonly SupportCollection<object> Support;
+
+    static Parser()
+    {
+      Support = new SupportCollection<object>(); //TODO: make заглушка
+
+      Support.Add<Double>(new NewDoubleParser());
+      Support.Add<Int32>(new Int32LiteralParser());
+    }
+
+    public static INewLiteralParser<T> Resolve<T>()
+    {
+#if CF
+      return null;
+#else
+      return (INewLiteralParser<T>) Support.Find<T>();
+#endif
+    }
+  }
+
+  sealed partial class Parser<T> : IParserSupport<T>
+  {
+    #region IParserSupport<T> Members
+
+    public string Expression { get { return this.expr; } }
+
+    public int BeginPos { get { return this.curPos; } }
+
+    public char DecimalDot { get { return this.dotSymbol; } }
+
+    public NumberFormatInfo NumberFormat
+    {
+      get { return this.numFormat; }
+    }
+
+    public T ParsedValue
+    {
+      set { this.value = value; }
+    }
+
+    public Exception InvalidNumberFormat(
+      string message,
+      string badLiteral,
+      Exception innerException)
+    {
+      var buf = new StringBuilder(message);
+
+      buf.Append(" \"");
+      buf.Append(badLiteral);
+      buf.Append("\".");
+
+      return new SyntaxException(
+          buf.ToString(),
+          this.expr,
+          this.curPos,
+          badLiteral.Length,
+          innerException);
+    }
+
+    #endregion
+  }
 }

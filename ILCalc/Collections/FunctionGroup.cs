@@ -9,291 +9,268 @@ using System.Text;
 
 namespace ILCalc
 {
-	using State = DebuggerBrowsableState;
+  using State = DebuggerBrowsableState;
 
-	/// <summary>
-	/// Represents the function overload group that contains
-	/// <see cref="FunctionItem"/> items with different values of
-	/// <see cref="FunctionItem.ArgsCount"/> and
-	/// <see cref="FunctionItem.HasParamArray"/> properties.<br/>
-	/// This class cannot be inherited.
-	/// </summary>
-	/// <threadsafety instance="false"/>
-	[DebuggerDisplay("{Count} functions")]
-	[Serializable]
+  /// <summary>
+  /// Represents the function overload group that contains
+  /// <see cref="FunctionItem{T}"/> items with different
+  /// values of <see cref="FunctionItem{T}.ArgsCount"/> and
+  /// <see cref="FunctionItem{T}.HasParamArray"/> properties.<br/>
+  /// This class cannot be inherited.</summary>
+  /// <typeparam name="T">Functions parameters
+  /// and return value type.</typeparam>
+  /// <threadsafety instance="false"/>
+  [DebuggerDisplay("{Count} functions")]
+  [Serializable]
+  public sealed class FunctionGroup<T>
+    : IEnumerable<FunctionItem<T>>
+  {
+    #region Fields
 
-	public sealed class FunctionGroup : IEnumerable<FunctionItem>
-	{
-		#region Fields
+    [DebuggerBrowsable(State.RootHidden)]
+    readonly List<FunctionItem<T>> funcList;
 
-		[DebuggerBrowsable(State.RootHidden)]
-		private readonly List<FunctionItem> funcList;
+    #endregion
+    #region Constructors
 
-		[DebuggerBrowsable(State.Never)]
-		private int paramsFuncsCount;
+    internal FunctionGroup(FunctionItem<T> function)
+    {
+      Debug.Assert(function != null);
 
-		#endregion
-		#region Constructors
+      this.funcList = new
+        List<FunctionItem<T>>(1) { function };
+    }
 
-		internal FunctionGroup(FunctionItem function)
-		{
-			Debug.Assert(function != null);
+    // For clone
+    internal FunctionGroup(FunctionGroup<T> other)
+    {
+      Debug.Assert(other != null);
 
-			this.funcList = new List<FunctionItem>(1) { function };
-			this.paramsFuncsCount = function.HasParamArray ? 1 : 0;
-		}
+      this.funcList = new List<
+        FunctionItem<T>>(other.funcList);
+    }
 
-		// For clone
-		internal FunctionGroup(FunctionGroup other)
-		{
-			Debug.Assert(other != null);
+    #endregion
+    #region Properties
 
-			this.funcList = new List<FunctionItem>(other.funcList);
-			this.paramsFuncsCount = other.paramsFuncsCount;
-		}
+    /// <summary>
+    /// Gets the count of <see cref="FunctionItem{T}">
+    /// functions</see> that this group represents.</summary>
+    [DebuggerBrowsable(State.Never)]
+    public int Count
+    {
+      get { return this.funcList.Count; }
+    }
 
-		#endregion
-		#region Properties
+    /// <summary>
+    /// Gets the <see cref="FunctionItem{T}"/>
+    /// at the specified index.</summary>
+    /// <param name="index">The index of the
+    /// <see cref="FunctionItem{T}"/> to get.</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0.<br/>-or-<br/>
+    /// <paramref name="index"/> is equal to or
+    /// greater than <see cref="Count"/></exception>
+    /// <returns>The <see cref="FunctionItem{T}"/>
+    /// at the specified index.</returns>
+    public FunctionItem<T> this[int index]
+    {
+      get { return this.funcList[index]; }
+    }
 
-		/// <summary>
-		/// Gets the count of <see cref="FunctionItem">functions</see>
-		/// that this group represents.</summary>
-		[DebuggerBrowsable(State.Never)]
-		public int Count
-		{
-			get { return this.funcList.Count; }
-		}
+    #endregion
+    #region Methods
 
-		/// <summary>
-		/// Gets the <see cref="FunctionItem"/> at the specified index.</summary>
-		/// <param name="index">The index of the <see cref="FunctionItem"/> to get.</param>
-		/// <exception cref="ArgumentOutOfRangeException">index is less than 0.
-		/// <br/>-or-<br/>index is equal to or greater than <see cref="Count"/></exception>
-		/// <returns>The <see cref="FunctionItem"/> at the specified index.</returns>
-		public FunctionItem this[int index]
-		{
-			get { return this.funcList[index]; }
-		}
+    // TODO: maybe Add & ICollection<T>?
 
-		#endregion
-		#region Methods
+    /// <summary>
+    /// Removes the <see cref="FunctionItem{T}"/> with
+    /// the specified <paramref name="argsCount"/> and
+    /// <paramref name="hasParamArray"/> values from
+    /// the <see cref="FunctionGroup{T}"/>.</summary>
+    /// <param name="argsCount">
+    /// <see cref="FunctionItem{T}"/> arguments count.</param>
+    /// <param name="hasParamArray">Indicates that
+    /// <see cref="FunctionItem{T}"/> has an parameters array.</param>
+    /// <returns><b>true</b> if specified <see cref="FunctionItem{T}"/>
+    /// is founded in the group and was removed;
+    /// otherwise, <b>false</b>.</returns>
+    public bool Remove(int argsCount, bool hasParamArray)
+    {
+      for (int i = 0; i < Count; i++)
+      {
+        FunctionItem<T> func = this.funcList[i];
 
-		// TODO: maybe Add & ICollection<T>?
+        if (func.ArgsCount == argsCount &&
+            func.HasParamArray == hasParamArray)
+        {
+          this.funcList.RemoveAt(i);
+          return true;
+        }
+      }
 
-		/// <summary>
-		/// Removes the <see cref="FunctionItem"/> with the specified
-		/// <paramref name="argsCount"/> and <paramref name="hasParamArray"/>
-		/// values from the <see cref="FunctionGroup"/>.</summary>
-		/// <param name="argsCount"><see cref="FunctionItem"/> arguments count.</param>
-		/// <param name="hasParamArray">Indicates that <see cref="FunctionItem"/>
-		/// has an parameters array.</param>
-		/// <returns><b>true</b> if specified <see cref="FunctionItem"/>
-		/// is founded in the group and was removed;
-		/// otherwise, <b>false</b>.</returns>
-		public bool Remove(int argsCount, bool hasParamArray)
-		{
-			for (int i = 0; i < this.Count; i++)
-			{
-				FunctionItem func = this.funcList[i];
+      return false;
+    }
 
-				if (func.ArgsCount == argsCount
-				 && func.HasParamArray == hasParamArray)
-				{
-					if (func.HasParamArray)
-					{
-						this.paramsFuncsCount--;
-					}
+    /// <summary>
+    /// Removes the <see cref="FunctionItem{T}"/> at the specified
+    /// index of the <see cref="FunctionGroup{T}"/>.</summary>
+    /// <param name="index">The zero-based index
+    /// of the <see cref="FunctionItem{T}"/> to remove.</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0,
+    /// equal to or greater than Count.</exception>
+    public void RemoveAt(int index)
+    {
+      this.funcList.RemoveAt(index);
+    }
 
-					this.funcList.RemoveAt(i);
-					return true;
-				}
-			}
+    /// <summary>
+    /// Removes all <see cref="FunctionItem{T}">functions</see>
+    /// from the <see cref="FunctionGroup{T}"/>.</summary>
+    public void Clear()
+    {
+      this.funcList.Clear();
+    }
 
-			return false;
-		}
+    /// <summary>
+    /// Determines whether a <see cref="FunctionItem{T}"/>
+    /// with the specified <paramref name="argsCount"/> and
+    /// <paramref name="hasParamArray"/> values is contains
+    /// in the <see cref="FunctionGroup{T}"/>.</summary>
+    /// <param name="argsCount">
+    /// <see cref="FunctionItem{T}"/> arguments count.</param>
+    /// <param name="hasParamArray">Indicates that
+    /// <see cref="FunctionItem{T}"/> has an parameters array.</param>
+    /// <returns><b>true</b> if function is found in the group;
+    /// otherwise, <b>false</b>.</returns>
+    public bool Contains(int argsCount, bool hasParamArray)
+    {
+      foreach (FunctionItem<T> func in this.funcList)
+      {
+        if (func.ArgsCount == argsCount &&
+            func.HasParamArray == hasParamArray)
+        {
+          return true;
+        }
+      }
 
-		/// <summary>
-		/// Removes the <see cref="FunctionItem"/> at the specified
-		/// index of the <see cref="FunctionGroup"/>.</summary>
-		/// <param name="index">The zero-based index
-		/// of the <see cref="FunctionItem"/> to remove.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/>
-		/// is less than 0, equal to or greater than Count.</exception>
-		public void RemoveAt(int index)
-		{
-			if (this.funcList[index].HasParamArray)
-			{
-				this.paramsFuncsCount--;
-			}
+      return false;
+    }
 
-			this.funcList.RemoveAt(index);
-		}
+    #endregion
+    #region IEnumerable<>
 
-		/// <summary>
-		/// Removes all <see cref="FunctionItem">functions</see>
-		/// from the <see cref="FunctionGroup"/>.</summary>
-		public void Clear()
-		{
-			this.paramsFuncsCount = 0;
-			this.funcList.Clear();
-		}
+    /// <summary>
+    /// Returns an enumerator that iterates through
+    /// the <see cref="FunctionItem{T}">functions</see>
+    /// in <see cref="FunctionGroup{T}"/>.</summary>
+    /// <returns>An enumerator for the all <see cref="FunctionItem{T}">
+    /// functions</see> in <see cref="FunctionGroup{T}"/>.</returns>
+    public IEnumerator<FunctionItem<T>> GetEnumerator()
+    {
+      return this.funcList.GetEnumerator();
+    }
 
-		/// <summary>
-		/// Determines whether a <see cref="FunctionItem"/> with the specified
-		/// <paramref name="argsCount"/> and <paramref name="hasParamArray"/>
-		/// values is contains in the <see cref="FunctionGroup"/>.</summary>
-		/// <param name="argsCount"><see cref="FunctionItem"/> arguments count.</param>
-		/// <param name="hasParamArray">Indicates that <see cref="FunctionItem"/>
-		/// has an parameters array.</param>
-		/// <returns><b>true</b> if function is found in the group;
-		/// otherwise, <b>false</b>.</returns>
-		public bool Contains(int argsCount, bool hasParamArray)
-		{
-			foreach (FunctionItem func in this.funcList)
-			{
-				if (func.ArgsCount == argsCount
-				 && func.HasParamArray == hasParamArray)
-				{
-					return true;
-				}
-			}
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+      return this.funcList.GetEnumerator();
+    }
 
-			return false;
-		}
+    #endregion
+    #region Internals
 
-		#endregion
-		#region IEnumerable<>
+    internal bool Append(FunctionItem<T> func)
+    {
+      Debug.Assert(func != null);
 
-		/// <summary>
-		/// Returns an enumerator that iterates through
-		/// the <see cref="FunctionItem">functions</see>
-		/// in <see cref="FunctionGroup"/>.</summary>
-		/// <returns>An enumerator for the all <see cref="FunctionItem">
-		/// functions</see> in <see cref="FunctionGroup"/>.</returns>
-		public IEnumerator<FunctionItem> GetEnumerator()
-		{
-			return this.funcList.GetEnumerator();
-		}
+      foreach (FunctionItem<T> f in this.funcList)
+      {
+        if (func.ArgsCount == f.ArgsCount &&
+            func.HasParamArray == f.HasParamArray)
+        {
+          return false;
+        }
+      }
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return this.funcList.GetEnumerator();
-		}
+      this.funcList.Add(func);
+      return true;
+    }
 
-		#endregion
-		#region Internals
+    internal string MakeMethodsArgsList()
+    {
+      switch (this.funcList.Count)
+      {
+        case 0: return string.Empty;
+        case 1: return this.funcList[0].ArgsString;
+      }
 
-		internal bool Append(FunctionItem function)
-		{
-			Debug.Assert(function != null);
+      var buf = new StringBuilder();
+      this.funcList.Sort(ArgsCountComparator);
 
-			foreach (FunctionItem f in this.funcList)
-			{
-				if (function.ArgsCount == f.ArgsCount
-				 && function.HasParamArray == f.HasParamArray)
-				{
-					return false;
-				}
-			}
+      // output first:
+      buf.Append(this.funcList[0].ArgsString);
 
-			if (function.HasParamArray)
-			{
-				this.paramsFuncsCount++;
-			}
+      // and others:
+      for (int i = 1, last = Count - 1; i < Count; i++)
+      {
+        FunctionItem<T> func = this.funcList[i];
 
-			this.funcList.Add(function);
-			return true;
-		}
+        if (i == last)
+        {
+          buf.Append(' ')
+             .Append(Resource.sAnd)
+             .Append(' ');
+        }
+        else buf.Append(", ");
 
-		internal string MakeMethodsArgsList()
-		{
-			switch (this.funcList.Count)
-			{
-				case 0: return string.Empty;
-				case 1: return this.funcList[0].ArgsString;
-			}
+        buf.Append(func.ArgsString);
+      }
 
-			var buf = new StringBuilder();
-			this.funcList.Sort(ArgsCountComparator);
+      return buf.ToString();
+    }
 
-			// output first:
-			buf.Append(this.funcList[0].ArgsString);
+    internal FunctionItem<T> GetOverload(int argsCount)
+    {
+      Debug.Assert(argsCount >= 0);
 
-			// and others:
-			for (int i = 1, last = this.Count - 1; i < this.Count; i++)
-			{
-				FunctionItem func = this.funcList[i];
+      FunctionItem<T> best = null;
+      int fixCount = -1;
 
-				if (i == last)
-				{
-					buf.Append(' ').Append(Resource.sAnd).Append(' ');
-				}
-				else buf.Append(", ");
+      foreach (var func in this.funcList)
+      {
+        if (func.HasParamArray)
+        {
+          if (func.ArgsCount <= argsCount &&
+              func.ArgsCount > fixCount)
+          {
+            best = func;
+            fixCount = func.ArgsCount;
+          }
+        }
+        else if (func.ArgsCount == argsCount)
+        {
+          return func;
+        }
+      }
 
-				buf.Append(func.ArgsString);
-			}
+      return best;
+    }
 
-			return buf.ToString();
-		}
+    static int ArgsCountComparator(
+      FunctionItem<T> a, FunctionItem<T> b)
+    {
+      if (a.ArgsCount == b.ArgsCount)
+      {
+        if (a.HasParamArray == b.HasParamArray)
+          return 0;
 
-		internal FunctionItem GetOverload(int argsCount)
-		{
-			Debug.Assert(argsCount >= 0);
+        return a.HasParamArray ? 1 : -1;
+      }
 
-			if (this.paramsFuncsCount > 0)
-			{
-				return GetParamsOverload(argsCount);
-			}
+      return a.ArgsCount < b.ArgsCount ? -1 : 1;
+    }
 
-			foreach (FunctionItem func in this.funcList)
-			{
-				if (func.ArgsCount == argsCount)
-				{
-					return func;
-				}
-			}
-
-			return null;
-		}
-
-		private static int ArgsCountComparator(FunctionItem a, FunctionItem b)
-		{
-			if (a.ArgsCount == b.ArgsCount)
-			{
-				if (a.HasParamArray == b.HasParamArray) return 0;
-				return a.HasParamArray ? 1 : -1;
-			}
-
-			return a.ArgsCount < b.ArgsCount ? -1 : 1;
-		}
-
-		private FunctionItem GetParamsOverload(int argsCount)
-		{
-			Debug.Assert(argsCount >= 0);
-
-			FunctionItem best = null;
-			int fixCount = -1;
-
-			foreach (var func in this.funcList)
-			{
-				if (func.HasParamArray)
-				{
-					if (func.ArgsCount <= argsCount
-					 && func.ArgsCount  >  fixCount)
-					{
-						best = func;
-						fixCount = func.ArgsCount;
-					}
-				}
-				else if (func.ArgsCount == argsCount)
-				{
-					return func;
-				}
-			}
-
-			return best;
-		}
-
-		#endregion
-	}
+    #endregion
+  }
 }

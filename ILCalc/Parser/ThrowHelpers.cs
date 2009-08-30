@@ -5,201 +5,193 @@ using System.Text;
 
 namespace ILCalc
 {
-	internal sealed partial class Parser
-	{
-		private Exception IncorrectConstr(Item prev, Item next, int i)
-		{
-			int len = i - this.prePos;
-			var buf = new StringBuilder(Resource.errIncorrectConstr);
+  sealed partial class Parser<T>
+  {
+    Exception IncorrectConstr(Item prev, Item next, int i)
+    {
+      int len = i - this.prePos;
+      var buf = new StringBuilder(Resource.errIncorrectConstr);
 
-			Debug.Assert(len >= 0);
+      Debug.Assert(len >= 0);
 
-			buf.Append(" (");
-			buf.Append(prev);
-			buf.Append(")(");
-			buf.Append(next);
-			buf.Append("): \"");
-			buf.Append(this.expr, this.prePos, len);
-			buf.Append("\".");
+      buf.Append(" (");
+      buf.Append(prev);
+      buf.Append(")(");
+      buf.Append(next);
+      buf.Append("): \"");
+      buf.Append(this.expr, this.prePos, len);
+      buf.Append("\".");
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, this.prePos, len);
-		}
+      return new SyntaxException(
+        buf.ToString(), this.expr, this.prePos, len);
+    }
 
-		private Exception BraceDisbalance(int pos, bool mode)
-		{
-			string message = mode ?
-				Resource.errDisbalanceOpen :
-				Resource.errDisbalanceClose;
+    Exception BraceDisbalance(int pos, bool mode)
+    {
+      string message = mode ?
+        Resource.errDisbalanceOpen :
+        Resource.errDisbalanceClose;
 
-			return new SyntaxException(message, this.expr, pos, 1);
-		}
+      return new SyntaxException(message, this.expr, pos, 1);
+    }
 
-		private Exception IncorrectIden(int i)
-		{
-			for (i++; i < this.xlen; i++)
-			{
-				char c = this.expr[i];
-				if (!char.IsLetterOrDigit(c) && c != '_')
-				{
-					break;
-				}
-			}
+    Exception IncorrectIden(int i)
+    {
+      for (i++; i < this.xlen; i++)
+      {
+        char c = this.expr[i];
+        if (!char.IsLetterOrDigit(c) && c != '_') break;
+      }
 
-			return IncorrectConstr(Item.Identifier, Item.Identifier, i);
-		}
+      return IncorrectConstr(
+        Item.Identifier, Item.Identifier, i);
+    }
 
-		private Exception NumberFormatException(string message, string text, Exception inner)
-		{
-			var buf = new StringBuilder(message);
+    //TODO: unused?
+    Exception NumberFormatException(
+      string message, string text, Exception inner)
+    {
+      var buf = new StringBuilder(message);
 
-			buf.Append(" \"");
-			buf.Append(text);
-			buf.Append("\".");
+      buf.Append(" \"");
+      buf.Append(text);
+      buf.Append("\".");
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, this.curPos, text.Length, inner);
-		}
+      return new SyntaxException(
+        buf.ToString(), this.expr, this.curPos, text.Length, inner);
+    }
 
-		private Exception NoOpenBrace(int pos, int len)
-		{
-			var buf = new StringBuilder(
-				Resource.errFunctionNoBrace);
+    Exception NoOpenBrace(int pos, int len)
+    {
+      var buf = new StringBuilder(Resource.errFunctionNoBrace);
 
-			buf.Append(" \"");
-			buf.Append(this.expr, pos, len);
-			buf.Append("\".");
+      buf.Append(" \"");
+      buf.Append(this.expr, pos, len);
+      buf.Append("\".");
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, pos, len);
-		}
+      return new SyntaxException(
+        buf.ToString(), this.expr, pos, len);
+    }
 
-		private Exception InvalidSeparator()
-		{
-			return new SyntaxException(
-				Resource.errInvalidSeparator, this.expr, this.curPos, 1);
-		}
+    Exception InvalidSeparator()
+    {
+      return new SyntaxException(
+        Resource.errInvalidSeparator, this.expr, this.curPos, 1);
+    }
 
-		private Exception UnresolvedIdentifier(int shift)
-		{
-			int end = this.curPos;
-			for (end += shift; end < this.xlen; end++)
-			{
-				char c = this.expr[end];
-				if (!Char.IsLetterOrDigit(c) && c != '_') break;
-			}
+    Exception UnresolvedIdentifier(int shift)
+    {
+      int end = this.curPos;
+      for (end += shift; end < this.xlen; end++)
+      {
+        char c = this.expr[end];
+        if (!Char.IsLetterOrDigit(c) && c != '_') break;
+      }
 
-			var buf = new StringBuilder(Resource.errUnresolvedIdentifier);
-			int len = end - this.curPos;
-				
-			buf.Append(" \"");
-			buf.Append(this.expr, this.curPos, len);
-			buf.Append("\".");
+      var buf = new StringBuilder(Resource.errUnresolvedIdentifier);
+      int len = end - this.curPos;
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, this.curPos, len);
-		}
+      buf.Append(" \"");
+      buf.Append(this.expr, this.curPos, len);
+      buf.Append("\".");
 
-		private Exception UnresolvedSymbol(int i)
-		{
-			var buf = new StringBuilder(Resource.errUnresolvedSymbol);
+      return new SyntaxException(
+        buf.ToString(), this.expr, this.curPos, len);
+    }
 
-			buf.Append(" '");
-			buf.Append(this.expr[i]);
-			buf.Append("'.");
+    Exception UnresolvedSymbol(int i)
+    {
+      var buf = new StringBuilder(Resource.errUnresolvedSymbol);
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, i, 1);
-		}
+      buf.Append(" '");
+      buf.Append(this.expr[i]);
+      buf.Append("'.");
 
-		private Exception WrongArgsCount(
-			int pos, int len, int args, FunctionGroup group)
-		{
-			var buf = new StringBuilder(Resource.sFunction);
+      return new SyntaxException(
+        buf.ToString(), this.expr, i, 1);
+    }
 
-			buf.Append(" \"");
-			buf.Append(this.expr, pos, len);
-			buf.Append("\" ");
-			buf.AppendFormat(Resource.errWrongOverload, args);
+    Exception WrongArgsCount(
+      int pos, int len, int args, FunctionGroup<T> group)
+    {
+      var buf = new StringBuilder(Resource.sFunction);
 
-			// NOTE: improve this?
-			// NOTE: may be empty FunctionGroup! Show actual message
-			// NOTE: FunctionGroup => IEnumerable<FunctionItem>
-			if (group != null)
-			{
-				buf.Append(' ');
-				buf.AppendFormat(
-					Resource.errExistOverload,
-					group.MakeMethodsArgsList());
-			}
+      buf.Append(" \"");
+      buf.Append(this.expr, pos, len);
+      buf.Append("\" ");
+      buf.AppendFormat(Resource.errWrongOverload, args);
 
-			return new SyntaxException(
-				buf.ToString(), this.expr, pos, len);
-		}
+      // NOTE: improve this?
+      // NOTE: may be empty FunctionGroup! Show actual message
+      // NOTE: FunctionGroup => IEnumerable<FunctionItem>
+      if (group != null)
+      {
+        buf.Append(' ');
+        buf.AppendFormat(
+          Resource.errExistOverload,
+          group.MakeMethodsArgsList());
+      }
 
-		private Exception AmbiguousMatchException(int pos, List<Capture> matches)
-		{
-			Debug.Assert(matches != null);
-			Debug.Assert(matches.Count > 0);
+      return new SyntaxException(
+        buf.ToString(), this.expr, pos, len);
+    }
 
-			var names = new List<string>(matches.Count);
+    Exception AmbiguousMatchException(int pos, List<Capture> matches)
+    {
+      Debug.Assert(matches != null);
+      Debug.Assert(matches.Count > 0);
 
-			foreach (Capture match in matches)
-			{
-				IdenType idenType = IdenType.Argument;
-				foreach (var list in Context.Literals)
-				{
-					if (idenType == match.Type)
-					{
-						int i = 0, id = match.Index;
-						foreach (string name in list)
-						{
-							if (i++ == id)
-							{
-								names.Add(name);
-								break;
-							}
-						}
-					}
+      var names = new List<string>(matches.Count);
 
-					idenType++;
-				}
-			}
+      foreach (Capture match in matches)
+      {
+        IdenType idenType = IdenType.Argument;
+        foreach (var list in Context.Literals)
+        {
+          if (idenType == match.Type)
+          {
+            int i = 0, id = match.Index;
+            foreach (string name in list)
+            {
+              if (i++ == id) { names.Add(name); break; }
+            }
+          }
 
-			Debug.Assert(matches.Count == names.Count);
+          idenType++;
+        }
+      }
 
-			var buf = new StringBuilder(Resource.errAmbiguousMatch);
-			for (int i = 0; i < matches.Count; i++)
-			{
-				string type = string.Empty;
+      Debug.Assert(matches.Count == names.Count);
 
-				switch (matches[i].Type)
-				{
-					case IdenType.Argument: type = Resource.sArgument; break;
-					case IdenType.Constant: type = Resource.sConstant; break;
-					case IdenType.Function: type = Resource.sFunction; break;
-				}
+      var buf = new StringBuilder(Resource.errAmbiguousMatch);
+      for (int i = 0; i < matches.Count; i++)
+      {
+        string type = string.Empty;
 
-				buf.Append(' ');
-				buf.Append(type.ToLowerInvariant());
-				buf.Append(" \"");
-				buf.Append(names[i]);
-				buf.Append('\"');
+        switch (matches[i].Type)
+        {
+          case IdenType.Argument: type = Resource.sArgument; break;
+          case IdenType.Constant: type = Resource.sConstant; break;
+          case IdenType.Function: type = Resource.sFunction; break;
+        }
 
-				if (i + 1 == matches.Count)
-				{
-					buf.Append(' ');
-					buf.Append(Resource.sAnd);
-				}
-				else
-				{
-					buf.Append(i == matches.Count ? '.' : ',');
-				}
-			}
+        buf.Append(' ');
+        buf.Append(type.ToLowerInvariant());
+        buf.Append(" \"");
+        buf.Append(names[i]);
+        buf.Append('\"');
 
-			int len = names[0].Length;
-			return new SyntaxException(
-				buf.ToString(), this.expr, pos, len);
-		}
-	}
+        if (i + 1 == matches.Count)
+        {
+          buf.Append(' ');
+          buf.Append(Resource.sAnd);
+        }
+        else buf.Append(i == matches.Count ? '.' : ',');
+      }
+
+      int len = names[0].Length;
+      return new SyntaxException(
+        buf.ToString(), this.expr, pos, len);
+    }
+  }
 }

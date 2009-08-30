@@ -3,209 +3,221 @@ using System.Collections.Generic;
 
 namespace ILCalc
 {
-	internal sealed partial class Parser
-	{
-		#region Fields
+  sealed partial class Parser<T>
+  {
+    #region Fields
 
-		private int exprDepth;
-		private int curPos;
-		private int prePos;
+    int exprDepth;
+    int curPos;
+    int prePos;
+    T value;
 
-		#endregion
+    #endregion
 
-		private int Parse(ref int i, bool func)
-		{
-			Item prev = Item.Begin;
-			int separators = 0;
-			var operators = new Stack<int>();
+    int Parse(ref int i, bool func)
+    {
+      Item prev = Item.Begin;
+      int separators = 0;
+      var operators = new Stack<int>();
 
-			while (i < this.xlen)
-			{
-				char c = this.expr[i];
+      while (i < this.xlen)
+      {
+        char c = this.expr[i];
 
-				// NOTE: maybe put in last else?
-				if (Char.IsWhiteSpace(c))
-				{
-					i++;
-					continue;
-				}
+        // NOTE: maybe put in last else?
+        if (Char.IsWhiteSpace(c))
+        {
+          i++;
+          continue;
+        }
 
-				this.curPos = i++;
+        //this.curPos = i++;
+        this.curPos = i;
+        int val;
 
-				// ============================================= NUMBER ==
-				if ((c <= '9' && '0' <= c) || c == dotSymbol)
-				{
-					// [ )123 ], [ 123 456 ] or [ pi123 ]
-					if (prev >= Item.Number)
-					{
-						ScanNumber(c, ref i);
-						throw IncorrectConstr(prev, Item.Number, i);
-					}
+        // ============================================= NUMBER ==
+        if ((val = Literal.TryParse(i, this)) != -1)
+        {
+          i += val;
 
-					Output.PutNumber(ScanNumber(c, ref i));
-					prev = Item.Number;
-				}
+          // [ )123 ], [ 123 456 ] or [ pi123 ]
+          if (prev >= Item.Number)
+          {
+            //ScanNumber(c, ref i);
+            throw IncorrectConstr(prev, Item.Number, i);
+          }
 
-				// =========================================== OPERATOR ==
-				else
-				{
-					int oper;
-					if ((oper = Operators.IndexOf(c)) != -1)
-					{
-						// BINARY ============
-						// [ )+ ], [ 123+ ] or [ pi+ ]
-						if (prev >= Item.Number)
-						{
-							Flush(operators, Priority[oper]);
-							operators.Push(oper);
-						}
+          Output.PutConstant(value);
+          prev = Item.Number;
+        }
 
-						// UNARY [-] =========
-						else if (oper == Code.Sub)
-						{
-							// prev == [+-], [,] or [(]
-							operators.Push(Code.Neg);
-						}
-					
-						// UNARY [+] =========
-						else
-						{
-							throw IncorrectConstr(prev, Item.Operator, i);
-						}
+        // =========================================== OPERATOR ==
+        else if ((val = Operators.IndexOf(c)) != -1)
+        {
+          // BINARY ============
+          // [ )+ ], [ 123+ ] or [ pi+ ]
+          if (prev >= Item.Number)
+          {
+            Flush(operators, Priority[val]);
+            operators.Push(val);
+          }
 
-						prev = Item.Operator;
-					}
+          // UNARY [-] =========
+          else if (val == Code.Sub)
+          {
+            // prev == [+-], [,] or [(]
+            operators.Push(Code.Neg);
+          }
 
-					// ========================================== SEPARATOR ==
-					else if (c == this.sepSymbol)
-					{
-						if (!func)
-						{
-							throw InvalidSeparator();
-						}
+          // UNARY [+] =========
+          else
+          {
+            //throw IncorrectConstr(prev, Item.Operator, i);
+            throw IncorrectConstr(prev, Item.Operator, i+1);
+          }
 
-						// [ (, ], [ +, ] or [ ,, ]
-						if (prev <= Item.Begin)
-						{
-							throw IncorrectConstr(prev, Item.Separator, i);
-						}
+          i++; // <===
+          prev = Item.Operator;
+        }
 
-						Flush(operators);
-						Output.PutSeparator();
-						separators++;
+        // ========================================== SEPARATOR ==
+        else if (c == this.sepSymbol)
+        {
+          if (!func)
+          {
+            throw InvalidSeparator();
+          }
 
-						prev = Item.Separator;
-					}
+          // [ (, ], [ +, ] or [ ,, ]
+          if (prev <= Item.Begin)
+          {
+            throw IncorrectConstr(prev, Item.Separator, i+1);
+            //throw IncorrectConstr(prev, Item.Separator, i);
+          }
 
-					// ========================================= BRACE OPEN ==
-					else if (c == '(')
-					{
-						// [ )( ], [ 123( ] or [ pi( ]
-						if (prev >= Item.Number)
-						{
-							if (!Context.ImplicitMul)
-							{
-								throw IncorrectConstr(prev, Item.Begin, i);
-							}
-						
-							Flush(operators, 1);
-							operators.Push(Code.Mul); // Insert [*]
-						}
+          Flush(operators);
+          Output.PutSeparator();
+          separators++;
 
-						ParseNested(ref i, false);
-						prev = Item.End;
-					}
+          i++; // <====
+          prev = Item.Separator;
+        }
 
-					// ======================================== BRACE CLOSE ==
-					else if (c == ')')
-					{
-						// [ +) ], [ ,) ] or [ () ]
-						if (prev <= Item.Separator || (!func
-						 && prev == Item.Begin))
-						{
-							throw IncorrectConstr(prev, Item.End, i);
-						}
+        // ========================================= BRACE OPEN ==
+        else if (c == '(')
+        {
+          // [ )( ], [ 123( ] or [ pi( ]
+          if (prev >= Item.Number)
+          {
+            if (!Context.ImplicitMul)
+            {
+              throw IncorrectConstr(prev, Item.Begin, i+1);
+              //throw IncorrectConstr(prev, Item.Begin, i);
+            }
 
-						Flush(operators);
-						if (this.exprDepth == 0)
-						{
-							throw BraceDisbalance(this.curPos, true);
-						}
+            Flush(operators, 1);
+            operators.Push(Code.Mul); // Insert [*]
+          }
 
-						if (prev != Item.Begin)
-						{
-							separators++;
-						}
+          i++; // <======
+          ParseNested(ref i, false);
+          prev = Item.End;
+        }
 
-						return separators;
-					}
+        // ======================================== BRACE CLOSE ==
+        else if (c == ')')
+        {
+          // [ +) ], [ ,) ] or [ () ]
+          if (prev <= Item.Separator ||
+            (!func && prev == Item.Begin))
+          {
+            throw IncorrectConstr(prev, Item.End, i+1);
+            //throw IncorrectConstr(prev, Item.End, i);
+          }
 
-					// ========================================= IDENTIFIER ==
-					else if (Char.IsLetterOrDigit(c) || c == '_')
-					{
-						if (prev >= Item.Number)
-						{
-							// [ pi sin ]
-							if (prev == Item.Identifier)
-							{
-								throw IncorrectIden(i);
-							}
+          Flush(operators);
+          if (this.exprDepth == 0)
+          {
+            throw BraceDisbalance(this.curPos, true);
+          }
 
-							if (!Context.ImplicitMul)
-							{
-								throw IncorrectConstr(prev, Item.Identifier, i);
-							}
+          if (prev != Item.Begin)
+          {
+            separators++;
+          }
 
-							// [ )pi ] or [ 123pi ]
-							Flush(operators, 1);
-							operators.Push(Code.Mul); // Insert [*]
-						}
+          i++; // <=====
+          return separators;
+        }
 
-						prev = ScanIdenifier(ref i);
-					}
+        // ========================================= IDENTIFIER ==
+        else if (Char.IsLetterOrDigit(c) || c == '_')
+        {
+          if (prev >= Item.Number)
+          {
+            // [ pi sin ]
+            if (prev == Item.Identifier)
+            {
+              //TODO: test if "sin z" (1 char unresolved!)
+              throw IncorrectIden(i);
+            }
 
-					// ========================================= UNRESOLVED ==
-					else
-					{
-						throw UnresolvedSymbol(this.curPos);
-					}
-				}
+            if (!Context.ImplicitMul)
+            {
+              //throw IncorrectConstr(prev, Item.Identifier, i);
+              throw IncorrectConstr(prev, Item.Identifier, i+1);
+            }
 
-				this.prePos = this.curPos;
-			}
+            // [ )pi ] or [ 123pi ]
+            Flush(operators, 1);
+            operators.Push(Code.Mul); // Insert [*]
+          }
 
-			// ====================================== END OF EXPRESSION ==
-			// [ +) ], [ ,) ] or [ () ]
-			if (prev <= Item.Begin)
-			{
-				throw IncorrectConstr(prev, Item.End, i);
-			}
+          prev = ScanIdenifier(ref i);
+        }
 
-			Flush(operators);
-			Output.PutExprEnd();
+        // ========================================= UNRESOLVED ==
+        else
+        {
+          throw UnresolvedSymbol(this.curPos);
+        }
 
-			return -1;
-		}
+        this.prePos = this.curPos;
+      }
 
-		#region Stack Operations
+      // ====================================== END OF EXPRESSION ==
+      // [ +) ], [ ,) ] or [ () ]
+      if (prev <= Item.Begin)
+      {
+        //throw IncorrectConstr(prev, Item.End, i);
+        throw IncorrectConstr(prev, Item.End, i+1);
+      }
 
-		private void Flush(Stack<int> stack)
-		{
-			while (stack.Count > 0)
-			{
-				Output.PutOperator(stack.Pop());
-			}
-		}
+      Flush(operators);
+      Output.PutExprEnd();
 
-		private void Flush(Stack<int> stack, int priority)
-		{
-			while (stack.Count > 0 &&
-			       priority <= Priority[stack.Peek()])
-			{
-				Output.PutOperator(stack.Pop());
-			}
-		}
+      return -1;
+    }
 
-		#endregion
-	}
+    #region Stack Operations
+
+    void Flush(Stack<int> stack)
+    {
+      while (stack.Count > 0)
+      {
+        Output.PutOperator(stack.Pop());
+      }
+    }
+
+    void Flush(Stack<int> stack, int priority)
+    {
+      while (stack.Count > 0 &&
+        priority <= Priority[stack.Peek()])
+      {
+        Output.PutOperator(stack.Pop());
+      }
+    }
+
+    #endregion
+  }
 }

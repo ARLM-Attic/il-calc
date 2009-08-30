@@ -53,6 +53,22 @@
     <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Deploy|AnyCPU' ">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\Releases\Deploy\Demo Application\</OutputPath>
+    <Optimize>true</Optimize>
+    <WarningLevel>1</WarningLevel>
+    <NoWarn>41999,42016</NoWarn>
+    <DebugType>None</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <WarningsAsErrors>42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.vb</CodeAnalysisModuleSuppressionsFile>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <DocumentationFile>
+    </DocumentationFile>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ciloci.Flee, Version=0.9.26.0, Culture=neutral, PublicKeyToken=c8526a021ef298ed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -133,4 +149,12 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PostBuildEvent>del *.xml
+del *.pdb
+del ru /q
+del pl /q
+rmdir ru
+rmdir pl</PostBuildEvent>
+  </PropertyGroup>
 </Project>

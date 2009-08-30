@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -7,168 +8,169 @@ using ILCalc;
 
 namespace SilverCalc
 {
-	public partial class Page
-	{
-		#region Fields
+  public partial class Page
+  {
+    #region Fields
 
-		private readonly List<string> exprList = new List<string>();
-		private readonly CalcContext calc;
-		private int listPos = -1;
+    readonly List<string> exprList = new List<string>();
+    readonly CalcContext<double> calc;
+    int listPos = -1;
 
-		#endregion
-		#region Constructor
+    #endregion
 
-		public Page()
-		{
-			InitializeComponent();
+    #region Constructor
 
-			HideInfo.Completed += delegate { infoPanel.Visibility = Visibility.Collapsed; };
-			HideError.Completed += delegate { errorPanel.Visibility = Visibility.Collapsed; };
+    public Page()
+    {
+      InitializeComponent();
 
-			this.calc = new CalcContext();
-			this.calc.Culture = CultureInfo.CurrentCulture;
-			this.calc.Functions.ImportBuiltIn();
-			this.calc.Constants.ImportBuiltIn();
-		}
+      HideInfo.Completed += delegate { infoPanel.Visibility = Visibility.Collapsed; };
+      HideError.Completed += delegate { errorPanel.Visibility = Visibility.Collapsed; };
 
-		#endregion
-		#region Event Handlers
+      this.calc = new CalcContext<double>();
+      this.calc.Culture = CultureInfo.CurrentCulture;
+      this.calc.Functions.ImportBuiltIn();
+      this.calc.Constants.ImportBuiltIn();
 
-		private void launchEvaluate_Click(object sender, RoutedEventArgs e)
-		{
-			if (infoPanel.Visibility == Visibility.Visible)
-			{
-				console.IsEnabled = true;
-				HideInfo.Begin();
-			}
+      System.Linq.Expressions.Expression<Func<string>> func = () => "hello!";
 
-			string expr = expressionBox.Text;
-			double res;
-			try
-			{
-				res = this.calc.Evaluate(expr);
-			}
-			catch (SyntaxException err)
-			{
-				expressionBox.Select(err.Position, err.Length);
-				errorText.Text = err.Message;
+      console.Text = func.Compile()();
+    }
 
-				if (errorPanel.Visibility == Visibility.Collapsed)
-				{
-					errorPanel.Visibility = Visibility.Visible;
-					ShowError.Begin();
-				}
+    #endregion
 
-				return;
-			}
+    #region Event Handlers
 
-			if (errorPanel.Visibility == Visibility.Visible)
-			{
-				HideError.Begin();
-			}
+    void launchEvaluate_Click(object sender, RoutedEventArgs e)
+    {
+      if (infoPanel.Visibility == Visibility.Visible)
+      {
+        console.IsEnabled = true;
+        HideInfo.Begin();
+      }
 
-			var buf = new StringBuilder();
+      string expr = expressionBox.Text;
+      double res;
+      try
+      {
+        res = this.calc.Evaluate(expr);
+      }
+      catch (SyntaxException err)
+      {
+        expressionBox.Select(err.Position, err.Length);
+        errorText.Text = err.Message;
 
-			buf.Append(expressionBox.Text);
-			buf.Append(" = ");
-			buf.Append(res);
-			buf.AppendLine();
+        if (errorPanel.Visibility == Visibility.Collapsed)
+        {
+          errorPanel.Visibility = Visibility.Visible;
+          ShowError.Begin();
+        }
 
-			console.Text += buf.ToString();
-			console.Select(console.Text.Length - 1, 0);
+        return;
+      }
 
-			expressionBox.Text = string.Empty;
-			expressionBox.Focus();
+      if (errorPanel.Visibility == Visibility.Visible)
+      {
+        HideError.Begin();
+      }
 
-			this.exprList.Add(expr);
-			this.listPos = this.exprList.Count;
-		}
+      var buf = new StringBuilder();
 
-		private void expressionBox_KeyDown( object sender, KeyEventArgs e )
-		{
-			if (e.Key == Key.Enter)
-			{
-				this.launchEvaluate_Click(null, null);
-			}
-			else if (this.exprList.Count != 0)
-			{
-				if (e.Key == Key.Up)
-				{
-					if (--this.listPos < 0)
-					{
-						this.listPos = this.exprList.Count - 1;
-					}
+      buf.Append(expressionBox.Text);
+      buf.Append(" = ");
+      buf.Append(res);
+      buf.AppendLine();
 
-					this.expressionBox.Text = this.exprList[this.listPos];
-				}
-				else if (e.Key == Key.Down)
-				{
-					if (++this.listPos >= this.exprList.Count)
-					{
-						this.listPos = 0;
-					}
+      console.Text += buf.ToString();
+      console.Select(console.Text.Length - 1, 0);
 
-					this.expressionBox.Text = this.exprList[this.listPos];
-				}
-			}
-		}
+      expressionBox.Text = string.Empty;
+      expressionBox.Focus();
 
-		private void consoleClear_Click(object sender, RoutedEventArgs e)
-		{
-			if (infoPanel.Visibility == Visibility.Visible)
-			{
-				console.IsEnabled = true;
-				HideInfo.Begin();
-			}
+      this.exprList.Add(expr);
+      this.listPos = this.exprList.Count;
+    }
 
-			console.Text = string.Empty;
-			this.exprList.Clear();
-			expressionBox.Focus();
-		}
+    void expressionBox_KeyDown(object sender, KeyEventArgs e)
+    {
+      if (e.Key == Key.Enter)
+      {
+        this.launchEvaluate_Click(null, null);
+      }
+      else if (this.exprList.Count != 0)
+      {
+        if (e.Key == Key.Up)
+        {
+          if (--this.listPos < 0)
+          {
+            this.listPos = this.exprList.Count - 1;
+          }
 
-		private void listFunctions_Click( object sender, RoutedEventArgs e )
-		{
-			this.ListMembers("Available functions:", this.calc.Functions.Names);
-		}
+          this.expressionBox.Text = this.exprList[this.listPos];
+        }
+        else if (e.Key == Key.Down)
+        {
+          if (++this.listPos >= this.exprList.Count)
+          {
+            this.listPos = 0;
+          }
 
-		private void listConstants_Click(object sender, RoutedEventArgs e)
-		{
-			this.ListMembers("Available constants:", this.calc.Constants.Keys);
-		}
+          this.expressionBox.Text = this.exprList[this.listPos];
+        }
+      }
+    }
 
-		#endregion
-		#region Methods
+    void consoleClear_Click(object sender, RoutedEventArgs e)
+    {
+      if (infoPanel.Visibility == Visibility.Visible)
+      {
+        console.IsEnabled = true;
+        HideInfo.Begin();
+      }
 
-		private void ListMembers(string str, IEnumerable<string> names)
-		{
-			var buf = new StringBuilder();
-			buf.AppendLine(str);
+      console.Text = string.Empty;
+      this.exprList.Clear();
+      expressionBox.Focus();
+    }
 
-			bool comma = false;
-			foreach (string name in names)
-			{
-				if (comma)
-				{
-					buf.Append(", ");
-				}
-				else
-				{
-					comma = true;
-				}
+    void listFunctions_Click(object sender, RoutedEventArgs e) { this.ListMembers("Available functions:", this.calc.Functions.Names); }
 
-				buf.Append(name);
-			}
+    void listConstants_Click(object sender, RoutedEventArgs e) { this.ListMembers("Available constants:", this.calc.Constants.Keys); }
 
-			lbInfoText.Text = buf.ToString();
+    #endregion
 
-			if (infoPanel.Visibility == Visibility.Collapsed)
-			{
-				console.IsEnabled = false;
-				ShowInfo.Begin();
-				infoPanel.Visibility = Visibility.Visible;
-			}
-		}
+    #region Methods
 
-		#endregion
-	}
+    void ListMembers(string str, IEnumerable<string> names)
+    {
+      var buf = new StringBuilder();
+      buf.AppendLine(str);
+
+      bool comma = false;
+      foreach (string name in names)
+      {
+        if (comma)
+        {
+          buf.Append(", ");
+        }
+        else
+        {
+          comma = true;
+        }
+
+        buf.Append(name);
+      }
+
+      lbInfoText.Text = buf.ToString();
+
+      if (infoPanel.Visibility == Visibility.Collapsed)
+      {
+        console.IsEnabled = false;
+        ShowInfo.Begin();
+        infoPanel.Visibility = Visibility.Visible;
+      }
+    }
+
+    #endregion
+  }
 }
