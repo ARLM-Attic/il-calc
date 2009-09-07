@@ -90,10 +90,13 @@
     <Compile Include="Collections\FunctionItem.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Common\AsyncHelper.cs" />
     <Compile Include="Common\Codes.cs" />
     <Compile Include="Common\Delegates.cs" />
+    <Compile Include="Common\IArithmetic.cs" />
     <Compile Include="Common\IEvaluator.cs" />
     <Compile Include="Common\IExpressionOutput.cs" />
+    <Compile Include="Common\ILiteralParser.cs" />
     <Compile Include="Common\TypeHelper.cs" />
     <Compile Include="Interpreter\Arithmetic.cs" />
     <Compile Include="Interpreter\Interpret\FuncCall.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="Others\ValueRange\ValueRange.cs" />
     <Compile Include="Others\ValueRange\ValueRange.Exception.cs" />
     <Compile Include="Others\ValueRange\ValueRange.Generics.cs" />
+    <Compile Include="Parser\LiteralParser.cs" />
     <Compile Include="Parser\Parser.cs">
       <SubType>Code</SubType>
     </Compile>

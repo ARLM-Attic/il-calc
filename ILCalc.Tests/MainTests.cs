@@ -1,22 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Runtime.Serialization.Formatters;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace ILCalc.Tests
 {
   [TestClass]
-  [Serializable]
   public sealed class MainTests
   {
     #region Initialize
 
-    [NonSerialized]
     readonly CalcContext<double> calc;
     readonly double x;
 
@@ -25,7 +19,7 @@ namespace ILCalc.Tests
     public MainTests()
     {
       this.calc = new CalcContext<double>("x");
-      this.x = new Random().NextDouble();
+      this.x = Rnd.NextDouble();
 
       Calc.Culture = CultureInfo.CurrentCulture;
 
@@ -73,22 +67,22 @@ namespace ILCalc.Tests
       return a + b;
     }
 
-    double Inst0()
+    public double Inst0()
     {
       return this.x;
     }
 
-    double Inst1(double arg)
+    public double Inst1(double arg)
     {
       return this.x + arg;
     }
 
-    double Inst2(double arg1, double arg2)
+    public double Inst2(double arg1, double arg2)
     {
       return this.x + arg1 / arg2;
     }
 
-    double InstP(params double[] args)
+    public double InstP(params double[] args)
     {
       if (args == null)
         throw new ArgumentNullException("args");
@@ -132,7 +126,7 @@ namespace ILCalc.Tests
       // separator:
       TestErr(";", 0, 1);
       TestErr("Max(2+;3)", 5, 2);
-      TestErr("Max(2;;3)", 5, 2);
+      TestErr("Max(2;;3)", 5, 2); //TODO: fix it
       TestErr("Max(;2)", 3, 2);
       TestGood("Max(1;3)");
       TestGood("Max(0;-1)");
@@ -176,16 +170,20 @@ namespace ILCalc.Tests
       foreach (var mode in Optimizer.Modes)
       {
         Calc.Optimization = mode;
-        foreach (string expr in gen.Generate(5000))
+        foreach (string expr in gen.Generate(500))
         {
           double eval, int1, int2;
           try
           {
             now = "Quick Interpret";
             int2 = Calc.Evaluate(expr, 1.0);
+#if !SILVERLIGHT
             now = "Evaluator";
             var evl = Calc.CreateEvaluator(expr);
             eval = evl.Evaluate(1.0);
+#else
+            eval = int2;
+#endif
             now = "Interpret";
             var itr = Calc.CreateInterpret(expr);
             int1 = itr.Evaluate(1.0);
@@ -198,13 +196,16 @@ namespace ILCalc.Tests
 
               Trace.WriteLine(name);
 
+#if !SILVERLIGHT
               if (Rnd.Next() % 2 == 0)
               {
                 Calc.Functions.Add(name, evl.Evaluate1);
               }
               else
+#endif
               {
-                Calc.Functions.Add(name, (EvalFunc1<double>) itr.Evaluate);
+                Calc.Functions.Add(name,
+                  (EvalFunc1<double>) itr.Evaluate);
               }
             }
           }
@@ -215,14 +216,15 @@ namespace ILCalc.Tests
             throw;
           }
 
-          if (double.IsNaN(eval)
-              || double.IsNaN(int1)
-              || double.IsNaN(int1))
+          if (double.IsNaN(eval) ||
+              double.IsNaN(int1) ||
+              double.IsNaN(int1))
           {
             continue;
           }
 
-          if (eval == int1 && int1 == int2)
+          if (eval == int1 &&
+              int1 == int2)
           {
             continue;
           }
@@ -273,7 +275,8 @@ namespace ILCalc.Tests
 
       Calc.Functions.AddStatic(
         "max",
-        typeof(Math).GetMethod("Max", new[] { typeof(double), typeof(double) }));
+        typeof(Math).GetMethod("Max",
+          new[] { typeof(double), typeof(double) }));
 
       Calc.Arguments[0] = "max";
       TestGood("2+max(3+3)");
@@ -301,11 +304,9 @@ namespace ILCalc.Tests
     public void OptimizerTest()
     {
       var gen = new ExprGenerator(Calc);
-
       foreach (string expr in gen.Generate(20000))
       {
-        double res1N, res1O,
-               res2N, res2O;
+        double res1N, res1O, res2N, res2O;
 
         try
         {
@@ -325,17 +326,11 @@ namespace ILCalc.Tests
           throw;
         }
 
-        if (res1N == res1O
-            && res2N == res2O)
-        {
-          continue;
-        }
+        if (res1N == res1O &&
+            res2N == res2O) continue;
 
-        if (double.IsNaN(res1N)
-            || double.IsNaN(res2N))
-        {
-          continue;
-        }
+        if (double.IsNaN(res1N) ||
+            double.IsNaN(res2N)) continue;
 
         Trace.WriteLine(expr);
         Trace.Indent();
@@ -347,95 +342,7 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region SerializationTests
-
-    [TestMethod]
-    public void InterpretSerializeTest()
-    {
-      const int Count = 10000;
-
-      var gen = new ExprGenerator(Calc);
-      var list1 = new List<double>();
-      var list2 = new List<double>();
-      var binFormatter = new BinaryFormatter
-      {
-        AssemblyFormat = FormatterAssemblyStyle.Simple,
-        FilterLevel = TypeFilterLevel.Low
-      };
-
-      using (var tempMem = new MemoryStream())
-      {
-        foreach (string expr in gen.Generate(Count))
-        {
-          var a = Calc.CreateInterpret(expr);
-
-          binFormatter.Serialize(tempMem, a);
-          list1.Add(a.Evaluate(1.23));
-        }
-
-        tempMem.Position = 0;
-        for (int i = 0; i < Count; i++)
-        {
-          var b = (Interpret<double>)
-            binFormatter.Deserialize(tempMem);
-
-          list2.Add(b.Evaluate(1.23));
-        }
-      }
-
-      CollectionAssert.AreEqual(list1, list2);
-    }
-
-    [TestMethod]
-    public void ContextSerializeTest()
-    {
-      var binFormatter = new BinaryFormatter
-      {
-        AssemblyFormat = FormatterAssemblyStyle.Simple,
-        FilterLevel = TypeFilterLevel.Low
-      };
-
-      using (var tempMem = new MemoryStream())
-      {
-        var range1 = new ValueRange<double>(1, 200, 1.50);
-        var exception1 = new SyntaxException("hehe");
-        var exception2 = new InvalidRangeException("wtf?");
-
-        binFormatter.Serialize(tempMem, Calc);
-        binFormatter.Serialize(tempMem, range1);
-        binFormatter.Serialize(tempMem, exception1);
-        binFormatter.Serialize(tempMem, exception2);
-
-        tempMem.Position = 0;
-
-        var other = (CalcContext<double>) binFormatter.Deserialize(tempMem);
-
-        Assert.AreEqual(Calc.Arguments.Count, other.Arguments.Count);
-        Assert.AreEqual(Calc.Constants.Count, other.Constants.Count);
-        Assert.AreEqual(Calc.Functions.Count, other.Functions.Count);
-        Assert.AreEqual(Calc.OverflowCheck, other.OverflowCheck);
-        Assert.AreEqual(Calc.Optimization, other.Optimization);
-        Assert.AreEqual(Calc.IgnoreCase, other.IgnoreCase);
-        Assert.AreEqual(Calc.Culture, other.Culture);
-
-        var range2 = (ValueRange<double>)
-          binFormatter.Deserialize(tempMem);
-
-        Assert.AreEqual(range1, range2);
-
-        var exception1D = (SyntaxException)
-          binFormatter.Deserialize(tempMem);
-
-        var exception2D = (InvalidRangeException)
-          binFormatter.Deserialize(tempMem);
-
-        Assert.AreEqual(exception1.Message, exception1D.Message);
-        Assert.AreEqual(exception2.Message, exception2D.Message);
-      }
-    }
-
-    #endregion
-    #region Import Test
+    #region ImportTest
 
     [TestMethod]
     public void ImportTest()
@@ -453,9 +360,13 @@ namespace ILCalc.Tests
       c.Constants.Import(typeof(ClassForImport));
       Assert.AreEqual(c.Constants.Count, 1);
 
+#if !SILVERLIGHT
+
       c.Constants.Clear();
       c.Constants.Import(typeof(ClassForImport), true);
       Assert.AreEqual(c.Constants.Count, 4);
+
+#endif
 
       c.Constants.Clear();
       c.Constants.Import(
@@ -463,23 +374,38 @@ namespace ILCalc.Tests
       Assert.AreEqual(c.Constants.Count, 9);
 
       c.Functions.ImportBuiltIn();
+#if SILVERLIGHT || CF
+      Assert.AreEqual(c.Functions.Count, 21);
+#else
       Assert.AreEqual(c.Functions.Count, 22);
+#endif
 
       c.Functions.Clear();
       c.Functions.Import(typeof(Math));
+#if CF
+      Assert.AreEqual(c.Functions.Count, 21);
+#elif SILVERLIGHT
+      Assert.AreEqual(c.Functions.Count, 22);
+#else
       Assert.AreEqual(c.Functions.Count, 23);
+#endif
 
       c.Functions.Clear();
       c.Functions.Import(typeof(ClassForImport));
       Assert.AreEqual(c.Functions.Count, 6);
 
+#if !SILVERLIGHT
+
       c.Functions.Clear();
       c.Functions.Import(typeof(ClassForImport), true);
       Assert.AreEqual(c.Functions.Count, 7);
 
+      //TODO: enable for silverlight/cf
       c.Functions.Clear();
       c.Functions.Import(typeof(ClassForImport), typeof(Math));
       Assert.AreEqual(c.Functions.Count, 29);
+
+#endif
 
       // delegates
       c.Functions.Add("f1", ClassForImport.ParamsMethod1);
@@ -527,7 +453,7 @@ namespace ILCalc.Tests
 
     // ReSharper disable UnusedMember.Local
     // ReSharper disable UnusedParameter.Local
-    class ClassForImport
+    public class ClassForImport
     {
 #pragma warning disable 169
 

@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SERIALIZE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERIALIZE ASYNC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -49,10 +49,6 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DynamicVisualizer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=9a0c861caf1989b5, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>DynVisualizer\DynamicVisualizer.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -62,6 +58,8 @@
     <Compile Include="CalcContext.Serialization.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
+    <Compile Include="Common\ICompiler.cs" />
+    <Compile Include="Common\IArithmetic.cs" />
     <Compile Include="Compiler\CalcContext.Methods.cs" />
     <Compile Include="Collections\FunctionItem.cs" />
     <Compile Include="Collections\FunctionCollection.cs" />
@@ -86,7 +84,7 @@
     <Compile Include="Others\ValueRange\ValueRange.Generics.cs" />
     <Compile Include="Interpreter\Arithmetic.cs" />
     <Compile Include="Compiler\CompilerBase.cs" />
-    <Compile Include="Compiler\CompilerSupport.cs" />
+    <Compile Include="Compiler\Compiler.Generics.cs" />
     <Compile Include="Compiler\Evaluator\EvaluatorCompiler.cs" />
     <Compile Include="Compiler\Tabulator\TabulatorCompiler.cs" />
     <Compile Include="Common\TypeHelper.cs" />
@@ -99,6 +97,8 @@
     <Compile Include="Others\Optimizer\OptimizeOutput.cs" />
     <Compile Include="Others\Specials\BufferOutput.cs" />
     <Compile Include="Others\Specials\NullOutput.cs" />
+    <Compile Include="Common\ILiteralParser.cs" />
+    <Compile Include="Parser\LiteralParser.cs" />
     <Compile Include="Parser\Parser.cs" />
     <Compile Include="Parser\ParserMain.cs" />
     <Compile Include="Parser\ScanIdentifier.cs" />
@@ -132,8 +132,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>del DynamicVisualizer.dll
-cd $(SolutionDir)Documentation\Output
+    <PostBuildEvent>cd $(SolutionDir)Documentation\Output
 copy /Y ILCalc.xml "$(TargetDir)"
 copy /Y ILCalc.chm "$(TargetDir)..\Documentation.chm"</PostBuildEvent>
   </PropertyGroup>

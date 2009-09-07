@@ -15,13 +15,12 @@ namespace ILCalc.Tests
     readonly CultureInfo culture;
     readonly NumberFormatInfo format;
     readonly List<string> idens;
-    readonly List<
-      KeyValuePair<string, FunctionItem<double>>> funcs;
+    readonly List<KeyValuePair<string,
+      FunctionItem<double>>> funcs;
 
     readonly char separator;
 
     #endregion
-
     #region Constructor
 
     public ExprGenerator(CalcContext<double> calc)
@@ -227,9 +226,11 @@ namespace ILCalc.Tests
       {
         switch (Random.Next() % 3)
         {
-          case 0: return text.ToLowerInvariant();
-          case 1: return text.ToUpperInvariant();
+          case 0: return text.ToLower();
+          case 1: return text.ToUpper();
+#if !SILVERLIGHT
           case 2: return culture.TextInfo.ToTitleCase(text);
+#endif
           default: return text;
         }
       }
@@ -243,8 +244,8 @@ namespace ILCalc.Tests
 
         string part = text.Substring(i, ln);
         buf.Append(flag ?
-          part.ToUpperInvariant() :
-          part.ToLowerInvariant());
+          part.ToUpper() :
+          part.ToLower());
 
         i += ln;
       }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using ILCalc.Custom;
 
 namespace ILCalc
 {
@@ -21,8 +22,8 @@ namespace ILCalc
 
     NumberFormatInfo numFormat;
 
-    static readonly INewLiteralParser<T>
-      Literal = Parser.Resolve<T>();
+    static readonly
+      ILiteralParser<T> Literal = LiteralParser.Resolve<T>();
 
     #endregion
     #region Methods
@@ -56,6 +57,7 @@ namespace ILCalc
       this.output = exprOutput;
       this.exprDepth = 0;
       this.prePos = 0;
+      this.value = default(T);
 
       int i = 0;
       Parse(ref i, false);

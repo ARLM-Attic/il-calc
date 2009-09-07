@@ -28,6 +28,8 @@ namespace ILCalc
     }
   }
 
+  delegate T Func<T>();
+
   // ReSharper disable UnusedParameter.Local
   // ReSharper disable UnusedParameter.Global
   [Conditional("NEVER")]

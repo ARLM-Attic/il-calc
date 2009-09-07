@@ -7,6 +7,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Changelog.txt = Changelog.txt
 		ILCalc.testrunconfig = ILCalc.testrunconfig
+		ILCalc1.vsmdi = ILCalc1.vsmdi
+		ILCalc2.vsmdi = ILCalc2.vsmdi
+		ILCalc3.vsmdi = ILCalc3.vsmdi
 		License.txt = License.txt
 		ReadMe.txt = ReadMe.txt
 		TODO List.txt = TODO List.txt
@@ -30,7 +33,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests", "ILCalc.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Bench", "Applications\ILCalc.Bench\ILCalc.Bench.csproj", "{22F2F27D-4C67-40CC-9F2C-21BA7B58B659}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workplace", "Workplace\Workplace.csproj", "{9FA46FCB-7EEC-498F-85E6-E2360C258593}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests.SL2", "ILCalc.Tests\ILCalc.Tests.SL2.csproj", "{4D2F796B-D454-40DB-A07B-D341317BAB16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{D594CDFD-CBB8-4514-A0C6-58A4C241C507}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests.CF3", "ILCalc.Tests\ILCalc.Tests.CF3.csproj", "{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -93,12 +100,17 @@ Global
 		{22F2F27D-4C67-40CC-9F2C-21BA7B58B659}.Deploy|Any CPU.Build.0 = Debug|Any CPU
 		{22F2F27D-4C67-40CC-9F2C-21BA7B58B659}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22F2F27D-4C67-40CC-9F2C-21BA7B58B659}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Deploy|Any CPU.Build.0 = Debug|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D2F796B-D454-40DB-A07B-D341317BAB16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D2F796B-D454-40DB-A07B-D341317BAB16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D2F796B-D454-40DB-A07B-D341317BAB16}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D2F796B-D454-40DB-A07B-D341317BAB16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D2F796B-D454-40DB-A07B-D341317BAB16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Deploy|Any CPU.Build.0 = Debug|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,5 +120,8 @@ Global
 		{AA30558D-9FBB-4593-AAA6-1A3A836A8B24} = {68D87EC0-48ED-48FE-93F1-3D7FBBFF5EC4}
 		{DCCFFE67-E1F2-4615-B3A3-30EC6E9E3398} = {68D87EC0-48ED-48FE-93F1-3D7FBBFF5EC4}
 		{22F2F27D-4C67-40CC-9F2C-21BA7B58B659} = {68D87EC0-48ED-48FE-93F1-3D7FBBFF5EC4}
+		{4D2F796B-D454-40DB-A07B-D341317BAB16} = {D594CDFD-CBB8-4514-A0C6-58A4C241C507}
+		{17090BAD-E714-45E8-A4B9-E2FF2F93F1D7} = {D594CDFD-CBB8-4514-A0C6-58A4C241C507}
+		{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B} = {D594CDFD-CBB8-4514-A0C6-58A4C241C507}
 	EndGlobalSection
 EndGlobal

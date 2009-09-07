@@ -1,22 +1,25 @@
-v0.9.6.9 beta ===========================================
+v0.9.7.0 beta ===========================================
 
 	* Solution: generics implemented!
-	* Generics: support for primitive types:
-		Int32, Double, Decimal
-	* Generics: integer literals support:
-		0xFFEA - hexamidal
-		065544 - octal
-		0b0010 - binary
+	* Generics: built-in support for BCL types:
+		Int32, Int64, Single, Double, Decimal
+	* Generics: extended integer literals support:
+		"0xFFEA" - hexadecimal
+		"0b0101" - binary
 	* Interpret: more performance improvements.
 	* Solution: improved dependencies between classes.
 	* Solution: all projects moved to generics.
-	* Solution: complete code reformat (much better).
+	* Solution: complete code reformat (looks better).
 	* Solution: folder structure re-done.
+	* UnitTests: became more and more generic...
+	* UnitTests: SL 2.0 and CF 3.5 versions of tests are available.
+	* Tabulator: beta support for async tabulation at CF/SL build.
+	* Docs: generic type parameters documentation.
 
 v0.9.5.1 ================================================
 
-	* Interpret: tabulation support!
-	* Interpret: async tabulation support!
+	* Interpret: tabulation support.
+	* Interpret: async tabulation support.
 	* Interpret: Allocate() method support.
 	* Interpret: less re-allocations while creation.
 	* Interpret: small fixes for instance calls.

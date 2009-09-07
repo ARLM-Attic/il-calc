@@ -10,9 +10,12 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
+[assembly: ComVisible(false)]
+[assembly: AssemblyVersion("0.9.5.1")]
+
+#if !CF
+
+[assembly: AssemblyFileVersion("0.9.5.1")]
 [assembly: AssemblyFlags(AssemblyNameFlags.EnableJITcompileOptimizer)]
 
-[assembly: ComVisible(false)]
-
-[assembly: AssemblyVersion("0.9.5.1")]
-[assembly: AssemblyFileVersion("0.9.5.1")]
+#endif

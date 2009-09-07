@@ -6,6 +6,7 @@ using System.Globalization;
 namespace ILCalc
 {
   using State = DebuggerBrowsableState;
+  using Br = DebuggerBrowsableAttribute;
 
   // TODO: away from here
   interface IListEnumerable
@@ -28,24 +29,24 @@ namespace ILCalc
     #region Fields
 
     // Imports collections
-    [DebuggerBrowsable(State.Never)] readonly ArgumentCollection arguments;
-    [DebuggerBrowsable(State.Never)] readonly ConstantDictionary<T> constants;
-    [DebuggerBrowsable(State.Never)] readonly FunctionCollection<T> functions;
+    [Br(State.Never)] readonly ArgumentCollection arguments;
+    [Br(State.Never)] readonly ConstantDictionary<T> constants;
+    [Br(State.Never)] readonly FunctionCollection<T> functions;
 
     // Context settings
-    [DebuggerBrowsable(State.Never)] CultureInfo parseCulture;
-    [DebuggerBrowsable(State.Never)] OptimizeModes optimizeMode;
-    [DebuggerBrowsable(State.Never)] bool implicitMul = true;
-    [DebuggerBrowsable(State.Never)] bool ignoreCase = true;
-    [DebuggerBrowsable(State.Never)] bool checkedMode;
+    [Br(State.Never)] CultureInfo parseCulture;
+    [Br(State.Never)] OptimizeModes optimizeMode;
+    [Br(State.Never)] bool implicitMul = true;
+    [Br(State.Never)] bool ignoreCase = true;
+    [Br(State.Never)] bool checkedMode;
 
     // Literals lookup list
-    [DebuggerBrowsable(State.Never), NonSerialized]
+    [Br(State.Never), NonSerialized]
     IListEnumerable[] literalsList;
     //TODO: move to parser?
 
     // Parser instance
-    [DebuggerBrowsable(State.Never), NonSerialized]
+    [Br(State.Never), NonSerialized]
     Parser<T> parser;
 
     #endregion

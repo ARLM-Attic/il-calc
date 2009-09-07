@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Reflection;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -22,7 +22,7 @@ namespace ILCalc.Tests
       this.v = random.NextDouble() * 10;
 
       // static methods:
-      Calc.Functions.Import(typeof(CallsTests), true);
+      Calc.Functions.Import(typeof(CallsTests));
 
       // instance methods:
       Calc.Functions.Add(Inst0);
@@ -33,7 +33,7 @@ namespace ILCalc.Tests
         typeof(CallsTests)
           .GetMethod("InsParams2",
            BindingFlags.Instance |
-           BindingFlags.NonPublic),
+           BindingFlags.Public),
         this);
     }
 
@@ -45,22 +45,22 @@ namespace ILCalc.Tests
     #endregion
     #region Import Methods
 
-    double Inst0()
+    public double Inst0()
     {
       return this.v;
     }
 
-    double Inst1(double a)
+    public double Inst1(double a)
     {
       return -a / this.v;
     }
 
-    double Inst2(double a, double b)
+    public double Inst2(double a, double b)
     {
       return -a / b + this.v;
     }
 
-    double InsParams(params double[] args)
+    public double InsParams(params double[] args)
     {
       if (args == null)
         throw new ArgumentNullException("args");
@@ -71,28 +71,28 @@ namespace ILCalc.Tests
       return res;
     }
 
-    double InsParams2(
+    public double InsParams2(
       double a, double b, params double[] args)
     {
       return a + SParams(args) / b + this.v;
     }
 
-    static double Stat0()
+    public static double Stat0()
     {
       return 0.001;
     }
 
-    static double Stat1(double x)
+    public static double Stat1(double x)
     {
       return -x;
     }
 
-    static double Stat2(double x, double y)
+    public static double Stat2(double x, double y)
     {
       return -x / y;
     }
 
-    static double SParams(params double[] args)
+    public static double SParams(params double[] args)
     {
       if (args == null)
         throw new ArgumentNullException("args");
@@ -103,7 +103,7 @@ namespace ILCalc.Tests
       return res;
     }
 
-    static double SParams2(
+    public static double SParams2(
       double x, double y, params double[] args)
     {
       return x + SParams(args) / y;
@@ -121,10 +121,11 @@ namespace ILCalc.Tests
       AssertTester tester =
         (expr, expected) => Assert.AreEqual(expected, eval(expr));
 
-      Trace.WriteLine("Static calls test...");
+      Debug.WriteLine("Static calls test...");
+      //Trace.WriteLine("Static calls test...");
       StaticTests(tester);
 
-      Trace.WriteLine("Instance calls test...");
+      Debug.WriteLine("Instance calls test...");
       InstanceTests(tester);
     }
 
@@ -204,20 +205,29 @@ namespace ILCalc.Tests
     [TestMethod]
     public void QuickInterpretCallsTest()
     {
-      DoTests(e => Calc.Evaluate(e, this.x));
+      DoTests(e => Calc
+        .Evaluate(e, this.x));
     }
 
     [TestMethod]
     public void InterpretCallsTest()
     {
-      DoTests(e => Calc.CreateInterpret(e).Evaluate(this.x));
+      DoTests(e => Calc
+        .CreateInterpret(e)
+        .Evaluate(this.x));
     }
+
+#if !SILVERLIGHT && !CF
 
     [TestMethod]
     public void EvaluatorCallsTest()
     {
-      DoTests(e => Calc.CreateEvaluator(e).Evaluate(this.x));
+      DoTests(e => Calc
+        .CreateEvaluator(e)
+        .Evaluate(this.x));
     }
+
+#endif
 
     #endregion
   }

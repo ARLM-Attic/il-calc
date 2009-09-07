@@ -486,6 +486,8 @@ namespace ILCalc
       InternalImport(type, Flags);
     }
 
+#if !SILVERLIGHT
+
     /// <summary>
     /// Imports all public static fields and
     /// constants of the specified type into this
@@ -498,6 +500,8 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// Some of the importing constants has a name
     /// that is already exist in the dictionary.</exception>
+    /// <remarks>Doesn't supported in Silverlight
+    /// because of reflection limitations.</remarks>
     public void Import(Type type, bool nonpublic)
     {
       if (type == null)
@@ -511,6 +515,8 @@ namespace ILCalc
       InternalImport(type, Flags |
         (nonpublic ? BindingFlags.NonPublic : 0));
     }
+
+#endif
 
     /// <summary>
     /// Imports all public static fields and

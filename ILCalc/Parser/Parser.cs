@@ -54,7 +54,7 @@ namespace ILCalc
         // =========================================== OPERATOR ==
         else if ((val = Operators.IndexOf(c)) != -1)
         {
-          // BINARY ============
+          // BINARY ======================
           // [ )+ ], [ 123+ ] or [ pi+ ]
           if (prev >= Item.Number)
           {
@@ -62,14 +62,14 @@ namespace ILCalc
             operators.Push(val);
           }
 
-          // UNARY [-] =========
+          // UNARY [-] ===================
           else if (val == Code.Sub)
           {
             // prev == [+-], [,] or [(]
             operators.Push(Code.Neg);
           }
 
-          // UNARY [+] =========
+          // UNARY [+] ===================
           else
           {
             //throw IncorrectConstr(prev, Item.Operator, i);
@@ -151,7 +151,7 @@ namespace ILCalc
         }
 
         // ========================================= IDENTIFIER ==
-        else if (Char.IsLetterOrDigit(c) || c == '_')
+        else if (Char.IsLetter(c) || c == '_')
         {
           if (prev >= Item.Number)
           {
@@ -190,7 +190,7 @@ namespace ILCalc
       if (prev <= Item.Begin)
       {
         //throw IncorrectConstr(prev, Item.End, i);
-        throw IncorrectConstr(prev, Item.End, i+1);
+        throw IncorrectConstr(prev, Item.End, i); //TODO: test for it!
       }
 
       Flush(operators);

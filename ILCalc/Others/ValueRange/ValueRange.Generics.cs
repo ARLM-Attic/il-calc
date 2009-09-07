@@ -1,14 +1,8 @@
 ﻿using System;
+using ILCalc.Custom;
 
 namespace ILCalc
 {
-  interface IRangeSupport<T>
-  {
-    T StepFromCount(ValueRange<T> r, int count);
-    int GetCount(ValueRange<T> r);
-    ValueRangeValidness Validate(ValueRange<T> r);
-  }
-
   /// <summary>
   /// Provides the static methods for creating
   /// <see cref="ValueRange{T}"/> instances.

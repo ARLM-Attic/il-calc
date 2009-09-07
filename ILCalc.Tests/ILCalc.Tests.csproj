@@ -45,8 +45,11 @@
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="MultiThreadTests.cs" />
     <Compile Include="Helpers\Optimizer.cs" />
+    <Compile Include="ParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TabulatorTests.cs" />
+    <Compile Include="SerializationTests.cs" />
+    <Compile Include="TabulationTests.Compile.cs" />
+    <Compile Include="TabulationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ILCalc\ILCalc.csproj">

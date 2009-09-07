@@ -107,6 +107,13 @@ namespace ILCalc
       buf.Append(this.expr[i]);
       buf.Append("'.");
 
+      if (LiteralParser.IsUnknown(Literal))
+      {
+        //TODO: write normaly
+        buf.Append(" If this is a part of literal, note that " + typeof(T) +
+                   " doesn't support literals.");
+      }
+
       return new SyntaxException(
         buf.ToString(), this.expr, i, 1);
     }

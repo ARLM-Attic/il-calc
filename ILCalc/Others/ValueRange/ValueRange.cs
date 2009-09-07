@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using ILCalc.Custom;
 
 namespace ILCalc
 {
@@ -27,8 +28,8 @@ namespace ILCalc
     readonly ValueRangeValidness valid;
 
     [DebuggerBrowsable(State.Never)]
-    static readonly IRangeSupport<T>
-      Generic = ValueRange.Resolve<T>();
+    static readonly
+      IRangeSupport<T> Generic = ValueRange.Resolve<T>();
 
     #endregion
     #region Constructors

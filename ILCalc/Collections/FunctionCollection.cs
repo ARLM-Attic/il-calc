@@ -554,6 +554,8 @@ namespace ILCalc
       InternalImport(type, Flags);
     }
 
+#if !SILVERLIGHT
+
     /// <summary>
     /// Imports all static methods of the specified type that is suitable
     /// to be added into the <see cref="FunctionCollection{T}"/>.</summary>
@@ -566,6 +568,8 @@ namespace ILCalc
     /// Some of importing methods has the same name and
     /// the same arguments count as the function that is already
     /// in the collection (overload impossible).</exception>
+    /// <remarks>Doesn't supported in Silverlight
+    /// because of reflection limitations.</remarks>
     public void Import(Type type, bool nonpublic)
     {
       const BindingFlags Flags =
@@ -576,6 +580,8 @@ namespace ILCalc
       InternalImport(type,
         Flags | (nonpublic ? BindingFlags.NonPublic : 0));
     }
+
+#endif
 
     /// <summary>
     /// Imports all static methods of the specified types that is suitable
