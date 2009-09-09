@@ -3,6 +3,8 @@ using ILCalc.Custom;
 
 namespace ILCalc
 {
+  //TODO: ValueRange tests!!!
+
   /// <summary>
   /// Provides the static methods for creating
   /// <see cref="ValueRange{T}"/> instances.
@@ -20,8 +22,10 @@ namespace ILCalc
     {
       Support = new SupportCollection<object>(3);
 
+      Support.Add<Single>(new SingleRangeSupport());
       Support.Add<Double>(new DoubleRangeSupport());
       Support.Add<Int32>(new Int32RangeSupport());
+      Support.Add<Int64>(new Int64RangeSupport());
       Support.Add<Decimal>(new DecimalRangeSupport());
     }
 
@@ -30,9 +34,7 @@ namespace ILCalc
       object support = Support.Find<T>();
       if(support == null)
       {
-        throw new NotSupportedException(
-          "Type " + typeof(T) + " not supported " +
-          "as ValueRange<T> type parameter.");
+        return new UnknownRangeSupport<T>();
       }
 
       return (IRangeSupport<T>) support;
@@ -41,6 +43,7 @@ namespace ILCalc
     #endregion
     #region Methods
 
+    //TODO: returns!
     /// <summary>
     /// Initializes a new instance of the
     /// <see cref="ValueRange{T}"/> structure with the
@@ -84,6 +87,51 @@ namespace ILCalc
     #endregion
     #region Supports
 
+    sealed class SingleRangeSupport : IRangeSupport<Single>
+    {
+      public float StepFromCount(
+        ValueRange<float> r, int count)
+      {
+        return (r.End - r.Begin) / count;
+      }
+
+      public int GetCount(ValueRange<float> r)
+      {
+        float len = r.End - r.Begin;
+        int rcount = (int) (len / r.Step) + 1;
+
+        if (len % r.Step == 0) rcount--;
+        return rcount;
+      }
+
+      public ValueRangeValidness Validate(ValueRange<float> r)
+      {
+        if (float.IsInfinity(r.Begin) || float.IsNaN(r.Begin)
+         || float.IsInfinity(r.Step)  || float.IsNaN(r.Step)
+         || float.IsInfinity(r.End)   || float.IsNaN(r.End))
+        {
+          return ValueRangeValidness.NotFinite;
+        }
+
+        if (r.Begin + r.Step == r.Begin)
+        {
+          return ValueRangeValidness.Endless;
+        }
+
+        if (r.Begin > r.End != r.Step < 0)
+        {
+          return ValueRangeValidness.WrongSign;
+        }
+
+        if ((r.End - r.Begin) / r.Step >= int.MaxValue)
+        {
+          return ValueRangeValidness.TooLoong;
+        }
+
+        return ValueRangeValidness.Correct;
+      }
+    }
+
     sealed class DoubleRangeSupport : IRangeSupport<Double>
     {
       public double StepFromCount(
@@ -107,22 +155,22 @@ namespace ILCalc
          || double.IsInfinity(r.Step)  || double.IsNaN(r.Step)
          || double.IsInfinity(r.End)   || double.IsNaN(r.End))
         {
-          return ValueRangeValidness.NotFiniteRange;
+          return ValueRangeValidness.NotFinite;
         }
 
-        if (r.Begin + r.Step == r.Begin)
+        if (r.Begin + r.Step == r.Begin) //TODO: improve
         {
-          return ValueRangeValidness.EndlessRange;
+          return ValueRangeValidness.Endless;
         }
 
         if (r.Begin > r.End != r.Step < 0)
         {
-          return ValueRangeValidness.WrongStepSign;
+          return ValueRangeValidness.WrongSign;
         }
 
         if ((r.End - r.Begin) / r.Step >= int.MaxValue)
         {
-          return ValueRangeValidness.RangeTooLoong;
+          return ValueRangeValidness.TooLoong;
         }
 
         return ValueRangeValidness.Correct;
@@ -131,8 +179,7 @@ namespace ILCalc
 
     sealed class Int32RangeSupport : IRangeSupport<Int32>
     {
-      public int StepFromCount(
-        ValueRange<int> r, int count)
+      public int StepFromCount(ValueRange<int> r, int count)
       {
         return (r.End - r.Begin) / count;
       }
@@ -149,12 +196,48 @@ namespace ILCalc
 
         if (r.Step == 0)
         {
-          return ValueRangeValidness.EndlessRange;
+          return ValueRangeValidness.Endless;
         }
 
         if (r.Begin > r.End != r.Step < 0)
         {
-          return ValueRangeValidness.WrongStepSign;
+          return ValueRangeValidness.WrongSign;
+        }
+
+        return ValueRangeValidness.Correct;
+      }
+    }
+
+    sealed class Int64RangeSupport : IRangeSupport<Int64>
+    {
+      public long StepFromCount(ValueRange<long> r, int count)
+      {
+        return (r.End - r.Begin) / count;
+      }
+
+      public int GetCount(ValueRange<long> r)
+      {
+        // TODO: think!
+        return (int) ((r.End - r.Begin) / r.Step);
+      }
+
+      public ValueRangeValidness Validate(ValueRange<long> r)
+      {
+        // TODO: think!!!!
+
+        if (r.Step == 0)
+        {
+          return ValueRangeValidness.Endless;
+        }
+
+        if (r.Begin > r.End != r.Step < 0)
+        {
+          return ValueRangeValidness.WrongSign;
+        }
+
+        if ((r.End - r.Begin) / r.Step >= int.MaxValue)
+        {
+          return ValueRangeValidness.TooLoong;
         }
 
         return ValueRangeValidness.Correct;
@@ -184,20 +267,35 @@ namespace ILCalc
       {
         if (r.Begin + r.Step == r.Begin)
         {
-          return ValueRangeValidness.EndlessRange;
+          return ValueRangeValidness.Endless;
         }
 
         if (r.Begin > r.End != r.Step < 0)
         {
-          return ValueRangeValidness.WrongStepSign;
+          return ValueRangeValidness.WrongSign;
         }
 
         if ((r.End - r.Begin) / r.Step >= int.MaxValue)
         {
-          return ValueRangeValidness.RangeTooLoong;
+          return ValueRangeValidness.TooLoong;
         }
 
         return ValueRangeValidness.Correct;
+      }
+    }
+
+    sealed class UnknownRangeSupport<T> : IRangeSupport<T>
+    {
+      public T StepFromCount(ValueRange<T> r, int count)
+      {
+        return default(T);
+      }
+
+      public int GetCount(ValueRange<T> r) { return 0; }
+
+      public ValueRangeValidness Validate(ValueRange<T> r)
+      {
+        return ValueRangeValidness.NotSupported;
       }
     }
 

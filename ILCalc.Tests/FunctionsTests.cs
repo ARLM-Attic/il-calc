@@ -6,14 +6,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ILCalc.Tests
 {
   [TestClass]
-  public sealed class CallsTests
+  public sealed class FunctionsTests
   {
     #region Initialize
 
     readonly CalcContext<double> calc;
     readonly double x, v;
 
-    public CallsTests()
+    public FunctionsTests()
     {
       var random = new Random();
 
@@ -22,7 +22,7 @@ namespace ILCalc.Tests
       this.v = random.NextDouble() * 10;
 
       // static methods:
-      Calc.Functions.Import(typeof(CallsTests));
+      Calc.Functions.Import(typeof(FunctionsTests));
 
       // instance methods:
       Calc.Functions.Add(Inst0);
@@ -30,7 +30,7 @@ namespace ILCalc.Tests
       Calc.Functions.Add(Inst2);
       Calc.Functions.Add(InsParams);
       Calc.Functions.AddInstance(
-        typeof(CallsTests)
+        typeof(FunctionsTests)
           .GetMethod("InsParams2",
            BindingFlags.Instance |
            BindingFlags.Public),
@@ -110,22 +110,44 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region Test Helpers
+    #region CallsTests
 
-    delegate void AssertTester(string expression, double actual);
+    [TestMethod]
+    public void QuickInterpretCallsTest()
+    {
+      DoTests(e => Calc
+        .Evaluate(e, this.x));
+    }
 
-    delegate double Evaluator(string expression);
+    [TestMethod]
+    public void InterpretCallsTest()
+    {
+      DoTests(e => Calc
+        .CreateInterpret(e)
+        .Evaluate(this.x));
+    }
+
+#if !SILVERLIGHT && !CF
+
+    [TestMethod]
+    public void EvaluatorCallsTest()
+    {
+      DoTests(e => Calc
+        .CreateEvaluator(e)
+        .Evaluate(this.x));
+    }
+
+#endif
 
     void DoTests(Evaluator eval)
     {
-      AssertTester tester =
-        (expr, expected) => Assert.AreEqual(expected, eval(expr));
+      AssertTester tester = (e, ex) =>
+        Assert.AreEqual(ex, eval(e));
 
-      Debug.WriteLine("Static calls test...");
-      //Trace.WriteLine("Static calls test...");
+      Trace.WriteLine("Static calls test...");
       StaticTests(tester);
 
-      Debug.WriteLine("Instance calls test...");
+      Trace.WriteLine("Instance calls test...");
       InstanceTests(tester);
     }
 
@@ -200,34 +222,142 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region Test Methods
+    #region ImportTests
 
     [TestMethod]
-    public void QuickInterpretCallsTest()
+    public void ImportTest()
     {
-      DoTests(e => Calc
-        .Evaluate(e, this.x));
-    }
+      var c = new CalcContext<double>();
 
-    [TestMethod]
-    public void InterpretCallsTest()
-    {
-      DoTests(e => Calc
-        .CreateInterpret(e)
-        .Evaluate(this.x));
-    }
+      c.Constants.Import(typeof(double));
+      Assert.AreEqual(c.Constants.Count, 6);
 
-#if !SILVERLIGHT && !CF
+      c.Constants.Clear();
+      c.Constants.ImportBuiltIn();
+      Assert.AreEqual(c.Constants.Count, 4);
 
-    [TestMethod]
-    public void EvaluatorCallsTest()
-    {
-      DoTests(e => Calc
-        .CreateEvaluator(e)
-        .Evaluate(this.x));
-    }
+      c.Constants.Clear();
+      c.Constants.Import(typeof(ClassForImport));
+      Assert.AreEqual(c.Constants.Count, 1);
+
+#if !SILVERLIGHT
+
+      c.Constants.Clear();
+      c.Constants.Import(typeof(ClassForImport), true);
+      Assert.AreEqual(c.Constants.Count, 4);
 
 #endif
+
+      c.Constants.Clear();
+      c.Constants.Import(
+        typeof(ClassForImport), typeof(Math), typeof(double));
+      Assert.AreEqual(c.Constants.Count, 9);
+
+      c.Functions.ImportBuiltIn();
+#if SILVERLIGHT || CF
+      Assert.AreEqual(c.Functions.Count, 21);
+#else
+      Assert.AreEqual(c.Functions.Count, 22);
+#endif
+
+      c.Functions.Clear();
+      c.Functions.Import(typeof(Math));
+#if SILVERLIGHT
+      Assert.AreEqual(c.Functions.Count, 22);
+#else
+      Assert.AreEqual(c.Functions.Count, 23);
+#endif
+
+      c.Functions.Clear();
+      c.Functions.Import(typeof(ClassForImport));
+      Assert.AreEqual(c.Functions.Count, 6);
+
+#if !SILVERLIGHT
+
+      c.Functions.Clear();
+      c.Functions.Import(typeof(ClassForImport), true);
+      Assert.AreEqual(c.Functions.Count, 7);
+
+      //TODO: enable for silverlight/cf
+      c.Functions.Clear();
+      c.Functions.Import(typeof(ClassForImport), typeof(Math));
+      Assert.AreEqual(c.Functions.Count, 29);
+
+#endif
+
+      // delegates
+      c.Functions.Add("f1", ClassForImport.ParamsMethod1);
+      c.Functions.Add("f2", ClassForImport.JustFunc);
+      c.Functions.Add("f3", ClassForImport.StaticMethod);
+      c.Functions.Add("f4", ClassForImport.StaticMethod1);
+    }
+
+    #endregion
+    #region Helpers
+
+    delegate void AssertTester(string expr, double actual);
+
+    delegate double Evaluator(string expr);
+
+
+    // ReSharper disable UnusedMember.Local
+    // ReSharper disable UnusedParameter.Local
+    public class ClassForImport
+    {
+#pragma warning disable 169
+
+      public const double Test = 0.123;
+      const double Foo = 2323;
+      const double Bar = 434343;
+      static readonly double X = 5.55;
+
+#pragma warning restore 169
+
+      public static double JustFunc()
+      {
+        return X;
+      }
+
+      public double InstanceMethod(double y)
+      {
+        return 0;
+      }
+
+      public static double StaticMethod(double y)
+      {
+        return 0;
+      }
+
+      public static double StaticMethod1(double y, double z)
+      {
+        return 0;
+      }
+
+      static double HiddenMethod(
+        double a, double b, double c)
+      {
+        return 0;
+      }
+
+      public static double ParamsMethod1(double[] args)
+      {
+        return 0;
+      }
+
+      public static double ParamsMethod2(double a, double[] args)
+      {
+        return 0;
+      }
+
+      public static double ParamsMethod3(
+        double a, double b, double c, double[] args)
+      {
+        return 0;
+      }
+    }
+
+    // ReSharper restore UnusedMember.Local
+    // ReSharper restore UnusedParameter.Local
 
     #endregion
   }

@@ -156,6 +156,9 @@
   <data name="errFunctionNotExist" xml:space="preserve">
     <value>Функции с именем "{0}" не существует в коллекции.</value>
   </data>
+  <data name="errGenericRange" xml:space="preserve">
+    <value>Некорретный промежуток: тип '{0}' не поддерживается в качестве параметра-типа структуры ValueRange&lt;T&gt;.</value>
+  </data>
   <data name="errIdentifierEmpty" xml:space="preserve">
     <value>Имя идентфикатора пустое или null.</value>
   </data>
@@ -201,6 +204,9 @@
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Культура '{0}' - нейтральная культура. Она не может быть использована для форматирования и разбора выражения.</value>
   </data>
+  <data name="errNotSupported" xml:space="preserve">
+    <value>Операция ({0}) не может быть применена к значению типа '{1}'.</value>
+  </data>
   <data name="errNumberFormat" xml:space="preserve">
     <value>Некорретный формат числа:</value>
   </data>
@@ -212,6 +218,9 @@
   </data>
   <data name="errRangeNotFinite" xml:space="preserve">
     <value>Некорректный промежуток: значение Begin, End или Step не является конечным числом (Inf / NaN).</value>
+  </data>
+  <data name="errRangeZeroInit" xml:space="preserve">
+    <value>Некорректный промежуток: не инициализирован (не используйте конструктор по умолчанию или default(ValueRange&lt;T&gt;)).</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
     <value>Tabulator может быть скомпилирован только для выражения с одним или более аргументами.</value>

@@ -3,16 +3,17 @@ v0.9.7.0 beta ===========================================
 	* Solution: generics implemented!
 	* Generics: built-in support for BCL types:
 		Int32, Int64, Single, Double, Decimal
-	* Generics: extended integer literals support:
+	* Generics: integer literals support:
 		"0xFFEA" - hexadecimal
 		"0b0101" - binary
 	* Interpret: more performance improvements.
+	* Evaluator: EvaluateMany() removed (wrong decision).
 	* Solution: improved dependencies between classes.
 	* Solution: all projects moved to generics.
-	* Solution: complete code reformat (looks better).
+	* Solution: complete code reformat (looks better =).
 	* Solution: folder structure re-done.
 	* UnitTests: became more and more generic...
-	* UnitTests: SL 2.0 and CF 3.5 versions of tests are available.
+	* UnitTests: SL 2.0 and CF versions of tests are available.
 	* Tabulator: beta support for async tabulation at CF/SL build.
 	* Docs: generic type parameters documentation.
 

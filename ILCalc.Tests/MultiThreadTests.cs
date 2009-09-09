@@ -60,39 +60,6 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region PerformanceTest
-
-    // [TestMethod]
-    public void SyncPerformanceTest()
-    {
-      const int Count = 1000000;
-
-      var sw = Stopwatch.StartNew();
-      for (int i = 0; i < Count; i++)
-      {
-        this.eval.Evaluate(1, 2);
-      }
-
-      Trace.WriteLine(sw.Elapsed, "eval version ");
-
-      sw = Stopwatch.StartNew();
-      for (int i = 0; i < Count; i++)
-      {
-        this.intr.Evaluate(1, 2);
-      }
-
-      Trace.WriteLine(sw.Elapsed, "norm version");
-
-      sw = Stopwatch.StartNew();
-      for (int i = 0; i < Count; i++)
-      {
-        this.intr.EvaluateSync(1, 2);
-      }
-
-      Trace.WriteLine(sw.Elapsed, "sync version ");
-    }
-
-    #endregion
     #region AsyncTabulateTest
 
     [TestMethod]

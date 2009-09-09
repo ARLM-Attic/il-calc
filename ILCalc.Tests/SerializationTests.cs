@@ -40,7 +40,7 @@ namespace ILCalc.Tests
     {
       const int Count = 10000;
 
-      var gen = new ExprGenerator(Calc);
+      var gen = new ExprGenerator<double>(Calc);
       var list1 = new List<double>();
       var list2 = new List<double>();
       var binFormatter = new BinaryFormatter

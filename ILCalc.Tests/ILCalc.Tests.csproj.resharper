@@ -1,0 +1,5 @@
+<Configuration>
+  <NamespaceFolders>
+    <SkipFolder>17090BAD-E714-45E8-A4B9-E2FF2F93F1D7/d:Helpers</SkipFolder>
+  </NamespaceFolders>
+</Configuration>

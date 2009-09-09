@@ -34,7 +34,7 @@
     <DefineConstants>TRACE;SERIALIZE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\ILCalc.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\ILCalcX.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Deploy|AnyCPU' ">
     <OutputPath>..\Releases\Deploy\ILCalc %28.NET 2.0%29\</OutputPath>
@@ -50,8 +50,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcContext.cs" />

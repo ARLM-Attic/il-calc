@@ -66,16 +66,19 @@
     <Reference Include="System.Windows.Browser" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\ILCalc\Others\SupportCollection.cs">
+      <Link>Helpers\SupportCollection.cs</Link>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CallsTests.cs" />
+    <Compile Include="EvaluationTests.cs" />
     <Compile Include="ExceptionsTests.cs" />
+    <Compile Include="FunctionsTests.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="Helpers\Optimizer.cs" />
     <Compile Include="Helpers\Trace.SL2.cs" />
-    <Compile Include="MainTests.cs" />
-    <Compile Include="ParserTests.cs" />
+    <Compile Include="ParsingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TabulationTests.cs" />
   </ItemGroup>

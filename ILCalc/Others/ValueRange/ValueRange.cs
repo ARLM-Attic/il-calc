@@ -12,8 +12,18 @@ namespace ILCalc
   /// Defines a set of (begin, end, step) values,
   /// that represents the range of values.<br/>
   /// This structure is immutable.</summary>
-  /// <typeparam name="T">Range values type.</typeparam>
+  /// <typeparam name="T">
+  /// Range values type.<br/>
+  /// Supported types list: <see cref="Int32"/>,
+  /// <see cref="Int64"/>, <see cref="Single"/>,
+  /// <see cref="Double"/>, <see cref="Decimal"/>.
+  /// </typeparam>
   /// <threadsafety instance="true" static="true"/>
+  /// <remarks>
+  /// If you are trying to use this class with
+  /// not supported type parameter you will
+  /// get <see cref="TypeInitializationException"/>.
+  /// </remarks>
   [DebuggerDisplay("[{Begin} - {End}] step {Step}")]
   [Serializable]
   public struct ValueRange<T>
@@ -23,7 +33,7 @@ namespace ILCalc
 
     [DebuggerBrowsable(State.Never)] readonly T begin, step, end;
     [DebuggerBrowsable(State.Never)] readonly int count;
-    
+
     [DebuggerBrowsable(State.Never)]
     readonly ValueRangeValidness valid;
 
@@ -74,32 +84,20 @@ namespace ILCalc
 
     /// <summary>
     /// Gets the begining value of the range.</summary>
-    public T Begin
-    {
-      get { return this.begin; }
-    }
+    public T Begin { get { return this.begin; } }
 
     /// <summary>
     /// Gets the ending value of the range.</summary>
-    public T End
-    {
-      get { return this.end; }
-    }
+    public T End { get { return this.end; } }
 
     /// <summary>
     /// Gets the step value of the range.</summary>
-    public T Step
-    {
-      get { return this.step; }
-    }
+    public T Step { get { return this.step; } }
 
     /// <summary>
     /// Gets the count of the steps, that would
     /// be taken while iteration over the range.</summary>
-    public int Count
-    {
-      get { return this.count; }
-    }
+    public int Count { get { return this.count; } }
 
     /// <summary>
     /// Gets the value indicating when this instance
@@ -108,14 +106,19 @@ namespace ILCalc
     /// otherwise <b>false</b></returns>
     public bool IsValid
     {
-      get { return this.valid == 0; }
+      get { return this.valid == ValueRangeValidness.Correct; }
     }
 
+    [DebuggerBrowsable(State.Never)]
     internal int ValidCount
     {
       get
       {
-        if (this.valid != 0) Validate();
+        if (this.valid != ValueRangeValidness.Correct)
+        {
+          Validate();
+        }
+
         return this.count;
       }
     }
@@ -131,8 +134,7 @@ namespace ILCalc
     /// equals <paramref name="value"/>.</returns>
     public ValueRange<T> SetBegin(T value)
     {
-      return new ValueRange<T>(
-        value, this.end, this.step);
+      return new ValueRange<T>(value, this.end, this.step);
     }
 
     /// <summary>
@@ -143,8 +145,7 @@ namespace ILCalc
     /// equals <paramref name="value"/>.</returns>
     public ValueRange<T> SetEnd(T value)
     {
-      return new ValueRange<T>(
-        this.begin, value, this.step);
+      return new ValueRange<T>(this.begin, value, this.step);
     }
 
     /// <summary>
@@ -154,8 +155,7 @@ namespace ILCalc
     /// <see cref="Step"/> equals <paramref name="value"/>.</returns>
     public ValueRange<T> SetStep(T value)
     {
-      return new ValueRange<T>(
-        this.begin, this.end, value);
+      return new ValueRange<T>(this.begin, this.end, value);
     }
 
     /// <summary>
@@ -172,8 +172,7 @@ namespace ILCalc
     public ValueRange<T> SetCount(int value)
     {
       return new ValueRange<T>(
-        this.begin,
-        this.end,
+        this.begin, this.end,
         Generic.StepFromCount(this, value));
     }
 
@@ -206,27 +205,14 @@ namespace ILCalc
       string msg = null;
       switch (this.valid)
       {
-        case ValueRangeValidness.Correct:
-          return;
-
-        case ValueRangeValidness.NotFiniteRange:
-          msg = Resource.errRangeNotFinite;
-          break;
-
-        case ValueRangeValidness.EndlessRange:
-          msg = Resource.errEndlessLoop;
-          break;
-
-        case ValueRangeValidness.WrongStepSign:
-          msg = Resource.errWrongStepSign;
-          break;
-
-        case ValueRangeValidness.RangeTooLoong:
-          msg = Resource.errTooLongRange;
-          break;
-
+        case ValueRangeValidness.Correct:   return;
+        case ValueRangeValidness.ZeroInit:  msg = Resource.errRangeZeroInit;  break;
+        case ValueRangeValidness.NotFinite: msg = Resource.errRangeNotFinite; break;
+        case ValueRangeValidness.Endless:   msg = Resource.errEndlessLoop;    break;
+        case ValueRangeValidness.WrongSign: msg = Resource.errWrongStepSign;  break;
+        case ValueRangeValidness.TooLoong:  msg = Resource.errTooLongRange;   break;
         case ValueRangeValidness.NotSupported:
-          msg = "Type is not supported!"; //TODO: localize
+          msg = string.Format(Resource.errGenericRange, typeof(T));
           break;
       }
 
@@ -243,7 +229,7 @@ namespace ILCalc
     {
       return
         this.begin.GetHashCode() ^
-        this.end.GetHashCode() ^
+        this.end.GetHashCode()   ^
         this.step.GetHashCode();
     }
 
@@ -311,11 +297,12 @@ namespace ILCalc
 
   enum ValueRangeValidness : byte
   {
-    Correct = 0,
-    NotFiniteRange,
-    EndlessRange,
-    WrongStepSign,
-    RangeTooLoong,
+    ZeroInit = 0,
+    Correct,
+    NotFinite,
+    Endless,
+    WrongSign,
+    TooLoong,
     NotSupported
   }
 }

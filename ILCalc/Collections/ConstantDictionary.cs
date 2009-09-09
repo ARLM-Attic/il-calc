@@ -19,13 +19,12 @@ namespace ILCalc
   /// in the dictionary.</typeparam>
   /// <threadsafety instance="false"/>
   [DebuggerDisplay("Count = {Count}")]
-  [DebuggerTypeProxy(typeof(
-    ConstantDictionary<>.ConstantsDebugView))]
+  [DebuggerTypeProxy(typeof(ConstantsDebugView<>))]
   [Serializable]
   public sealed class ConstantDictionary<T>
     : IDictionary<string, T>,
-      ICollection,
-      IListEnumerable
+      IListEnumerable,
+      ICollection
   {
     #region Fields
 
@@ -574,37 +573,38 @@ namespace ILCalc
     }
 
     #endregion
-    #region Debug View
+  }
 
-    sealed class ConstantsDebugView
+  #region Debug View
+
+  sealed class ConstantsDebugView<T>
+  {
+    [DebuggerBrowsable(State.RootHidden)]
+    readonly ViewItem[] items;
+
+    public ConstantsDebugView(ConstantDictionary<T> list)
     {
-      [DebuggerBrowsable(State.RootHidden)]
-      readonly ViewItem[] items;
-
-      public ConstantsDebugView(ConstantDictionary<T> list)
+      this.items = new ViewItem[list.Count];
+      int i = 0;
+      foreach (var item in list)
       {
-        this.items = new ViewItem[list.Count];
-        int i = 0;
-        foreach (var item in list)
-        {
-          this.items[i].Name = item.Key;
-          this.items[i].Value = item.Value;
-          i++;
-        }
-      }
-
-      [DebuggerDisplay("{Value}", Name = "{Name}")]
-      struct ViewItem
-      {
-        // ReSharper disable UnaccessedField.Local
-
-        [DebuggerBrowsable(State.Never)] public string Name;
-        [DebuggerBrowsable(State.Never)] public T Value;
-
-        // ReSharper restore UnaccessedField.Local
+        this.items[i].Name  = item.Key;
+        this.items[i].Value = item.Value;
+        i++;
       }
     }
 
-    #endregion
+    [DebuggerDisplay("{Value}", Name = "{Name}")]
+    struct ViewItem
+    {
+      // ReSharper disable UnaccessedField.Local
+
+      [DebuggerBrowsable(State.Never)] public string Name;
+      [DebuggerBrowsable(State.Never)] public T Value;
+
+      // ReSharper restore UnaccessedField.Local
+    }
   }
+
+  #endregion
 }

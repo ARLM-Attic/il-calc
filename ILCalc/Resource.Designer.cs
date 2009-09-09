@@ -178,6 +178,15 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Wrong range: type &apos;{0}&apos; is not supported as type parameter of ValueRange&lt;T&gt; structure..
+        /// </summary>
+        internal static string errGenericRange {
+            get {
+                return ResourceManager.GetString("errGenericRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty or null identifier name..
         /// </summary>
         internal static string errIdentifierEmpty {
@@ -313,6 +322,15 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation ({0}) isn&apos;t supported for the &apos;{1}&apos; type..
+        /// </summary>
+        internal static string errNotSupported {
+            get {
+                return ResourceManager.GetString("errNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Incorrect number format:.
         /// </summary>
         internal static string errNumberFormat {
@@ -340,11 +358,29 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If this is a part of literal, note that &apos;{0}&apos; doesn&apos;t support parse of literals..
+        /// </summary>
+        internal static string errParseLiteralHint {
+            get {
+                return ResourceManager.GetString("errParseLiteralHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Wrong range: Begin, End or Step is not finite value..
         /// </summary>
         internal static string errRangeNotFinite {
             get {
                 return ResourceManager.GetString("errRangeNotFinite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrong range: non initialized (do not use parameterless constructor or default(ValueRange&lt;T&gt;))..
+        /// </summary>
+        internal static string errRangeZeroInit {
+            get {
+                return ResourceManager.GetString("errRangeZeroInit", resourceCulture);
             }
         }
         

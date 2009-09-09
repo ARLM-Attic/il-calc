@@ -209,8 +209,15 @@ namespace ILCalc
       }
 
       // invoke via reflection
-      return (T)
-        this.method.Invoke(this.target, fixArgs);
+      try //TODO: is it right?
+      {
+        return (T)
+          this.method.Invoke(this.target, fixArgs);
+      }
+      catch (TargetInvocationException ex)
+      {
+        throw ex.InnerException;
+      }
     }
 
     internal T Invoke(object[] fixedArgs)

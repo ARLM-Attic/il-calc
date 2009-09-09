@@ -92,7 +92,7 @@ namespace ILCalc
     }
 
     #endregion
-    #region Static Data
+    #region StaticData
 
     /////////////////////////////////////////
     // WARNING: do not modify items order! //

@@ -17,11 +17,17 @@ namespace ILCalc
   // TODO: extract comments from code
 
   /// <summary>
-  /// Represents the expression context (arguments, constants and functions
-  /// available to use in expression, parsing settings) and provides methods
-  /// to compile, evaluate and validate expressions in runtime.<br/>
+  /// Represents the expression context (arguments,
+  /// constants and functions available to use in expression,
+  /// parsing settings) and provides methods to compile,
+  /// evaluate and validate expressions in runtime.<br/>
   /// This class cannot be inherited.</summary>
-  /// <typeparam name="T">Expression values type.</typeparam>
+  /// <typeparam name="T">
+  /// Expression values type.<br/>
+  /// Supported types are: <see cref="Int32"/>,
+  /// <see cref="Int64"/>, <see cref="Single"/>,
+  /// <see cref="Double"/>, <see cref="Decimal"/>.
+  /// </typeparam>
   /// <threadsafety instance="false"/>
   [Serializable]
   public sealed partial class CalcContext<T>
@@ -92,34 +98,40 @@ namespace ILCalc
     #endregion
     #region Properties
 
-    /// <summary>Gets the <see cref="ArgumentCollection"/>
-    /// available for use in the expression.</summary>
+    /// <summary>
+    /// Gets the <see cref="ArgumentCollection"/>
+    /// available for use in the expression.
+    /// </summary>
     public ArgumentCollection Arguments
     {
       get { return this.arguments; }
     }
 
-    /// <summary>Gets the <see cref="ConstantDictionary{T}"/>
-    /// available for use in the expression.</summary>
+    /// <summary>
+    /// Gets the <see cref="ConstantDictionary{T}"/>
+    /// available for use in the expression.
+    /// </summary>
     public ConstantDictionary<T> Constants
     {
       get { return this.constants; }
     }
 
-    /// <summary>Gets the <see cref="FunctionCollection{T}"/>
-    /// available for use in the expression.</summary>
+    /// <summary>
+    /// Gets the <see cref="FunctionCollection{T}"/>
+    /// available for use in the expression.
+    /// </summary>
     public FunctionCollection<T> Functions
     {
       get { return this.functions; }
     }
 
     /// <summary>
-    /// Gets or sets <see cref="CultureInfo"/> instance
-    /// used for expression parsing.</summary>
-    /// <exception cref="NotSupportedException"><paramref name="value"/>
-    /// is neutral culture, that can't be used as parse culture.</exception>
-    /// <remarks>
-    /// Can be <c>null</c> for ignoring culture-sensitive
+    /// Gets or sets <see cref="CultureInfo"/>
+    /// instance used for expression parsing.</summary>
+    /// <exception cref="NotSupportedException">
+    /// <paramref name="value"/> is neutral culture,
+    /// that can't be used as parse culture.</exception>
+    /// <remarks>Can be <c>null</c> for ignoring culture-sensitive
     /// characters and using ordinal compare for strings.</remarks>
     public CultureInfo Culture
     {
@@ -136,8 +148,10 @@ namespace ILCalc
       }
     }
 
-    /// <summary>Gets or sets a value indicating whether ignore case
-    /// mode is will be used for identifiers names in the expresion.</summary>
+    /// <summary>
+    /// Gets or sets a value indicating whether ignore
+    /// case mode is will be used for identifiers names
+    /// in the expresion.</summary>
     /// <value><b>true</b> by default.</value>
     public bool IgnoreCase
     {
@@ -145,8 +159,10 @@ namespace ILCalc
       set { this.ignoreCase = value; }
     }
 
-    /// <summary>Gets or sets a value indicating whether implicit
-    /// multiplication will be allowed in the expression.</summary>
+    /// <summary>
+    /// Gets or sets a value indicating whether implicit
+    /// multiplication will be allowed in the expression.
+    /// </summary>
     /// <value><b>true</b> by default.</value>
     public bool ImplicitMul
     {
@@ -154,8 +170,10 @@ namespace ILCalc
       set { this.implicitMul = value; }
     }
 
-    /// <summary>Gets or sets a value indicating whether arithmetic
-    /// checks are enabled while the expression evaluation.</summary>
+    /// <summary>
+    /// Gets or sets a value indicating whether arithmetic
+    /// checks are enabled while the expression evaluation.
+    /// </summary>
     /// <remarks>Using this option will reduce
     /// perfomance of the evaluation.</remarks>
     /// <value><b>false</b> by default.</value>
@@ -165,16 +183,20 @@ namespace ILCalc
       set { this.checkedMode = value; }
     }
 
-    /// <summary>Gets or sets a bitwise OR combination
-    /// of <see cref="OptimizeModes"/> enumeration values
-    /// that specify optimization modes for expression.</summary>
-    /// <value><see cref="OptimizeModes.None"/> by default.</value>
+    /// <summary>
+    /// Gets or sets a bitwise OR combination of
+    /// <see cref="OptimizeModes"/> enumeration values
+    /// that specify optimization modes for expression.
+    /// </summary>
+    /// <value><see cref="OptimizeModes.None"/>
+    /// by default.</value>
     public OptimizeModes Optimization
     {
       get { return this.optimizeMode; }
       set { this.optimizeMode = value; }
     }
 
+    [Br(State.Never)]
     internal IListEnumerable[] Literals
     {
       get { return this.literalsList; }
@@ -188,15 +210,18 @@ namespace ILCalc
     /// using quick interpretation mode.</summary>
     /// <param name="expression">Expression to evaluate.</param>
     /// <param name="arguments">Expression arguments values.</param>
-    /// <exception cref="SyntaxException"><paramref name="expression"/>
-    /// contains syntax error(s) and can't be evaluated.</exception>
+    /// <exception cref="SyntaxException">
+    /// <paramref name="expression"/> contains
+    /// syntax error(s) and can't be evaluated.</exception>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="expression"/> is null.<br/>-or-<br/>
     /// <paramref name="arguments"/> is null.</exception>
-    /// <exception cref="ArgumentException">Wrong arguments count was
-    /// specified by the <paramref name="arguments"/> parameter.</exception>
-    /// <exception cref="ArithmeticException">Expression evaluation
-    /// thrown the <see cref="ArithmeticException"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Wrong arguments count was specified by the
+    /// <paramref name="arguments"/> parameter.</exception>
+    /// <exception cref="ArithmeticException">
+    /// Expression evaluation thrown the
+    /// <see cref="ArithmeticException"/>.</exception>
     /// <returns>Evaluated value.</returns>
     public T Evaluate(string expression, params T[] arguments)
     {
@@ -214,12 +239,14 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Generates the <see cref="Interpret{T}"/> object for evaluating
-    /// the specified <paramref name="expression"/>.</summary>
-    /// <param name="expression">
-    /// Expression to create <see cref="Interpret{T}"/> from.</param>
-    /// <exception cref="SyntaxException"><paramref name="expression"/>
-    /// contains syntax error(s) and can't be used for the
+    /// Generates the <see cref="Interpret{T}"/>
+    /// object for evaluating the specified
+    /// <paramref name="expression"/>.</summary>
+    /// <param name="expression">Expression to create
+    /// <see cref="Interpret{T}"/> from.</param>
+    /// <exception cref="SyntaxException">
+    /// <paramref name="expression"/> contains
+    /// syntax error(s) and can't be used for the
     /// <see cref="Interpret{T}"/> creation.</exception>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="expression"/> is null.</exception>
@@ -239,10 +266,12 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Validates the specified <paramref name="expression"/>.</summary>
+    /// Validates the specified
+    /// <paramref name="expression"/>.</summary>
     /// <param name="expression">Expression to validate.</param>
     /// <exception cref="SyntaxException">
-    /// <paramref name="expression"/> contains syntax error(s)</exception>
+    /// <paramref name="expression"/>
+    /// contains syntax error(s)</exception>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="expression"/> is null.</exception>
     public void Validate(string expression)

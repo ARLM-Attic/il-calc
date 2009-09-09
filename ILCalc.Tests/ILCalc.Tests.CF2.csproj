@@ -5,15 +5,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0C16F9D7-89ED-4E91-98D3-DC90DBC5260B}</ProjectGuid>
+    <ProjectGuid>{77752BBD-9A2A-4691-9901-0927F8F9F76B}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>ILCalc.Tests.CF3</RootNamespace>
-    <AssemblyName>ILCalc.Tests.CF3</AssemblyName>
+    <RootNamespace>ILCalc.Tests.CF2</RootNamespace>
+    <AssemblyName>ILCalc.Tests.CF2</AssemblyName>
     <PlatformFamilyName>PocketPC</PlatformFamilyName>
     <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
-    <OSVersion>5.01</OSVersion>
-    <DeployDirSuffix>ILCalc.Tests.CF3</DeployDirSuffix>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OSVersion>5.1</OSVersion>
+    <DeployDirSuffix>ILCalc.Tests.CF2</DeployDirSuffix>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FormFactorID>
     </FormFactorID>
     <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DefineConstants>TRACE;DEBUG;PocketPC CF</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PocketPC CF CF2</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -51,7 +51,8 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\ilcalc\others\SupportCollection.cs">
@@ -59,17 +60,17 @@
     </Compile>
     <Compile Include="EvaluationTests.cs" />
     <Compile Include="ExceptionsTests.cs" />
-    <Compile Include="FunctionsTests.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="Helpers\Optimizer.cs" />
+    <Compile Include="Helpers\Trace.SL2.cs" />
     <Compile Include="ParsingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TabulationTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ILCalc\ILCalc.CF3.csproj">
-      <Project>{DF3F36EB-F30A-4EC1-9E72-8D67663D4749}</Project>
-      <Name>ILCalc.CF3</Name>
+    <ProjectReference Include="..\ILCalc\ILCalc.CF2.csproj">
+      <Project>{7E968142-67B6-4394-AA11-A0270EB5490A}</Project>
+      <Name>ILCalc.CF2</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />

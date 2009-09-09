@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -16,14 +17,33 @@ namespace ILCalc.Tests
     {
       this.doubleTester = new TabTester<double, DoubleRangeSupport>();
       var ctx = this.doubleTester.Context;
+
+      this.int32Tester = new TabTester<int, Int32RangeSupport>();
+      var ct = this.int32Tester.Context;
+
+#if CF2
+
+      Type math = typeof(Math);
+      ctx.Functions.AddStatic(math.GetMethod("Sin"));
+      ctx.Functions.AddStatic(math.GetMethod("Cos"));
+      ctx.Functions.AddStatic(math.GetMethod("Tan"));
+
+      Type t = typeof(TabulationTests);
+      ct.Functions.AddStatic(t
+        .GetMethod("Func", new[] { typeof(int) }));
+      ct.Functions.AddStatic(t
+        .GetMethod("Func", new[] { typeof(int), typeof(int) }));
+
+#else
+
       ctx.Functions.Add(Math.Sin);
       ctx.Functions.Add(Math.Cos);
       ctx.Functions.Add(Math.Tan);
 
-      this.int32Tester = new TabTester<int, Int32RangeSupport>();
-      var ct = this.int32Tester.Context;
       ct.Functions.Add((EvalFunc1<int>) Func);
       ct.Functions.Add((EvalFunc2<int>) Func);
+
+#endif
     }
 
     #endregion

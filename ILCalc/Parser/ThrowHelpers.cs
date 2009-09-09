@@ -109,9 +109,8 @@ namespace ILCalc
 
       if (LiteralParser.IsUnknown(Literal))
       {
-        //TODO: write normaly
-        buf.Append(" If this is a part of literal, note that " + typeof(T) +
-                   " doesn't support literals.");
+        buf.Append(string.Format(
+          Resource.errParseLiteralHint, typeof(T)));
       }
 
       return new SyntaxException(

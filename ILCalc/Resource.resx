@@ -156,6 +156,9 @@
   <data name="errFunctionNotExist" xml:space="preserve">
     <value>Function "{0}" does not exist in the collection.</value>
   </data>
+  <data name="errGenericRange" xml:space="preserve">
+    <value>Wrong range: type '{0}' is not supported as type parameter of ValueRange&lt;T&gt; structure.</value>
+  </data>
   <data name="errIdentifierEmpty" xml:space="preserve">
     <value>Empty or null identifier name.</value>
   </data>
@@ -201,6 +204,9 @@
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Culture '{0}' is neutral culture. It cannot be used for parse and formatting .</value>
   </data>
+  <data name="errNotSupported" xml:space="preserve">
+    <value>Operation ({0}) isn't supported for the '{1}' type.</value>
+  </data>
   <data name="errNumberFormat" xml:space="preserve">
     <value>Incorrect number format:</value>
   </data>
@@ -210,8 +216,14 @@
   <data name="errOverloadImpossible" xml:space="preserve">
     <value>Function with same parameters ({0}) is already in the list (overload impossible).</value>
   </data>
+  <data name="errParseLiteralHint" xml:space="preserve">
+    <value>If this is a part of literal, note that '{0}' doesn't support parse of literals.</value>
+  </data>
   <data name="errRangeNotFinite" xml:space="preserve">
     <value>Wrong range: Begin, End or Step is not finite value.</value>
+  </data>
+  <data name="errRangeZeroInit" xml:space="preserve">
+    <value>Wrong range: non initialized (do not use parameterless constructor or default(ValueRange&lt;T&gt;)).</value>
   </data>
   <data name="errTabulatorWrongArgs" xml:space="preserve">
     <value>Tabulator object can be created only for the expressions with one or more arguments.</value>
