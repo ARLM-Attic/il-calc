@@ -130,8 +130,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>cd $(SolutionDir)Documentation\Output
-copy /Y ILCalc.xml "$(TargetDir)"
-copy /Y ILCalc.chm "$(TargetDir)..\Documentation.chm"</PostBuildEvent>
+    <PostBuildEvent>REM cd $(SolutionDir)Documentation\Output
+REM copy /Y ILCalc.xml "$(TargetDir)"
+REM copy /Y ILCalc.chm "$(TargetDir)..\Documentation.chm"</PostBuildEvent>
   </PropertyGroup>
 </Project>
