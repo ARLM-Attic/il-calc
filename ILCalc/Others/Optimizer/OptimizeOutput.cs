@@ -104,7 +104,7 @@ namespace ILCalc
       code.Add(oper);
     }
 
-    public new void PutCall(FunctionItem<T> func, int argsCount)
+    public new void PutCall(FunctionInfo<T> func, int argsCount)
     {
       if (FuncionFolding)
       {
@@ -221,7 +221,7 @@ namespace ILCalc
       this.interp.Reset();
     }
 
-    void FoldFunction(int start, FunctionItem<T> func, int argsCount)
+    void FoldFunction(int start, FunctionInfo<T> func, int argsCount)
     {
       Debug.Assert(start >= 0);
       Debug.Assert(func != null);
@@ -247,7 +247,7 @@ namespace ILCalc
         this.numbers.RemoveRange(numIndex, argsCount);
       }
 
-      PutConstant(func.Invoke(stack, argsCount));
+      PutConstant(func.Invoke(stack, argsCount - 1, argsCount));
     }
 
     void OptimizePow(int value)

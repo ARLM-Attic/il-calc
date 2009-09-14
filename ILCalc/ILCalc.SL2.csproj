@@ -86,9 +86,7 @@
     <Compile Include="Collections\FunctionGroup.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Collections\FunctionItem.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Collections\FunctionInfo.cs" />
     <Compile Include="Common\AsyncHelper.cs" />
     <Compile Include="Common\Codes.cs" />
     <Compile Include="Common\Delegates.cs" />

@@ -71,7 +71,7 @@ namespace ILCalc
     public void PutBeginCall() { }
     public void PutSeparator() { }
 
-    public void PutCall(FunctionItem<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int argsCount)
     {
       Debug.Assert(this.pos + 1 >= argsCount);
 

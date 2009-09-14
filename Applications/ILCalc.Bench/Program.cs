@@ -4,29 +4,8 @@ namespace ILCalc.Bench
 {
   static class Program
   {
-    static decimal Pow(decimal x, decimal y)
-    {
-      decimal result = 0;
-      while (y != 0)
-      {
-        
-      }
-
-
-      return 0;
-    }
-
     static void Main()
     {
-      int x = Benchmarks.Pow(2, 0);
-      int y = Benchmarks.Pow2(2, 0);
-
-      int x1 = Benchmarks.Pow(-2, 3);
-      int y1 = Benchmarks.Pow2(-2, 3);
-
-      int x2 = Benchmarks.Pow(2, -3);
-      int y2 = Benchmarks.Pow2(2, -3);
-
       Tester.BenchmarkOutput += Console.WriteLine;
 
       if (!ShowMenu(

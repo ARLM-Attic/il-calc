@@ -1,6 +1,6 @@
 ﻿namespace ILCalc
 {
-  static class Code
+  static class Code //TODO: => enum
   {
     public const int Return = int.MaxValue;
 
@@ -21,14 +21,10 @@
     public const int ParamCall = 12;
     public const int BeginCall = 13;
 
-#if !CF2
-
     // For Interpret:
     public const int Delegate0 = 16;
     public const int Delegate1 = 17;
     public const int Delegate2 = 18;
-
-#endif
 
     public static bool IsOperator(int code)
     {

@@ -129,7 +129,7 @@ namespace ILCalc
 
       // NOTE: improve this?
       // NOTE: may be empty FunctionGroup! Show actual message
-      // NOTE: FunctionGroup => IEnumerable<FunctionItem>
+      // NOTE: FunctionGroup => IEnumerable<FunctionInfo>
       if (group != null)
       {
         buf.Append(' ');

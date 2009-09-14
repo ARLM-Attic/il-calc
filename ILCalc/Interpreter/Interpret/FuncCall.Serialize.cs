@@ -7,7 +7,7 @@ namespace ILCalc
   sealed partial class FuncCall<T> : ISerializable
   {
     static readonly Type
-      FunctionType = typeof(FunctionItem<T>);
+      FunctionType = typeof(FunctionInfo<T>);
 
     FuncCall(SerializationInfo info, StreamingContext context)
     {
@@ -22,7 +22,7 @@ namespace ILCalc
         this.fixArgs[--fixCount] = this.varArgs;
       }
 
-      this.func = (FunctionItem<T>)
+      this.func = (FunctionInfo<T>)
         info.GetValue("func", FunctionType);
 
       this.argsCount = fixCount + varCount;

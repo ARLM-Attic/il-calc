@@ -9,7 +9,7 @@ namespace ILCalc
   {
     #region Fields
 
-    protected readonly List<FunctionItem<T>> functions;
+    protected readonly List<FunctionInfo<T>> functions;
     protected readonly List<T> numbers;
     protected readonly List<int> code;
     protected readonly List<int> data;
@@ -20,7 +20,7 @@ namespace ILCalc
     //TODO: abstract class?
     public BufferOutput()
     {
-      this.functions = new List<FunctionItem<T>>(2);
+      this.functions = new List<FunctionInfo<T>>(2);
       this.numbers = new List<T>(4);
       this.code = new List<int>(8);
       this.data = new List<int>(2);
@@ -60,7 +60,7 @@ namespace ILCalc
       this.code.Add(Code.BeginCall);
     }
 
-    public void PutCall(FunctionItem<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int argsCount)
     {
       Debug.Assert(func != null);
       Debug.Assert(argsCount >= 0);

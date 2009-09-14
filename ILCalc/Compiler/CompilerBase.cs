@@ -313,7 +313,7 @@ namespace ILCalc
       #endregion
       #region Constructor
 
-      public FuncCall(FunctionItem<T> func, int argsCount)
+      public FuncCall(FunctionInfo<T> func, int argsCount)
       {
         Target = func.Target;
         Method = func.Method;
@@ -344,7 +344,7 @@ namespace ILCalc
     #endregion
     #region IExpressionOutput
 
-    public new void PutCall(FunctionItem<T> func, int argzCount)
+    public new void PutCall(FunctionInfo<T> func, int argzCount)
     {
       int i = this.calls.Count;
       while (this.calls[--i] != null)

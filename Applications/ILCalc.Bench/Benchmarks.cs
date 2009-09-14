@@ -247,40 +247,28 @@ namespace ILCalc.Bench
         });
     }
 
+    public static double Foo(double x)
+    {
+      return -x;
+    }
+
+    delegate double Func(double x);
+
     public static void PowTests()
     {
-      var rnd = new Random();
+      var method = typeof(Benchmarks).GetMethod("Foo");
+      var delegt = (Delegate) new Func(Foo);
 
-      Tester.Run("Pow tests", 10000000,
-        () => { Pow (rnd.Next(-100, 100), rnd.Next(-100, 100)); return "Pow1"; },
-        () => { Pow2(rnd.Next(-100, 100), rnd.Next(-100, 100)); return "Pow2"; }
-      );
-    }
-
-    public static int Pow(int x, int y)
-    {
-      if (y  < 0) return 0;
-      if (y == 0) return 1;
-
-      int t = x;
-      for(int i = 1; i < y; i++) t *= x;
-
-      return t;
-    }
-
-    public static int Pow2(int x, int y)
-    {
-        if (y < 0) return 0;
-
-        int res = 1;
-        while (y != 0)
-        {
-            if ((y & 1) == 1) res *= x;
-            y >>= 1;
-            x *= x;
+      Tester.Run("Calls tests", 500000,
+        () => {
+          var result = (double) method.Invoke(null, new object[] { 1.2 });
+          return "Reflection";
+        },
+        () => {
+          var result = (double) delegt.DynamicInvoke(1.2);
+          return "DynamicInvoke";
         }
-
-        return res;
+      );
     }
 
     #endregion

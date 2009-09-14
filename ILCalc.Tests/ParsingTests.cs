@@ -23,23 +23,10 @@ namespace ILCalc.Tests
       Calc.Constants.ImportBuiltIn();
       Calc.Culture = CultureInfo.InvariantCulture;
 
-#if CF2
-
-      Type t = typeof(ParsingTests);
-      CalcI4.Functions.AddInstance("xin", t.GetMethod("Func"), this);
-      CalcI4.Functions.AddInstance("bin", t.GetMethod("Func"), this);
-      CalcI4.Functions.AddInstance("max", t.GetMethod("Max"), this);
-      Calc.Functions.AddStatic("max", typeof(Math)
-        .GetMethod("Max", new[] { typeof(double), typeof(double) }));
-
-#else
-
       CalcI4.Functions.Add("xin", Func);
       CalcI4.Functions.Add("bin", Func);
       CalcI4.Functions.Add("max", Max);
       Calc.Functions.Add("max", Math.Max);
-
-#endif
     }
 
     public int Func(int x) { return x; }

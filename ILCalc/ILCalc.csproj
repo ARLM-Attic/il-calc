@@ -50,6 +50,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
@@ -59,7 +61,7 @@
     <Compile Include="Common\ICompiler.cs" />
     <Compile Include="Common\IArithmetic.cs" />
     <Compile Include="Compiler\CalcContext.Methods.cs" />
-    <Compile Include="Collections\FunctionItem.cs" />
+    <Compile Include="Collections\FunctionInfo.cs" />
     <Compile Include="Collections\FunctionCollection.cs" />
     <Compile Include="Collections\FunctionFactory.cs" />
     <Compile Include="Collections\FunctionGroup.cs" />

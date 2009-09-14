@@ -113,7 +113,7 @@ namespace ILCalc.Tests
     readonly CultureInfo culture;
     readonly NumberFormatInfo format;
     readonly List<string> idens;
-    readonly List<KeyValuePair<string, FunctionItem<T>>> funcs;
+    readonly List<KeyValuePair<string, FunctionInfo<T>>> funcs;
 
     readonly char separator;
 
@@ -135,7 +135,7 @@ namespace ILCalc.Tests
       if (calc.Constants != null)
         this.idens.AddRange(calc.Constants.Keys);
 
-      this.funcs = new List<KeyValuePair<string, FunctionItem<T>>>();
+      this.funcs = new List<KeyValuePair<string, FunctionInfo<T>>>();
 
       foreach (var item in calc.Functions)
       {
@@ -143,7 +143,7 @@ namespace ILCalc.Tests
         foreach (var func in item.Value)
         {
           this.funcs.Add(
-            new KeyValuePair<string, FunctionItem<T>>(name, func));
+            new KeyValuePair<string, FunctionInfo<T>>(name, func));
         }
       }
     }
@@ -201,7 +201,7 @@ namespace ILCalc.Tests
     void PutFunction(StringBuilder buf, int depth)
     {
       var pair = this.funcs[FromTo(0, this.funcs.Count)];
-      FunctionItem<T> func = pair.Value;
+      FunctionInfo<T> func = pair.Value;
 
       buf.Append(pair.Key);
       PutSpace(buf);

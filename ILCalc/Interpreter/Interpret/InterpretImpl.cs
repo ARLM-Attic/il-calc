@@ -74,33 +74,18 @@ namespace ILCalc
         else
         {
           if (op == Code.Argument)
-          {
             stack[++i] = args[this.code[c++]];
-          }
-#if !CF2
           else if (op == Code.Delegate0)
-          {
             stack[++i] = ((EvalFunc0<T>) this.funcs[f++])();
-          }
           else if (op == Code.Delegate1)
-          {
-            stack[i] = ((EvalFunc1<T>) this.funcs[f++])(stack[i]);
-          }
+            stack  [i] = ((EvalFunc1<T>) this.funcs[f++])(stack[i]);
           else if (op == Code.Delegate2)
-          {
-            stack[--i] = ((EvalFunc2<T>) this.funcs[f++])(stack[i], stack[i+1]);
-          }
-#endif
+            stack[--i] = ((EvalFunc2<T>) this.funcs[f++])(stack[i], stack[i + 1]);
           else if (op == Code.Function)
           {
             ((FuncCall<T>) this.funcs[f++]).Invoke(stack, ref i);
           }
-          else
-          {
-            
-            //if (this.check) Interpret.Check(stack[0]);
-            return stack[0];
-          }
+          else return stack[0];
         }
       }
     }

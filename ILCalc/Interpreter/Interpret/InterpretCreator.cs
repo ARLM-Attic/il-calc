@@ -98,18 +98,14 @@ namespace ILCalc
     public void PutSeparator() { }
     public void PutBeginCall() { }
 
-    public void PutCall(
-      FunctionItem<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int argsCount)
     {
       Debug.Assert(func != null);
       Debug.Assert(argsCount >= 0);
 
-#if CF2
-			AddFunc(func, argsCount);
-			AddCode(Code.Function);
-			RecalcStackSize(argsCount);
-#else
-      if (func.HasParamArray || func.ArgsCount > 2)
+      Delegate deleg = func.MakeDelegate();
+
+      if (deleg == null)
       {
         AddFunc(func, argsCount);
         AddCode(Code.Function);
@@ -117,31 +113,19 @@ namespace ILCalc
         return;
       }
 
+      AddDelegate(deleg);
       switch (func.ArgsCount)
       {
-        case 0:
-          AddDelegate(func, EvalType0);
-          AddCode(Code.Delegate0);
-
-          if (++this.stackSize > this.stackMax)
-          {
-            this.stackMax = this.stackSize;
-          }
-
-          break;
-
-        case 1:
-          AddDelegate(func, EvalType1);
-          AddCode(Code.Delegate1);
-          break;
-
-        case 2:
-          AddDelegate(func, EvalType2);
-          AddCode(Code.Delegate2);
-          this.stackSize--;
-          break;
+        case 0: AddCode(Code.Delegate0);
+                if (++this.stackSize > this.stackMax)
+                  this.stackMax = this.stackSize;
+                break;
+        case 1: AddCode(Code.Delegate1);
+                break;
+        case 2: AddCode(Code.Delegate2);
+                this.stackSize--;
+                break;
       }
-#endif
     }
 
     public void PutExprEnd()
@@ -189,26 +173,19 @@ namespace ILCalc
       else this.stackSize -= argsCount - 1;
     }
 
-#if !CF2
-
-    void AddDelegate(FunctionItem<T> func, Type delegType)
+    void AddDelegate(Delegate deleg)
     {
-      Debug.Assert(func != null);
-      Debug.Assert(delegType != null);
+      Debug.Assert(deleg != null);
 
       if (this.fpos == this.funcs.Length)
       {
         ExpandArray(ref this.funcs);
       }
 
-      this.funcs[this.fpos++] =
-        Delegate.CreateDelegate(
-          delegType, func.Target, func.Method);
+      this.funcs[this.fpos++] = deleg;
     }
 
-#endif
-
-    void AddFunc(FunctionItem<T> func, int argsCount)
+    void AddFunc(FunctionInfo<T> func, int argsCount)
     {
       Debug.Assert(func != null);
       Debug.Assert(argsCount >= 0);

@@ -70,7 +70,7 @@ namespace ILCalc
         Output.PutBeginCall();
         int argsCount = ParseNested(ref i, true);
 
-        FunctionItem<T> func = group.GetOverload(argsCount);
+        FunctionInfo<T> func = group.GetOverload(argsCount);
         if (func == null)
         {
           // there is no valid overload to use:
@@ -173,7 +173,7 @@ namespace ILCalc
     #endregion
     #region Overloads
 
-    List<FunctionItem<T>> GetOverloads(
+    List<FunctionInfo<T>> GetOverloads(
       List<Capture> matches, int argsCount)
     {
       Debug.Assert(matches != null);
@@ -182,7 +182,7 @@ namespace ILCalc
       bool hasParams = false;
       int fixCount = -1;
 
-      var overloads = new List<FunctionItem<T>>();
+      var overloads = new List<FunctionInfo<T>>();
 
       foreach (Capture match in matches)
       {

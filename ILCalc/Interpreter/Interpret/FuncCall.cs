@@ -11,7 +11,8 @@ namespace ILCalc
   {
     #region Fields
 
-    readonly FunctionItem<T> func;
+    //TODO: remove it, only MethodInfo + object
+    readonly FunctionInfo<T> func;
     readonly int lastIndex; // TODO: without it?
 
     readonly object[] fixArgs;
@@ -23,7 +24,7 @@ namespace ILCalc
     #endregion
     #region Constructor
 
-    public FuncCall(FunctionItem<T> f, int argsCount)
+    public FuncCall(FunctionInfo<T> f, int argsCount)
     {
       Debug.Assert(f != null);
       Debug.Assert(argsCount >= 0);
@@ -78,7 +79,10 @@ namespace ILCalc
           }
 
           // invoke via reflection:
-          stack[++pos] = this.func.Invoke(fixTemp);
+          Debug.Assert(fixTemp != null);
+
+          stack[++pos] = (T)
+            this.func.Method.Invoke(this.func.Target, fixTemp);
         }
         finally
         {
@@ -87,8 +91,7 @@ namespace ILCalc
       }
       else
       {
-        T result = this.func.Invoke(
-          stack, pos, this.argsCount);
+        T result = this.func.Invoke(stack, pos, this.argsCount);
 
         pos -= this.argsCount - 1;
         stack[pos] = result; // TODO: is all right here?

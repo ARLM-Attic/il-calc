@@ -8,10 +8,11 @@ namespace ILCalc
   {
     static readonly CultureInfo Current = CultureInfo.CurrentCulture;
 
-    public static void AppendFormat(
+    public static StringBuilder AppendFormat(
       this StringBuilder builder, string format, object arg)
     {
       builder.AppendFormat(Current, format, arg);
+      return builder;
     }
   }
 }

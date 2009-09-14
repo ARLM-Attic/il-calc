@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Changelog.txt = Changelog.txt
 		ILCalc.testrunconfig = ILCalc.testrunconfig
+		ILCalc2.vsmdi = ILCalc2.vsmdi
 		License.txt = License.txt
 		ReadMe.txt = ReadMe.txt
 		TODO List.txt = TODO List.txt
@@ -38,7 +39,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests.CF3", "ILCalc.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests.CF2", "ILCalc.Tests\ILCalc.Tests.CF2.csproj", "{77752BBD-9A2A-4691-9901-0927F8F9F76B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workplace", "Workplace\Workplace.csproj", "{9FA46FCB-7EEC-498F-85E6-E2360C258593}"
+EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = ILCalc2.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Deploy|Any CPU = Deploy|Any CPU
@@ -113,6 +119,12 @@ Global
 		{77752BBD-9A2A-4691-9901-0927F8F9F76B}.Deploy|Any CPU.Build.0 = Debug|Any CPU
 		{77752BBD-9A2A-4691-9901-0927F8F9F76B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77752BBD-9A2A-4691-9901-0927F8F9F76B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Deploy|Any CPU.Build.0 = Debug|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FA46FCB-7EEC-498F-85E6-E2360C258593}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

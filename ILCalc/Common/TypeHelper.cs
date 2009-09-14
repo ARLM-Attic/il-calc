@@ -12,6 +12,11 @@ namespace ILCalc
     public static readonly Type ValueType = typeof(T);
     public static readonly Type ArrayType = typeof(T[]);
 
+    public static readonly Type Func0 = typeof(EvalFunc0<T>);
+    public static readonly Type Func1 = typeof(EvalFunc1<T>);
+    public static readonly Type Func2 = typeof(EvalFunc2<T>);
+    public static readonly Type Func3 = typeof(EvalFuncN<T>);
+
     static readonly List<Type>
       TypesList = new List<Type> { ArrayType };
 

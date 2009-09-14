@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -21,29 +20,12 @@ namespace ILCalc.Tests
       this.int32Tester = new TabTester<int, Int32RangeSupport>();
       var ct = this.int32Tester.Context;
 
-#if CF2
+      ctx.Functions.Add("Sin", Math.Sin);
+      ctx.Functions.Add("Cos", Math.Cos);
+      ctx.Functions.Add("Tan", Math.Tan);
 
-      Type math = typeof(Math);
-      ctx.Functions.AddStatic(math.GetMethod("Sin"));
-      ctx.Functions.AddStatic(math.GetMethod("Cos"));
-      ctx.Functions.AddStatic(math.GetMethod("Tan"));
-
-      Type t = typeof(TabulationTests);
-      ct.Functions.AddStatic(t
-        .GetMethod("Func", new[] { typeof(int) }));
-      ct.Functions.AddStatic(t
-        .GetMethod("Func", new[] { typeof(int), typeof(int) }));
-
-#else
-
-      ctx.Functions.Add(Math.Sin);
-      ctx.Functions.Add(Math.Cos);
-      ctx.Functions.Add(Math.Tan);
-
-      ct.Functions.Add((EvalFunc1<int>) Func);
-      ct.Functions.Add((EvalFunc2<int>) Func);
-
-#endif
+      ct.Functions.Add("Func", (EvalFunc1<int>) Func);
+      ct.Functions.Add("Func", (EvalFunc2<int>) Func);
     }
 
     #endregion
@@ -56,8 +38,7 @@ namespace ILCalc.Tests
 
       readonly CalcContext<T> context;
 
-      static readonly TRangeSupport
-        Range = new TRangeSupport();
+      static readonly TRangeSupport Range = new TRangeSupport();
 
       public TabTester()
       {
@@ -89,9 +70,7 @@ namespace ILCalc.Tests
       }
 
       static T[][] Tabulate2D(
-        EvalFunc2<T> func,
-        ValueRange<T> r1,
-        ValueRange<T> r2)
+        EvalFunc2<T> func, ValueRange<T> r1, ValueRange<T> r2)
       {
         var array = new T[r1.Count][];
         T x = r1.Begin;

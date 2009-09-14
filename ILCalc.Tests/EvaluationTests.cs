@@ -55,8 +55,7 @@ namespace ILCalc.Tests
       void EqualityAssert(T a, T b);
     }
 
-    public sealed class DoubleTestSupport
-      : ITestSupport<double>
+    public sealed class DoubleTestSupport : ITestSupport<double>
     {
       #region Initialize
 
@@ -79,22 +78,10 @@ namespace ILCalc.Tests
         Context.Functions.Import("Params2", typeof(DoubleTestSupport));
         Context.Functions.Import("Params3", typeof(DoubleTestSupport));
 
-#if CF2
-
-        Type t = typeof(DoubleTestSupport);
-        Context.Functions.AddInstance(t.GetMethod("Inst0"), this);
-        Context.Functions.AddInstance(t.GetMethod("Inst1"), this);
-        Context.Functions.AddInstance(t.GetMethod("Inst2"), this);
-        Context.Functions.AddInstance(t.GetMethod("InstP"), this);
-
-#else
-
-        Context.Functions.Add(Inst0);
-        Context.Functions.Add(Inst1);
-        Context.Functions.Add(Inst2);
-        Context.Functions.Add(InstP);
-
-#endif
+        Context.Functions.Add("Inst0", Inst0);
+        Context.Functions.Add("Inst1", Inst1);
+        Context.Functions.Add("Inst2", Inst2);
+        Context.Functions.Add("InstP", InstP);
       }
 
       #endregion
@@ -170,15 +157,16 @@ namespace ILCalc.Tests
         if (double.IsInfinity(a) || double.IsNaN(a) ||
             double.IsInfinity(b) || double.IsNaN(b)) return;
 
-        //TODO: correctly!
-        Assert.AreEqual(a, b, Math.Abs(a * 0.00000001));
+        const double Eps = 1e-6;
+
+        var delta = Math.Max(Math.Abs(a), Math.Abs(b)) * Eps;
+        Assert.AreEqual(a, b, delta);
       }
 
       #endregion
     }
 
-    public sealed class Int32TestSupport
-      : ITestSupport<int>
+    public sealed class Int32TestSupport : ITestSupport<int>
     {
       #region Initialize
 
@@ -199,22 +187,10 @@ namespace ILCalc.Tests
         Context.Functions.Import("Params2", typeof(Int32TestSupport));
         Context.Functions.Import("Params3", typeof(Int32TestSupport));
 
-#if CF2
-
-        Type t = typeof(Int32TestSupport);
-        Context.Functions.AddInstance(t.GetMethod("Inst0"), this);
-        Context.Functions.AddInstance(t.GetMethod("Inst1"), this);
-        Context.Functions.AddInstance(t.GetMethod("Inst2"), this);
-        Context.Functions.AddInstance(t.GetMethod("InstP"), this);
-
-#else
-
-        Context.Functions.Add(Inst0);
-        Context.Functions.Add(Inst1);
-        Context.Functions.Add(Inst2);
-        Context.Functions.Add(InstP);
-
-#endif
+        Context.Functions.Add("Inst0", Inst0);
+        Context.Functions.Add("Inst1", Inst1);
+        Context.Functions.Add("Inst2", Inst2);
+        Context.Functions.Add("InstP", InstP);
       }
 
       #endregion

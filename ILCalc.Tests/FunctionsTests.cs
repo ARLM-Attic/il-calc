@@ -25,10 +25,10 @@ namespace ILCalc.Tests
       Calc.Functions.Import(typeof(FunctionsTests));
 
       // instance methods:
-      Calc.Functions.Add(Inst0);
-      Calc.Functions.Add(Inst1);
-      Calc.Functions.Add(Inst2);
-      Calc.Functions.Add(InsParams);
+      Calc.Functions.Add("Inst0", Inst0);
+      Calc.Functions.Add("Inst1", Inst1);
+      Calc.Functions.Add("Inst2", Inst2);
+      Calc.Functions.Add("InsParams", InsParams);
       Calc.Functions.AddInstance(
         typeof(FunctionsTests)
           .GetMethod("InsParams2",

@@ -68,13 +68,10 @@ namespace ILCalc
     // Types ==================================================
     static readonly Type[][] ArgsTypes =
       {
-        null,
+        Type.EmptyTypes,
         new[] { TypeHelper<T>.ValueType },
-        new[]
-        {
-          TypeHelper<T>.ValueType,
-          TypeHelper<T>.ValueType
-        },
+        new[] { TypeHelper<T>.ValueType,
+                TypeHelper<T>.ValueType },
         new[] { TypeHelper<T>.ArrayType }
       };
 

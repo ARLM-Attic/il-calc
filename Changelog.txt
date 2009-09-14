@@ -1,3 +1,13 @@
+v0.9.7.2 beta ===========================================
+
+	* Solution: Delegates support for CF 2.0 build.
+	* QuickInterpret: delegates calls.
+	* Interpret: better work with imported delegates.
+	* Interpret: slightly faster calls via reflection.
+	* Solution: FunctionItem<T> renamed => FunctionInfo<T>.
+	* Bugfix: compiling Evaluator<T> with 0 args and owner.
+	* Bugfix: methods with targets transform to delegates in Interpret.
+
 v0.9.7.0 beta ===========================================
 
 	* Solution: generics implemented!

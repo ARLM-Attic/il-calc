@@ -7,7 +7,7 @@
     void PutArgument(int id);
     void PutSeparator();
     void PutBeginCall();
-    void PutCall(FunctionItem<T> func, int argsCount);
+    void PutCall(FunctionInfo<T> func, int argsCount);
     void PutExprEnd(); //TODO: remove?
   }
 }

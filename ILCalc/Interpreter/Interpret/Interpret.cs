@@ -7,7 +7,7 @@ namespace ILCalc
   using Browsable = DebuggerBrowsableAttribute;
   using State = DebuggerBrowsableState;
 
-  //TODO: async tab => redone?
+  // TODO: async tab => redone?
 
   /// <summary>
   /// Represents the object for evaluating expression by interpreter.<br/>

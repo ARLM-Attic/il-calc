@@ -13,9 +13,9 @@ namespace ILCalc
 
   /// <summary>
   /// Represents the function overload group that contains
-  /// <see cref="FunctionItem{T}"/> items with different
-  /// values of <see cref="FunctionItem{T}.ArgsCount"/> and
-  /// <see cref="FunctionItem{T}.HasParamArray"/> properties.<br/>
+  /// <see cref="FunctionInfo{T}"/> items with different
+  /// values of <see cref="FunctionInfo{T}.ArgsCount"/> and
+  /// <see cref="FunctionInfo{T}.HasParamArray"/> properties.<br/>
   /// This class cannot be inherited.</summary>
   /// <typeparam name="T">Functions parameters
   /// and return value type.</typeparam>
@@ -23,22 +23,22 @@ namespace ILCalc
   [DebuggerDisplay("{Count} functions")]
   [Serializable]
   public sealed class FunctionGroup<T>
-    : IEnumerable<FunctionItem<T>>
+    : IEnumerable<FunctionInfo<T>>
   {
     #region Fields
 
     [DebuggerBrowsable(State.RootHidden)]
-    readonly List<FunctionItem<T>> funcList;
+    readonly List<FunctionInfo<T>> funcList;
 
     #endregion
     #region Constructors
 
-    internal FunctionGroup(FunctionItem<T> function)
+    internal FunctionGroup(FunctionInfo<T> function)
     {
       Debug.Assert(function != null);
 
       this.funcList = new
-        List<FunctionItem<T>>(1) { function };
+        List<FunctionInfo<T>>(1) { function };
     }
 
     // For clone
@@ -47,14 +47,14 @@ namespace ILCalc
       Debug.Assert(other != null);
 
       this.funcList = new List<
-        FunctionItem<T>>(other.funcList);
+        FunctionInfo<T>>(other.funcList);
     }
 
     #endregion
     #region Properties
 
     /// <summary>
-    /// Gets the count of <see cref="FunctionItem{T}">
+    /// Gets the count of <see cref="FunctionInfo{T}">
     /// functions</see> that this group represents.</summary>
     [DebuggerBrowsable(State.Never)]
     public int Count
@@ -63,17 +63,17 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Gets the <see cref="FunctionItem{T}"/>
+    /// Gets the <see cref="FunctionInfo{T}"/>
     /// at the specified index.</summary>
     /// <param name="index">The index of the
-    /// <see cref="FunctionItem{T}"/> to get.</param>
+    /// <see cref="FunctionInfo{T}"/> to get.</param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="index"/> is less than 0.<br/>-or-<br/>
     /// <paramref name="index"/> is equal to or
     /// greater than <see cref="Count"/></exception>
-    /// <returns>The <see cref="FunctionItem{T}"/>
+    /// <returns>The <see cref="FunctionInfo{T}"/>
     /// at the specified index.</returns>
-    public FunctionItem<T> this[int index]
+    public FunctionInfo<T> this[int index]
     {
       get { return this.funcList[index]; }
     }
@@ -84,22 +84,22 @@ namespace ILCalc
     // TODO: maybe Add & ICollection<T>?
 
     /// <summary>
-    /// Removes the <see cref="FunctionItem{T}"/> with
+    /// Removes the <see cref="FunctionInfo{T}"/> with
     /// the specified <paramref name="argsCount"/> and
     /// <paramref name="hasParamArray"/> values from
     /// the <see cref="FunctionGroup{T}"/>.</summary>
     /// <param name="argsCount">
-    /// <see cref="FunctionItem{T}"/> arguments count.</param>
+    /// <see cref="FunctionInfo{T}"/> arguments count.</param>
     /// <param name="hasParamArray">Indicates that
-    /// <see cref="FunctionItem{T}"/> has an parameters array.</param>
-    /// <returns><b>true</b> if specified <see cref="FunctionItem{T}"/>
+    /// <see cref="FunctionInfo{T}"/> has an parameters array.</param>
+    /// <returns><b>true</b> if specified <see cref="FunctionInfo{T}"/>
     /// is founded in the group and was removed;
     /// otherwise, <b>false</b>.</returns>
     public bool Remove(int argsCount, bool hasParamArray)
     {
       for (int i = 0; i < Count; i++)
       {
-        FunctionItem<T> func = this.funcList[i];
+        FunctionInfo<T> func = this.funcList[i];
 
         if (func.ArgsCount == argsCount &&
             func.HasParamArray == hasParamArray)
@@ -113,10 +113,10 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Removes the <see cref="FunctionItem{T}"/> at the specified
+    /// Removes the <see cref="FunctionInfo{T}"/> at the specified
     /// index of the <see cref="FunctionGroup{T}"/>.</summary>
     /// <param name="index">The zero-based index
-    /// of the <see cref="FunctionItem{T}"/> to remove.</param>
+    /// of the <see cref="FunctionInfo{T}"/> to remove.</param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <paramref name="index"/> is less than 0,
     /// equal to or greater than Count.</exception>
@@ -126,7 +126,7 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Removes all <see cref="FunctionItem{T}">functions</see>
+    /// Removes all <see cref="FunctionInfo{T}">functions</see>
     /// from the <see cref="FunctionGroup{T}"/>.</summary>
     public void Clear()
     {
@@ -134,19 +134,19 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Determines whether a <see cref="FunctionItem{T}"/>
+    /// Determines whether a <see cref="FunctionInfo{T}"/>
     /// with the specified <paramref name="argsCount"/> and
     /// <paramref name="hasParamArray"/> values is contains
     /// in the <see cref="FunctionGroup{T}"/>.</summary>
     /// <param name="argsCount">
-    /// <see cref="FunctionItem{T}"/> arguments count.</param>
+    /// <see cref="FunctionInfo{T}"/> arguments count.</param>
     /// <param name="hasParamArray">Indicates that
-    /// <see cref="FunctionItem{T}"/> has an parameters array.</param>
+    /// <see cref="FunctionInfo{T}"/> has an parameters array.</param>
     /// <returns><b>true</b> if function is found in the group;
     /// otherwise, <b>false</b>.</returns>
     public bool Contains(int argsCount, bool hasParamArray)
     {
-      foreach (FunctionItem<T> func in this.funcList)
+      foreach (FunctionInfo<T> func in this.funcList)
       {
         if (func.ArgsCount == argsCount &&
             func.HasParamArray == hasParamArray)
@@ -163,11 +163,11 @@ namespace ILCalc
 
     /// <summary>
     /// Returns an enumerator that iterates through
-    /// the <see cref="FunctionItem{T}">functions</see>
+    /// the <see cref="FunctionInfo{T}">functions</see>
     /// in <see cref="FunctionGroup{T}"/>.</summary>
-    /// <returns>An enumerator for the all <see cref="FunctionItem{T}">
+    /// <returns>An enumerator for the all <see cref="FunctionInfo{T}">
     /// functions</see> in <see cref="FunctionGroup{T}"/>.</returns>
-    public IEnumerator<FunctionItem<T>> GetEnumerator()
+    public IEnumerator<FunctionInfo<T>> GetEnumerator()
     {
       return this.funcList.GetEnumerator();
     }
@@ -180,11 +180,11 @@ namespace ILCalc
     #endregion
     #region Internals
 
-    internal bool Append(FunctionItem<T> func)
+    internal bool Append(FunctionInfo<T> func)
     {
       Debug.Assert(func != null);
 
-      foreach (FunctionItem<T> f in this.funcList)
+      foreach (FunctionInfo<T> f in this.funcList)
       {
         if (func.ArgsCount == f.ArgsCount &&
             func.HasParamArray == f.HasParamArray)
@@ -214,7 +214,7 @@ namespace ILCalc
       // and others:
       for (int i = 1, last = Count - 1; i < Count; i++)
       {
-        FunctionItem<T> func = this.funcList[i];
+        FunctionInfo<T> func = this.funcList[i];
 
         if (i == last)
         {
@@ -230,11 +230,11 @@ namespace ILCalc
       return buf.ToString();
     }
 
-    internal FunctionItem<T> GetOverload(int argsCount)
+    internal FunctionInfo<T> GetOverload(int argsCount)
     {
       Debug.Assert(argsCount >= 0);
 
-      FunctionItem<T> best = null;
+      FunctionInfo<T> best = null;
       int fixCount = -1;
 
       foreach (var func in this.funcList)
@@ -258,7 +258,7 @@ namespace ILCalc
     }
 
     static int ArgsCountComparator(
-      FunctionItem<T> a, FunctionItem<T> b)
+      FunctionInfo<T> a, FunctionInfo<T> b)
     {
       if (a.ArgsCount == b.ArgsCount)
       {
