@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using ILCalc.Custom;
@@ -232,54 +231,6 @@ namespace ILCalc
       OpCodes.Rem, OpCodes.Nop,
       OpCodes.Neg
     };
-
-    #endregion
-    #region Closure
-
-    public static readonly Type Owner2Type = typeof(Closure<,>);
-    public static readonly Type Owner3Type = typeof(Closure<,,>);
-    public static readonly Type OwnerNType = typeof(Closure);
-
-    public static readonly FieldInfo OwnerArrayField = OwnerNType
-      .GetField("closure", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    // TODO: try to make it struct?
-    public sealed class Closure
-    {
-      object[] closure;
-
-      public Closure(object[] closure)
-      {
-        Debug.Assert(closure != null);
-        this.closure = closure;
-      }
-    }
-
-    public sealed class Closure<T1, T2>
-    {
-      readonly T1 obj0;
-      readonly T2 obj1;
-
-      public Closure(T1 obj0, T2 obj1)
-      {
-        this.obj0 = obj0;
-        this.obj1 = obj1;
-      }
-    }
-
-    public sealed class Closure<T1, T2, T3>
-    {
-      readonly T1 obj0;
-      readonly T2 obj1;
-      readonly T3 obj2;
-
-      public Closure(T1 obj0, T2 obj1, T3 obj2)
-      {
-        this.obj0 = obj0;
-        this.obj1 = obj1;
-        this.obj2 = obj2;
-      }
-    }
 
     #endregion
   }

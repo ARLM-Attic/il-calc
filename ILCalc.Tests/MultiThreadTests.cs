@@ -90,7 +90,7 @@ namespace ILCalc.Tests
     [TestMethod]
     public void ThreadSafetyTest()
     {
-      const int Count = 1000;
+      const int Count = 200;
 
       for (int i = 0; i < Count; i++)
       {

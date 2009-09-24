@@ -43,7 +43,7 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region Import Methods
+    #region ImportMethods
 
     public double Inst0()
     {
@@ -127,7 +127,7 @@ namespace ILCalc.Tests
         .Evaluate(this.x));
     }
 
-#if !SILVERLIGHT && !CF
+#if !CF
 
     [TestMethod]
     public void EvaluatorCallsTest()
@@ -234,7 +234,7 @@ namespace ILCalc.Tests
 
       c.Constants.Clear();
       c.Constants.ImportBuiltIn();
-      Assert.AreEqual(c.Constants.Count, 4);
+      Assert.AreEqual(c.Constants.Count, 5);
 
       c.Constants.Clear();
       c.Constants.Import(typeof(ClassForImport));

@@ -31,13 +31,13 @@
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DefineConstants>TRACE;DEBUG;PocketPC CF CF2</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CF CF2</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;$(PlatformFamilyName)</DefineConstants>
+    <DefineConstants>TRACE;CF CF2</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -62,7 +62,6 @@
     <Compile Include="ExceptionsTests.cs" />
     <Compile Include="FunctionsTests.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
-    <Compile Include="Helpers\Optimizer.cs" />
     <Compile Include="Helpers\Trace.SL2.cs" />
     <Compile Include="ParsingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

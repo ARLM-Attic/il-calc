@@ -9,8 +9,6 @@ namespace ILCalc
 {
   using State = DebuggerBrowsableState;
 
-  //TODO: with <the> same name
-
   /// <summary>
   /// Manages the pairs list of names and attached
   /// function groups available to an expression.
@@ -35,6 +33,10 @@ namespace ILCalc
 
     [DebuggerBrowsable(State.Never)]
     readonly List<FunctionGroup<T>> funcsList;
+
+    [DebuggerBrowsable(State.Never)]
+    static readonly FunctionCollection<T>
+      BuiltIns = ImportHelper.ResolveFunctions<T>();
 
     #endregion
     #region Constructors
@@ -179,8 +181,8 @@ namespace ILCalc
 
     /// <summary>
     /// Adds the <see cref="FunctionInfo{T}"/>
-    /// to the <see cref="FunctionCollection{T}"/> with
-    /// the function name, taken from real method name.</summary>
+    /// to the <see cref="FunctionCollection{T}"/> with the
+    /// function name, taken from real method name.</summary>
     /// <overloads>Adds the function to the
     /// <see cref="FunctionCollection{T}"/>.</overloads>
     /// <param name="function">
@@ -188,7 +190,7 @@ namespace ILCalc
     /// <exception cref="ArgumentNullException">
     /// <paramref name="function"/> is null.</exception>
     /// <exception cref="ArgumentException">
-    /// <see cref="FunctionInfo{T}"/> with same name
+    /// <see cref="FunctionInfo{T}"/> with the same name
     /// and the same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(FunctionInfo<T> function)
@@ -210,7 +212,7 @@ namespace ILCalc
     /// <paramref name="name"/> is null.<br/>-or-<br/>
     /// <paramref name="function"/> is null.</exception>
     /// <exception cref="ArgumentException">
-    /// <see cref="FunctionInfo{T}"/> with same name
+    /// <see cref="FunctionInfo{T}"/> with the same name
     /// and the same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(string name, FunctionInfo<T> function)
@@ -236,7 +238,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and the same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(string name, EvalFunc0<T> target)
@@ -258,7 +260,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(string name, EvalFunc1<T> target)
@@ -280,7 +282,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(string name, EvalFunc2<T> target)
@@ -301,13 +303,43 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void Add(string name, EvalFuncN<T> target)
     {
       AddFunc(name, FunctionFactory<T>
         .FromDelegate(target, true));
+    }
+
+    /// <summary>
+    /// Adds the <typeparamref name="TDelegate"/> delegate
+    /// to the <see cref="FunctionCollection{T}"/>
+    /// with the specified function name.</summary>
+    /// <typeparam name="TDelegate">Delegate type.</typeparam>
+    /// <param name="name">Function group name.</param>
+    /// <param name="target">
+    /// <typeparamref name="TDelegate"/> instance to add.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="target"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <typeparamref name="TDelegate"/>
+    /// is not delegate type.<br/>-or-<br/>
+    /// <paramref name="target"/> is not valid delegate
+    /// to be added to the <see cref="FunctionCollection{T}"/>.
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
+    /// same name and same arguments count already exist
+    /// in the collection (overload impossible).</exception>
+    public void Add<TDelegate>(string name, TDelegate target)
+    {
+      var delType = typeof(TDelegate);
+      if (!typeof(Delegate).IsAssignableFrom(delType))
+      {
+        throw new ArgumentException();
+      }
+
+      AddFunc(name, FunctionFactory<T>
+        .FromDelegate((Delegate) (object) target, true));
     }
 
     #if !CF2
@@ -323,7 +355,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and the same arguments count already exist
     /// in the collection (overload impossible).</exception>
     /// <remarks>Not available on .NET CF 2.0 because
@@ -345,7 +377,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     /// <remarks>Not available on .NET CF 2.0 because
@@ -357,9 +389,9 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Adds the <see cref="EvalFunc2{T}"/> delegate to the
-    /// <see cref="FunctionCollection{T}"/> with the function
-    /// name, taken from real method name.</summary>
+    /// Adds the <see cref="EvalFunc2{T}"/> delegate
+    /// to the <see cref="FunctionCollection{T}"/> with the
+    /// function name, taken from real method name.</summary>
     /// <param name="target">
     /// <see cref="EvalFunc2{T}"/> instance to add.</param>
     /// <exception cref="ArgumentNullException">
@@ -367,7 +399,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     /// <remarks>Not available on .NET CF 2.0 because
@@ -389,7 +421,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="target"/> is not valid delegate
     /// to be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     /// <remarks>Not available on .NET CF 2.0 because
@@ -400,10 +432,24 @@ namespace ILCalc
         .FromDelegate(target, true));
     }
 
-    //TODO: public void AddDelegate<TDelegate>(TDelegate target)
-
-    //TODO: implement!
-    public void AddDelegate<TDelegate>(string name, TDelegate target)
+    /// <summary>
+    /// Adds the <typeparamref name="TDelegate"/> delegate
+    /// to the <see cref="FunctionCollection{T}"/> with the
+    /// function name, taken from real method name.</summary>
+    /// <typeparam name="TDelegate">Delegate type.</typeparam>
+    /// <param name="target">
+    /// <typeparamref name="TDelegate"/> instance to add.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="target"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <typeparamref name="TDelegate"/>
+    /// is not delegate type.<br/>-or-<br/>
+    /// <paramref name="target"/> is not valid delegate
+    /// to be added to the <see cref="FunctionCollection{T}"/>.
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
+    /// same name and same arguments count already exist
+    /// in the collection (overload impossible).</exception>
+    public void Add<TDelegate>(TDelegate target)
     {
       var delType = typeof(TDelegate);
       if (!typeof(Delegate).IsAssignableFrom(delType))
@@ -411,9 +457,8 @@ namespace ILCalc
         throw new ArgumentException();
       }
 
-      var invoker = delType.GetMethod("Invoke");
-
-
+      AddFunc(FunctionFactory<T>
+        .FromDelegate((Delegate) (object) target, true));
     }
 
 #endif
@@ -431,13 +476,15 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="method"/> is not valid method to be
     /// added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void AddStatic(MethodInfo method)
     {
       if (method == null)
         throw new ArgumentNullException("method");
+
+      Validator.CheckVisible(method);
 
       AddFunc(FunctionFactory<T>
         .FromReflection(method, null, true));
@@ -455,13 +502,15 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="method"/> is not valid method to
     /// be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void AddStatic(string name, MethodInfo method)
     {
       if (method == null)
         throw new ArgumentNullException("method");
+
+      Validator.CheckVisible(method);
 
       AddFunc(name, FunctionFactory<T>
         .FromReflection(method, null, true));
@@ -480,13 +529,15 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="method"/> is not valid method to
     /// be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void AddInstance(MethodInfo method, object target)
     {
       if (method == null) throw new ArgumentNullException("method");
       if (target == null) throw new ArgumentNullException("target");
+
+      Validator.CheckVisible(method);
 
       AddFunc(FunctionFactory<T>
         .FromReflection(method, target, true));
@@ -506,7 +557,7 @@ namespace ILCalc
     /// <exception cref="ArgumentException">
     /// <paramref name="method"/> is not valid method to
     /// be added to the <see cref="FunctionCollection{T}"/>.
-    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with
+    /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
     public void AddInstance(
@@ -514,6 +565,8 @@ namespace ILCalc
     {
       if (method == null) throw new ArgumentNullException("method");
       if (target == null) throw new ArgumentNullException("target");
+
+      Validator.CheckVisible(method);
 
       AddFunc(name, FunctionFactory<T>
         .FromReflection(method, target, true));
@@ -535,73 +588,14 @@ namespace ILCalc
     /// in the collection (overload impossible).</exception>
     public void ImportBuiltIn()
     {
-      if (typeof(T) != typeof(Double))
-        return; //TODO: remove
-
-      Type math = typeof(Math);
-      Type type = typeof(double);
-      var oneArg = new[] { type };
-      var twoArg = new[] { type, type };
-
-      //TODO: replace with delegates
-
-//      var col = new FunctionCollection<double>
-//      {
-//        { "abs", Math.Abs },
-//        Math.Sin, Math.Sinh, Math.Asin,
-//        Math.Cos, Math.Cosh, Math.Acos,
-//        Math.Tan, Math.Tanh, Math.Atan,
-//        Math.Atan2, { "Ceil", Math.Ceiling },
-//        Math.Floor,
-//        Math.Round,
-//#if !CF2
-//#if !SILVERLIGHT
-//        { "Trunc", Math.Truncate },
-//#endif
-//        (EvalFunc2<double>) Math.Log,
-//#endif
-//        (EvalFunc1<double>) Math.Log,
-//        Math.Log10,
-//        Math.Min, Math.Max,
-//        Math.Exp, Math.Pow,
-//        Math.Sqrt
-//      };
-
-      AddStatic("Abs", math.GetMethod("Abs", oneArg));
-
-      AddStatic("Sin", math.GetMethod("Sin"));
-      AddStatic("Cos", math.GetMethod("Cos"));
-      AddStatic("Tan", math.GetMethod("Tan"));
-
-      AddStatic("Sinh", math.GetMethod("Sinh"));
-      AddStatic("Cosh", math.GetMethod("Cosh"));
-      AddStatic("Tanh", math.GetMethod("Tanh"));
-
-      AddStatic("Acos", math.GetMethod("Acos"));
-      AddStatic("Asin", math.GetMethod("Asin"));
-      AddStatic("Atan", math.GetMethod("Atan"));
-      AddStatic("Atan2", math.GetMethod("Atan2"));
-
-      AddStatic("Ceil", math.GetMethod("Ceiling", oneArg));
-      AddStatic("Floor", math.GetMethod("Floor", oneArg));
-      AddStatic("Round", math.GetMethod("Round", oneArg));
-
-#if !SILVERLIGHT && !CF
-      AddStatic("Trunc", math.GetMethod("Truncate", oneArg));
-#endif
-
-      AddStatic("Log", math.GetMethod("Log", oneArg));
-#if !CF
-      AddStatic("Log", math.GetMethod("Log", twoArg));
-#endif
-      AddStatic("Log10", math.GetMethod("Log10"));
-
-      AddStatic("Min", math.GetMethod("Min", twoArg));
-      AddStatic("Max", math.GetMethod("Max", twoArg));
-
-      AddStatic("Exp", math.GetMethod("Exp"));
-      AddStatic("Pow", math.GetMethod("Pow"));
-      AddStatic("Sqrt", math.GetMethod("Sqrt"));
+      if (BuiltIns != null)
+      {
+        foreach (var pair in BuiltIns)
+        foreach (var func in pair.Value)
+        {
+          Add(pair.Key, func);
+        }
+      }
     }
 
     /// <summary>
@@ -624,6 +618,8 @@ namespace ILCalc
         BindingFlags.Static |
         BindingFlags.Public |
         BindingFlags.FlattenHierarchy;
+
+      Validator.CheckVisible(type);
 
       InternalImport(type, Flags);
     }
@@ -713,6 +709,8 @@ namespace ILCalc
       var method = FunctionFactory<T>
         .TryResolve(type, methodName, -1);
 
+      Validator.CheckVisible(method);
+
       AddFunc(FunctionFactory<T>
         .FromReflection(method, null, true));
     }
@@ -735,7 +733,7 @@ namespace ILCalc
     /// <br/>-or-<br/>Founded method is not valid to be added
     /// to the <see cref="FunctionCollection{T}"/>.
     /// <br/>-or-<br/><see cref="FunctionInfo{T}"/>
-    /// with same name and the same arguments count already
+    /// with the same name and the same arguments count already
     /// exist in the collection (overload impossible).</exception>
     public void Import(
       string methodName, Type type, int parametersCount)
@@ -745,6 +743,8 @@ namespace ILCalc
 
       var method = FunctionFactory<T>.TryResolve(
         type, methodName, parametersCount);
+
+      Validator.CheckVisible(method);
 
       AddFunc(FunctionFactory<T>
         .FromReflection(method, null, true));

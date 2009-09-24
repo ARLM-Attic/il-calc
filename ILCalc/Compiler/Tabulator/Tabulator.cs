@@ -7,13 +7,14 @@ namespace ILCalc
   using Browsable = DebuggerBrowsableAttribute;
 
   /// <summary>
-  /// Represents the object for evaluating compiled expression
-  /// in specified range of argument values.<br/>
+  /// Represents the object for evaluating
+  /// compiled expression in specified range
+  /// of argument values.<br/>
   /// Instance of this class can be get from the
-  /// <see cref="CalcContext{T}.CreateTabulator"/> method.<br/>
-  /// This class cannot be inherited.</summary>
+  /// <see cref="CalcContext{T}.CreateTabulator"/>
+  /// method.<br/>This class cannot be inherited.</summary>
   /// <typeparam name="T">Expression values type.</typeparam>
-  /// <remarks>Not available in the .NET CF / Silverlight versions.</remarks>
+  /// <remarks>Not available in the .NET CF versions.</remarks>
   /// <threadsafety instance="true" static="true"/>
   [DebuggerDisplay("{ToString()} ({RangesCount} range(s))")]
   public sealed class Tabulator<T>
@@ -424,26 +425,41 @@ namespace ILCalc
     /// The <see cref="AsyncCallback"/> delegate.</param>
     /// <param name="state">An object that contains
     /// state information for this tabulation.</param>
-    /// <exception cref="InvalidRangeException"><paramref name="range"/>
-    /// is not valid for iteration over it.</exception>
-    /// <exception cref="ArgumentException"><see cref="Tabulator{T}"/>
-    /// with one range is not compiled, you should specify valid
+    /// <exception cref="InvalidRangeException">
+    /// <paramref name="range"/> is not valid
+    /// for iteration over it.</exception>
+    /// <exception cref="ArgumentException">
+    /// <see cref="Tabulator{T}"/> with one range
+    /// is not compiled, you should specify valid
     /// <see cref="RangesCount">ranges count</see>.</exception>
     /// <exception cref="ArithmeticException">Expression evaluation
     /// thrown the <see cref="ArithmeticException"/>.</exception>
     /// <returns>An <see cref="IAsyncResult"/> that references
     /// the asynchronous tabulation result.</returns>
     public IAsyncResult BeginTabulate(
-      ValueRange<T> range, AsyncCallback callback, object state)
+      ValueRange<T> range,
+      AsyncCallback callback,
+      object state)
     {
       if (this.argsCount != 1) throw InvalidArgs(1);
 
-      return ((TabFunc1<T>) this.asyncTab).BeginInvoke(
-        new T[range.ValidCount],
-        range.Step,
-        range.Begin,
-        callback,
-        state);
+#if SILVERLIGHT
+
+      return new AsyncHelper<T[]>(() => 
+        this.tabulator1(
+          new T[range.ValidCount],
+          range.Step, range.Begin),
+        callback, state);
+
+#else
+
+      return ((TabFunc1<T>) this.asyncTab)
+        .BeginInvoke(
+          new T[range.ValidCount],
+          range.Step, range.Begin,
+          callback, state);
+
+#endif
     }
 
     /// <summary>
@@ -481,14 +497,29 @@ namespace ILCalc
         array[i] = new T[count];
       }
 
-      return ((TabFunc2<T>) this.asyncTab).BeginInvoke(
-        array,
-        range1.Step,
-        range2.Step,
-        range1.Begin,
-        range2.Begin,
-        callback,
-        state);
+#if SILVERLIGHT
+
+      return new AsyncHelper<T[][]>(() =>
+        this.tabulator2(
+          array,
+          range1.Step,
+          range2.Step,
+          range1.Begin,
+          range2.Begin),
+        callback, state);
+
+#else
+
+      return ((TabFunc2<T>) this.asyncTab)
+        .BeginInvoke(
+          array,
+          range1.Step,
+          range2.Step,
+          range1.Begin,
+          range2.Begin,
+          callback, state);
+
+#endif
     }
 
     /// <summary>
@@ -520,18 +551,29 @@ namespace ILCalc
     {
       if (this.argsCount != 3) throw WrongRangesCount(3);
 
-      return ((TabFuncN<T>) this.asyncTab).BeginInvoke(
-        this.allocator(
-          range1.ValidCount,
-          range2.ValidCount,
-          range3.ValidCount),
-        new[]
-        {
-          range1.Step,  range2.Step,  range3.Step,
-          range1.Begin, range2.Begin, range3.Begin
-        },
-        callback,
-        state);
+      var array = this.allocator(
+        range1.ValidCount,
+        range2.ValidCount,
+        range3.ValidCount);
+
+      var args = new[]
+      {
+        range1.Step,  range2.Step,  range3.Step,
+        range1.Begin, range2.Begin, range3.Begin
+      };
+
+#if SILVERLIGHT
+
+      return new AsyncHelper<Array>(() =>
+        this.tabulatorN(array, args),
+        callback, state);
+
+#else
+
+      return ((TabFuncN<T>) this.asyncTab)
+        .BeginInvoke(array, args, callback, state);
+
+#endif
     }
 
     /// <summary>
@@ -555,7 +597,9 @@ namespace ILCalc
     /// <returns><see cref="RangesCount">N</see>-dimensional jagged array
     /// of the evaluated values casted to <see cref="Array"/> type.</returns>
     public IAsyncResult BeginTabulate(
-      ValueRange<T>[] ranges, AsyncCallback callback, object state)
+      ValueRange<T>[] ranges,
+      AsyncCallback callback,
+      object state)
     {
       if (ranges == null
        || ranges.Length != this.argsCount)
@@ -575,8 +619,19 @@ namespace ILCalc
         data[ranges.Length + i] = range.Begin;
       }
 
-      return ((TabFuncN<T>) this.asyncTab).BeginInvoke(
-        this.allocator(lengths), data, callback, state);
+#if SILVERLIGHT
+
+      return new AsyncHelper<Array>(() =>
+        this.tabulatorN(this.allocator(lengths), data),
+        callback, state);
+
+#else
+
+      return ((TabFuncN<T>) this.asyncTab)
+        .BeginInvoke(this.allocator(lengths),
+          data, callback, state);
+
+#endif
     }
 
     /// <summary>
@@ -595,16 +650,29 @@ namespace ILCalc
       if (result == null)
         throw new ArgumentNullException("result");
 
+#if SILVERLIGHT
+
+      switch (this.argsCount)
+      {
+        case 1:  return ((AsyncHelper<T[]>)   result).EndInvoke();
+        case 2:  return ((AsyncHelper<T[][]>) result).EndInvoke();
+        default: return ((AsyncHelper<Array>) result).EndInvoke();
+      }
+
+#else
+
       switch (this.argsCount)
       {
         case 1:  return ((TabFunc1<T>) this.asyncTab).EndInvoke(result);
         case 2:  return ((TabFunc2<T>) this.asyncTab).EndInvoke(result);
         default: return ((TabFuncN<T>) this.asyncTab).EndInvoke(result);
       }
+
+#endif
     }
 
     #endregion
-    #region Throw Methods
+    #region ThrowMethods
 
     T[] ThrowMethod1(T[] array, T step, T begin)
     {
@@ -623,7 +691,9 @@ namespace ILCalc
     Array ThrowAlloc(int[] length)
     {
       throw new ArgumentException(string.Format(
-        Resource.errWrongRangesCount, length.Length, this.argsCount));
+        Resource.errWrongRangesCount,
+        length.Length,
+        this.argsCount));
     }
 
     Exception InvalidArgs(int actualCount)

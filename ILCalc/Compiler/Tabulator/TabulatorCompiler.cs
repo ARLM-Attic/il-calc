@@ -68,9 +68,18 @@ namespace ILCalc
       Type[] argsTypes = ArgsTypes[args];
       object owner = OwnerFixup(ref argsTypes);
 
+#if SILVERLIGHT
+
+      var method = new DynamicMethod(
+        "tabulator", ArgsTypes[args][0], argsTypes);
+
+#else
+
       var method = new DynamicMethod(
         "tabulator", ArgsTypes[args][0],
         argsTypes, OwnerType, true);
+
+#endif
 
       // ======================================================
 
@@ -360,9 +369,18 @@ namespace ILCalc
 
     static Allocator<T> CompileAllocator(int rank)
     {
+#if SILVERLIGHT
+
+      var method = new DynamicMethod(
+        "alloc" + rank, SystemArrayType, AllocArgs);
+
+#else
+
       var method = new DynamicMethod(
         "alloc" + rank, SystemArrayType,
         AllocArgs, AllocType, true);
+
+#endif
 
       ILGenerator il = method.GetILGenerator();
 

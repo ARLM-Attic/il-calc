@@ -33,14 +33,13 @@ namespace ILCalc
     #endregion
     #region Interpreter
 
-    internal override T Run(T[] stackArr, T[] args)
+    internal override T Run(T[] stack, T[] args)
     {
       int c = 0, // code position
           n = 0, // number position
           f = 0, // functions pos
           i = -1; // stack marker
 
-      T[] stack = stackArr;
       while (true)
       {
         int op = this.code[c++];
@@ -140,7 +139,7 @@ namespace ILCalc
       return TabNImpl(args, stack, array, 0, ranges);
     }
 
-    internal override Array TabNImpl(
+    internal Array TabNImpl(
       T[] args, T[] stack, Array xarray,
       int pos, params ValueRange<T>[] ranges)
     {
@@ -174,8 +173,8 @@ namespace ILCalc
           var array = (Array) xarray.GetValue(i);
           TabNImpl(args, stack, array, next, ranges);
 
-          args[pos] = Generic
-            .Add(args[pos], ranges[pos].Step);
+          args[pos] = Generic.Add(
+            args[pos], ranges[pos].Step);
         }
       }
 

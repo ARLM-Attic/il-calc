@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
-    <Compile Include="CalcContext.Serialization.cs" />
+    <Compile Include="Others\CalcContext.Serialize.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
     <Compile Include="Common\ICompiler.cs" />
@@ -65,10 +65,12 @@
     <Compile Include="Collections\FunctionCollection.cs" />
     <Compile Include="Collections\FunctionFactory.cs" />
     <Compile Include="Collections\FunctionGroup.cs" />
+    <Compile Include="Compiler\Compiler.Owner.cs" />
     <Compile Include="Compiler\Tabulator\Tabulator.Alloc.cs" />
     <Compile Include="Interpreter\Interpret\Interpret.Alloc.cs" />
     <Compile Include="Interpreter\Interpret\InterpretImpl.cs" />
     <Compile Include="Interpreter\QuickInterpImpl.cs" />
+    <Compile Include="Others\ImportHelper.cs" />
     <Compile Include="Others\Validator.cs" />
     <Compile Include="Compiler\Evaluator\Evaluator.cs" />
     <Compile Include="Common\IEvaluator.cs" />

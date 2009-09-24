@@ -1,12 +1,19 @@
-v0.9.7.2 beta ===========================================
+v0.9.7.3 beta ===========================================
 
+	* Silverlight: compiler (Evaluator) is now supported!
+	* Silverlight: visibility checks for methods import.
+	* Silverlight: async Tabulate() support for Tabulator.
 	* Solution: Delegates support for CF 2.0 build.
-	* QuickInterpret: delegates calls.
+	* QuickInterpret: faster calls of imported delegates.
 	* Interpret: better work with imported delegates.
 	* Interpret: slightly faster calls via reflection.
+	* FunctionCollection: new Add<TDelegate> method included.
 	* Solution: FunctionItem<T> renamed => FunctionInfo<T>.
-	* Bugfix: compiling Evaluator<T> with 0 args and owner.
+	* ValueRange: better Double \ Single range validation.
+	* Collection: ImportBuiltIns works now for all supported types.
+	* Solution: more unit tests + some custom tests for Silverlight.
 	* Bugfix: methods with targets transform to delegates in Interpret.
+	* Bugfix: compiling Evaluator<T> with 0 args and owner.
 
 v0.9.7.0 beta ===========================================
 

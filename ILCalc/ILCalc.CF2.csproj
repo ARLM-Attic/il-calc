@@ -104,6 +104,7 @@
     <Compile Include="Interpreter\QuickInterpImpl.cs" />
     <Compile Include="Others\Compatibility.CF.cs" />
     <Compile Include="Others\Compatibility.CF2.cs" />
+    <Compile Include="Others\ImportHelper.cs" />
     <Compile Include="Others\Optimizer\OptimizeModes.cs" />
     <Compile Include="Others\Optimizer\OptimizeOutput.cs" />
     <Compile Include="Others\Specials\BufferOutput.cs" />

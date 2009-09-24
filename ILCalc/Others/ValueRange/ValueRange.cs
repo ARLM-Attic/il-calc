@@ -19,15 +19,9 @@ namespace ILCalc
   /// <see cref="Double"/>, <see cref="Decimal"/>.
   /// </typeparam>
   /// <threadsafety instance="true" static="true"/>
-  /// <remarks>
-  /// If you are trying to use this class with
-  /// not supported type parameter you will
-  /// get <see cref="TypeInitializationException"/>.
-  /// </remarks>
   [DebuggerDisplay("[{Begin} - {End}] step {Step}")]
   [Serializable]
-  public struct ValueRange<T>
-    : IEquatable<ValueRange<T>>
+  public struct ValueRange<T> : IEquatable<ValueRange<T>>
   {
     #region Fields
 
@@ -45,9 +39,9 @@ namespace ILCalc
     #region Constructors
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ValueRange{T}"/>
-    /// structure with the specified begin, end and step values.
-    /// </summary>
+    /// Initializes a new instance of the
+    /// <see cref="ValueRange{T}"/> structure with
+    /// the specified begin, end and step values.</summary>
     /// <param name="begin">Range begin value.</param>
     /// <param name="end">Range end value.</param>
     /// <param name="step">Range step value.</param>
@@ -83,30 +77,55 @@ namespace ILCalc
     #region Properties
 
     /// <summary>
-    /// Gets the begining value of the range.</summary>
-    public T Begin { get { return this.begin; } }
+    /// Gets the begining value of the range.
+    /// </summary>
+    [DebuggerHidden]
+    public T Begin
+    {
+      get { return this.begin; }
+    }
 
     /// <summary>
-    /// Gets the ending value of the range.</summary>
-    public T End { get { return this.end; } }
+    /// Gets the ending value of the range.
+    /// </summary>
+    [DebuggerHidden]
+    public T End
+    {
+      get { return this.end; }
+    }
 
     /// <summary>
-    /// Gets the step value of the range.</summary>
-    public T Step { get { return this.step; } }
+    /// Gets the step value of the range.
+    /// </summary>
+    [DebuggerHidden]
+    public T Step
+    {
+      get { return this.step; }
+    }
 
     /// <summary>
     /// Gets the count of the steps, that would
-    /// be taken while iteration over the range.</summary>
-    public int Count { get { return this.count; } }
+    /// be taken while iteration over the range.
+    /// </summary>
+    [DebuggerHidden]
+    public int Count
+    {
+      get { return this.count; }
+    }
 
     /// <summary>
     /// Gets the value indicating when this instance
     /// is valid for iteration over it.</summary>
     /// <returns><b>true</b> if range is valid,
     /// otherwise <b>false</b></returns>
+    [DebuggerHidden]
     public bool IsValid
     {
-      get { return this.valid == ValueRangeValidness.Correct; }
+      get
+      {
+        return this.valid ==
+          ValueRangeValidness.Correct;
+      }
     }
 
     [DebuggerBrowsable(State.Never)]
@@ -298,10 +317,8 @@ namespace ILCalc
   enum ValueRangeValidness : byte
   {
     ZeroInit = 0,
-    Correct,
-    NotFinite,
-    Endless,
-    WrongSign,
+    Correct, NotFinite,
+    Endless, WrongSign,
     TooLoong,
     NotSupported
   }

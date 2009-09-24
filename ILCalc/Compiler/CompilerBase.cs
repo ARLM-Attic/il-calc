@@ -21,8 +21,8 @@ namespace ILCalc
     int targetsCount;
     Type ownerType;
 
-    protected static readonly
-      ICompiler<T> Generic = CompilerSupport.Resolve<T>();
+    protected static readonly ICompiler<T>
+      Generic = CompilerSupport.Resolve<T>();
 
     #endregion
     #region Constructor
@@ -46,12 +46,12 @@ namespace ILCalc
 
     protected void CodeGen(ILGenerator il)
     {
-      int n = 0, d = 0, c = 0;
+      int n = 0, d = 0, c = 0, id = 0;
       Stack<FuncCall> stack = null;
-      FuncCall curCall = null;
-      int targetIndex = 0;
+      FuncCall call = null;
 
-      for (int i = 0; ; i++) // TODO: length-based?
+      // TODO: length-based?
+      for (int i = 0; ; i++)
       {
         int op = this.code[i];
 
@@ -72,47 +72,47 @@ namespace ILCalc
         else if (op == Code.Separator) // =============================
         {
           // separator needed only for params calls
-          Debug.Assert(curCall != null);
-          if (curCall.VarCount >= 0)
+          Debug.Assert(call != null);
+          if (call.VarCount >= 0)
           {
-            EmitSeparator(il, curCall);
+            EmitSeparator(il, call);
           }
         }
         else if (op == Code.Function) // ==============================
         {
-          EmitFunctionCall(il, curCall);
+          EmitFunctionCall(il, call);
 
           // parent call info:
-          if (stack == null || stack.Count == 0)
-               curCall = null;
-          else curCall = stack.Pop();
+          if (stack == null ||
+              stack.Count == 0) call = null;
+          else call = stack.Pop();
         }
         else if (op == Code.BeginCall) // =============================
         {
-          if (curCall != null)
+          if (call != null)
           {
             // allocate if needed
             if (stack == null) stack = new Stack<FuncCall>();
-            stack.Push(curCall);
+            stack.Push(call);
           }
 
-          curCall = this.calls[c++];
+          call = this.calls[c++];
 
           // need for local to store params array:
-          if (curCall.VarCount > 0)
+          if (call.VarCount > 0)
           {
-            curCall.Local = il.DeclareLocal(TypeHelper<T>.ArrayType);
+            call.Local = il.DeclareLocal(
+              TypeHelper<T>.ArrayType);
           }
 
-          if (curCall.Target != null)
+          if (call.Target != null)
           {
-            EmitLoadTarget(il, curCall.Target, targetIndex++);
+            EmitLoadObj(il, call.Target, id++);
           }
 
-          if (curCall.Current == 0 &&
-              curCall.VarCount > 0)
+          if (call.Current == 0 && call.VarCount > 0)
           {
-            EmitParamArr(il, curCall);
+            EmitParamArr(il, call);
           }
         }
         else // =======================================================
@@ -127,22 +127,26 @@ namespace ILCalc
 
     protected abstract void EmitLoadArg(ILGenerator il, int index);
 
-    void EmitLoadTarget(ILGenerator il, object target, int index)
+    void EmitLoadObj(ILGenerator il, object obj, int index)
     {
       Debug.Assert(il != null);
-      Debug.Assert(target != null);
+      Debug.Assert(obj != null);
       Debug.Assert(index < this.targetsCount);
 
-      // loads target
+      // loads this
       il.Emit(OpCodes.Ldarg_0);
 
-      if (this.targetsCount == 1) {}
+      if (this.targetsCount == 1)
+      {
+        // if expr constains only one target,
+        // this target will be this
+      }
       else if (this.targetsCount <= 3)
       {
         Debug.Assert(this.ownerType != null);
 
         FieldInfo field = OwnerType.GetField(
-          "obj" + index, InstanceNonPublic);
+          "obj" + index, OwnerSupport.FieldFlags);
 
         Debug.Assert(field != null);
 
@@ -153,11 +157,11 @@ namespace ILCalc
       }
       else
       {
-        il.Emit(OpCodes.Ldfld, CompilerSupport.OwnerArrayField);
+        il.Emit(OpCodes.Ldfld, OwnerSupport.OwnerNArray);
         il_EmitLoadI4(il, index);
         il.Emit(OpCodes.Ldelem_Ref);
 
-        Type targetType = target.GetType();
+        Type targetType = obj.GetType();
 
         if (targetType.IsValueType)
              il.Emit(OpCodes.Unbox_Any, targetType);
@@ -203,9 +207,9 @@ namespace ILCalc
         }
       }
 
-      if (call.Target == null)
-           il.Emit(OpCodes.Call, call.Method);
-      else il.Emit(OpCodes.Callvirt, call.Method);
+      il.Emit(
+        call.Target == null ? OpCodes.Call : OpCodes.Callvirt,
+        call.Method);
     }
 
     static void EmitParamArr(ILGenerator il, FuncCall call)
@@ -219,6 +223,17 @@ namespace ILCalc
     }
 
     // ReSharper disable InconsistentNaming
+
+    protected void il_EmitLoadArg(ILGenerator il, int index)
+    {
+      Debug.Assert(index >= 0);
+
+      if (this.targetsCount > 0) index++;
+
+      if (index <= 3)
+           il.Emit(OpArgsLoad[index]);
+      else il.Emit(OpCodes.Ldarg_S, (byte) index);
+    }
 
     protected static void il_EmitLoadI4(ILGenerator il, int value)
     {
@@ -235,17 +250,6 @@ namespace ILCalc
       {
         il.Emit(OpLoadConst[value+1]);
       }
-    }
-
-    protected void il_EmitLoadArg(ILGenerator il, int index)
-    {
-      Debug.Assert(index >= 0);
-
-      if (this.targetsCount > 0) index++;
-
-      if (index <= 3)
-           il.Emit(OpArgsLoad[index]);
-      else il.Emit(OpCodes.Ldarg_S, (byte) index);
     }
 
     protected static void il_EmitLoadElem(ILGenerator il)
@@ -304,7 +308,7 @@ namespace ILCalc
       private int current;
 
       public int VarCount { get; private set; }
-      public object Target { get; private set; }
+      public object Target { get; private set; } // TODO: replace with bool!
       public MethodInfo Method { get; private set; }
       public LocalBuilder Local { get; set; }
 
@@ -315,8 +319,8 @@ namespace ILCalc
 
       public FuncCall(FunctionInfo<T> func, int argsCount)
       {
-        Target = func.Target;
         Method = func.Method;
+        Target = func.Target;
 
         if (func.HasParamArray)
         {
@@ -346,6 +350,8 @@ namespace ILCalc
 
     public new void PutCall(FunctionInfo<T> func, int argzCount)
     {
+      Validator.CheckVisible(func.Method);
+
       int i = this.calls.Count;
       while (this.calls[--i] != null)
       {
@@ -353,9 +359,13 @@ namespace ILCalc
       }
 
       this.calls[i] = new FuncCall(func, argzCount);
-      if (func.Target != null) this.targetsCount++;
-
       this.code.Add(Code.Function);
+
+      if (func.Target != null)
+      {
+        this.targetsCount++;
+      }
+
       // NOTE: do not call base impl!
     }
 
@@ -368,46 +378,47 @@ namespace ILCalc
     #endregion
     #region Helpers
 
-    object GetOwner()
+    object CreateOwner()
     {
-      Debug.Assert(this.targetsCount != 0);
+      Debug.Assert(this.targetsCount > 0);
 
-      var cls = new object[this.targetsCount];
+      var c = new object[this.targetsCount];
       int i = 0;
 
-      foreach (FuncCall call in this.calls)
+      foreach(var f in this.calls)
       {
-        if (call.Target != null)
-          cls[i++] = call.Target;
+        if (f.Target != null)
+        {
+          c[i++] = f.Target;
+        }
       }
 
-      switch (cls.Length)
+      switch (c.Length)
       {
         case 1:
-          this.ownerType = cls[0].GetType();
-          return cls[0];
+          this.ownerType = c[0].GetType();
+          return c[0];
 
         case 2:
-          this.ownerType = CompilerSupport.Owner2Type
-            .MakeGenericType(
-              cls[0].GetType(),
-              cls[1].GetType());
+          this.ownerType = OwnerSupport
+            .Owner2Type.MakeGenericType(
+              c[0].GetType(),
+              c[1].GetType());
 
-         return Activator.CreateInstance(this.ownerType, cls);
+         return Activator.CreateInstance(this.ownerType, c);
 
         case 3:
-          this.ownerType = CompilerSupport.Owner3Type
-            .MakeGenericType(
-              cls[0].GetType(),
-              cls[1].GetType(),
-              cls[2].GetType());
+          this.ownerType = OwnerSupport
+            .Owner3Type.MakeGenericType(
+              c[0].GetType(),
+              c[1].GetType(),
+              c[2].GetType());
 
-          return Activator.CreateInstance(this.ownerType, cls);
+          return Activator.CreateInstance(this.ownerType, c);
 
         default:
-          this.ownerType = CompilerSupport.OwnerNType;
-
-          return new CompilerSupport.Closure(cls);
+          this.ownerType = OwnerSupport.OwnerNType;
+          return new OwnerSupport.Closure(c);
       }
     }
 
@@ -415,7 +426,7 @@ namespace ILCalc
     {
       if (this.targetsCount > 0)
       {
-        object owner = GetOwner();
+        object owner = CreateOwner();
 
         var ownerArgs = new Type[argsTypes.Length + 1];
         Array.Copy(argsTypes, 0, ownerArgs, 1, argsTypes.Length);
@@ -426,7 +437,7 @@ namespace ILCalc
         return owner;
       }
 
-      this.ownerType = CompilerSupport.OwnerNType;
+      this.ownerType = OwnerSupport.OwnerNType;
       return null;
     }
 
@@ -439,10 +450,7 @@ namespace ILCalc
     }
 
     #endregion
-    #region Static Data
-
-    const BindingFlags InstanceNonPublic =
-      BindingFlags.Instance | BindingFlags.NonPublic;
+    #region StaticData
 
     // OpCodes =====================================
 

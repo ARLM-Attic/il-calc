@@ -261,6 +261,8 @@ namespace ILCalc
         default: return null;
       }
 
+      Validator.CheckVisible(Method);
+
       return Delegate.CreateDelegate(delType, Target, Method);
 
 #endif

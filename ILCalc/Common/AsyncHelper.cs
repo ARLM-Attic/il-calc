@@ -4,19 +4,20 @@ using System.Threading;
 
 namespace ILCalc
 {
+  using Br = DebuggerBrowsableAttribute;
+  using State = DebuggerBrowsableState;
+
   sealed class AsyncHelper<T>
     : IAsyncResult, IDisposable
   {
     #region Fields
 
-    volatile bool completed;
-    readonly object state;
-    readonly AsyncCallback callback;
-    readonly object syncWait;
-    readonly object syncTask;
-    Exception except;
-    ManualResetEvent waitHandle;
-    T result;
+    [Br(State.Never)] volatile bool completed;
+    [Br(State.Never)] readonly AsyncCallback callback;
+    [Br(State.Never)] readonly object state, syncWait, syncTask;
+    [Br(State.Never)] Exception except;
+    [Br(State.Never)] ManualResetEvent waitHandle;
+    [Br(State.Never)] T result;
 
     //TODO: correct message
     static readonly InvalidOperationException
@@ -129,7 +130,9 @@ namespace ILCalc
     {
       lock (this.syncWait)
         if (this.waitHandle != null)
+        {
           this.waitHandle.Close();
+        }
     }
 
     #endregion

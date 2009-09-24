@@ -186,6 +186,9 @@
   <data name="errMethodImportFailed" xml:space="preserve">
     <value>Import failed: method</value>
   </data>
+  <data name="errMethodNonPublic" xml:space="preserve">
+    <value>Method '{0}' is not public.</value>
+  </data>
   <data name="errMethodNotFounded" xml:space="preserve">
     <value>Method "{0}" cannot be founded (non public / not static?).</value>
   </data>
@@ -230,6 +233,9 @@
   </data>
   <data name="errTooLongRange" xml:space="preserve">
     <value>Wrong range: iterations count doesn't fit in integer values range.</value>
+  </data>
+  <data name="errTypeNonPublic" xml:space="preserve">
+    <value>Type '{0}' is not visible for ILCalc.</value>
   </data>
   <data name="errUnresolvedIdentifier" xml:space="preserve">
     <value>Unresolved identifier:</value>

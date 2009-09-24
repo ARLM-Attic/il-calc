@@ -34,6 +34,10 @@ namespace ILCalc
     [DebuggerBrowsable(State.Never)]
     readonly List<T> valuesList;
 
+    [DebuggerBrowsable(State.Never)]
+    static readonly ConstantDictionary<T>
+      BuiltIns = ImportHelper.ResolveConstants<T>();
+
     #endregion
     #region Constructors
 
@@ -430,30 +434,15 @@ namespace ILCalc
     /// <summary>
     /// Imports standart builtin constants into 
     /// this <see cref="ConstantDictionary{T}"/>.</summary>
-    /// <remarks>Currently this method imports Pi,
-    /// E, Inf and NaN constants.</remarks>
     /// <exception cref="ArgumentException">
-    /// Some of names is already
-    /// exist in the dictionary.</exception>
+    /// Some of names is already exist in the dictionary.
+    /// </exception>
     public void ImportBuiltIn()
     {
-      //TODO: destroy!!!!
-      if (typeof(T) == typeof(Double))
+      if (BuiltIns != null)
       {
-        ImportDoubles((ConstantDictionary<double>)(object)this);
+        AddRange(BuiltIns);
       }
-    }
-
-    //TODO: destroy!!!!
-    static void ImportDoubles(ConstantDictionary<double> dict)
-    {
-      Debug.Assert(dict != null);
-
-      dict.Add("E", Math.E);
-      dict.Add("Pi", Math.PI);
-
-      dict.Add("NaN", Double.NaN);
-      dict.Add("Inf", Double.PositiveInfinity);
     }
 
     /// <summary>
@@ -476,6 +465,8 @@ namespace ILCalc
     {
       if (type == null)
         throw new ArgumentNullException("type");
+
+      Validator.CheckVisible(type);
 
       const BindingFlags Flags =
         BindingFlags.Static |

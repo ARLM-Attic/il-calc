@@ -46,9 +46,18 @@ namespace ILCalc
       Type[] argsTypes = ArgsTypes[args];
       object owner = OwnerFixup(ref argsTypes);
 
+#if SILVERLIGHT
+
+      var method = new DynamicMethod(
+        "evaluator", TypeHelper<T>.ValueType, argsTypes);
+
+#else
+
       var method = new DynamicMethod(
         "evaluator", TypeHelper<T>.ValueType,
         argsTypes, OwnerType, true);
+
+#endif
 
       // ======================================================
 

@@ -14,15 +14,17 @@ using System.Resources;
 [assembly: ComVisible(false)]
 [assembly: System.CLSCompliant(true)]
 
-[assembly: AssemblyVersion("0.9.7.0")]
+[assembly: AssemblyVersion("0.9.7.3")]
 
 #if !CF
 
-[assembly: AssemblyFileVersion("0.9.7.0")]
-[assembly: AssemblyFlags(AssemblyNameFlags.EnableJITcompileOptimizer)]
+[assembly: AssemblyFileVersion("0.9.7.3")]
+[assembly: AssemblyFlags(
+  AssemblyNameFlags.EnableJITcompileOptimizer)]
 
-[assembly: NeutralResourcesLanguage("en",
-	UltimateResourceFallbackLocation.MainAssembly)]
+[assembly:
+  NeutralResourcesLanguage("en",
+    UltimateResourceFallbackLocation.MainAssembly)]
 
 #else
 

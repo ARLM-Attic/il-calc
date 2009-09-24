@@ -268,6 +268,15 @@ namespace ILCalc {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method &apos;{0}&apos; is not public..
+        /// </summary>
+        internal static string errMethodNonPublic {
+            get {
+                return ResourceManager.GetString("errMethodNonPublic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method &quot;{0}&quot; cannot be founded (non public / not static?)..
         /// </summary>
         internal static string errMethodNotFounded {
@@ -399,6 +408,15 @@ namespace ILCalc {
         internal static string errTooLongRange {
             get {
                 return ResourceManager.GetString("errTooLongRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; is not visible for ILCalc..
+        /// </summary>
+        internal static string errTypeNonPublic {
+            get {
+                return ResourceManager.GetString("errTypeNonPublic", resourceCulture);
             }
         }
         

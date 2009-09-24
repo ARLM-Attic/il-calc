@@ -186,6 +186,9 @@
   <data name="errMethodImportFailed" xml:space="preserve">
     <value>Импорт невозможен: метод</value>
   </data>
+  <data name="errMethodNonPublic" xml:space="preserve">
+    <value>Метод '{0}' не является публичным.</value>
+  </data>
   <data name="errMethodNotFounded" xml:space="preserve">
     <value>Метод с именем "{0}" не может быть найден (не в публичном доступе или не статический?).</value>
   </data>
@@ -227,6 +230,9 @@
   </data>
   <data name="errTooLongRange" xml:space="preserve">
     <value>Некоррентный промежуток: количество итераций промежутка лежит вне границ представления целых чисел.</value>
+  </data>
+  <data name="errTypeNonPublic" xml:space="preserve">
+    <value>Класс '{0}' находится вне зоны видимости ILCalc.</value>
   </data>
   <data name="errUnresolvedIdentifier" xml:space="preserve">
     <value>Неопознанный идентификатор:</value>

@@ -1,7 +1,5 @@
 ﻿using System.Runtime.Serialization;
 
-//TODO: remove this file?
-
 namespace ILCalc
 {
   public sealed partial class CalcContext<T>

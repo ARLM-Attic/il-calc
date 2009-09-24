@@ -11,11 +11,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("0.9.5.1")]
+[assembly: AssemblyVersion("0.9.7.3")]
 
 #if !CF
 
-[assembly: AssemblyFileVersion("0.9.5.1")]
+[assembly: AssemblyFileVersion("0.9.7.3")]
 [assembly: AssemblyFlags(AssemblyNameFlags.EnableJITcompileOptimizer)]
 
 #endif

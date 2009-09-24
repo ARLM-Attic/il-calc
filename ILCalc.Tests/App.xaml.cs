@@ -13,6 +13,8 @@ namespace ILCalc.Tests
 
     private void ApplicationStartup(object sender, StartupEventArgs e)
     {
+      //new ExceptionsTests().ImportExceptionsTest();
+
       RootVisual = (UIElement)
         UnitTestSystem.CreateTestPage(this);
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,7 +28,7 @@ namespace ILCalc.Tests
     public void DoubleOptimizerTest()
     {
       var t = new EvalTester<Double, DoubleTestSupport>();
-      t.EvaluationTest();
+      t.OptimizerTest();
     }
 
     [TestMethod]
@@ -41,7 +42,7 @@ namespace ILCalc.Tests
     public void Int32OptimizerTest()
     {
       var t = new EvalTester<Int32, Int32TestSupport>();
-      t.EvaluationTest();
+      t.OptimizerTest();
     }
 
     #endregion
@@ -297,7 +298,7 @@ namespace ILCalc.Tests
 
         string now = string.Empty;
 
-        foreach (var mode in Optimizer.Modes)
+        foreach (var mode in OptimizerModes)
         {
           c.Optimization = mode;
           foreach (string expr in gen.Generate(500))
@@ -313,7 +314,7 @@ namespace ILCalc.Tests
 
               Support.EqualityAssert(int1, int2);
 
-#if !SILVERLIGHT && !CF
+#if !CF
 
               now = "Evaluator";
               var evl = c.CreateEvaluator(expr);
@@ -329,7 +330,7 @@ namespace ILCalc.Tests
                 string name = GenRandomName();
                 now = "Add " + name + " func";
 
-#if !SILVERLIGHT && !CF
+#if !CF
 
                 if (Rnd.Next() % 2 == 0)
                   c.Functions.Add(name, evl.Evaluate1);
@@ -337,7 +338,8 @@ namespace ILCalc.Tests
 
 #endif
 #if !CF2
-                c.Functions.Add(name, (EvalFunc1<T>) itr.Evaluate);
+                c.Functions.Add(name,
+                  (EvalFunc1<T>) itr.Evaluate);
 #endif
               }
             }
@@ -414,6 +416,19 @@ namespace ILCalc.Tests
         }
 
         return buf.ToString();
+      }
+
+      static IEnumerable<OptimizeModes> OptimizerModes
+      {
+        get
+        {
+          var mode = OptimizeModes.None;
+          while (mode <= OptimizeModes.PerformAll)
+          {
+            yield return mode;
+            mode++;
+          }
+        }
       }
 
       #endregion

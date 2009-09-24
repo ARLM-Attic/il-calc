@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace ILCalc
@@ -7,10 +8,11 @@ namespace ILCalc
   {
     public static void CheckName(string name)
     {
-      // NOTE: perform nullness check in callers?
-
       if (string.IsNullOrEmpty(name))
-        throw new ArgumentException(Resource.errIdentifierEmpty);
+      {
+        throw new ArgumentException(
+          Resource.errIdentifierEmpty);
+      }
 
       char first = name[0];
       if (!char.IsLetter(first) && first != '_')
@@ -20,19 +22,22 @@ namespace ILCalc
 
       for (int i = 1; i < name.Length; i++)
       {
-        char ch = name[i];
-        if (!char.IsLetterOrDigit(ch) && ch != '_')
+        char c = name[i];
+        if (!char.IsLetterOrDigit(c) && c != '_')
         {
-          throw new ArgumentException(string.Format(
-            Resource.errIdentifierSymbol, ch, name));
+          throw new ArgumentException(
+            string.Format(
+              Resource.errIdentifierSymbol, c, name));
         }
       }
     }
 
-    static ArgumentException InvalidFirstSymbol(string name, char first)
+    [DebuggerHidden]
+    static Exception InvalidFirstSymbol(string name, char first)
     {
       var buf = new StringBuilder();
-      buf.AppendFormat(Resource.errIdentifierStartsWith, name);
+      buf.AppendFormat(
+        Resource.errIdentifierStartsWith, name);
 
       if (first == '<')
       {
@@ -41,6 +46,36 @@ namespace ILCalc
       }
 
       return new ArgumentException(buf.ToString());
+    }
+
+    [Conditional("SILVERLIGHT")]
+    public static void CheckVisible(Type type)
+    {
+      Debug.Assert(type != null);
+
+      if (!type.IsVisible)
+      {
+        throw new ArgumentException(string.Format(
+          Resource.errTypeNonPublic, type.FullName));
+      }
+    }
+
+    [Conditional("SILVERLIGHT")]
+    public static void CheckVisible(
+      System.Reflection.MethodInfo method)
+    {
+      Debug.Assert(method != null);
+
+      if (!method.IsPublic)
+      {
+        throw new ArgumentException(string.Format(
+          Resource.errMethodNonPublic, method));
+      }
+
+      if (method.DeclaringType != null)
+      {
+        CheckVisible(method.DeclaringType);
+      }
     }
   }
 }

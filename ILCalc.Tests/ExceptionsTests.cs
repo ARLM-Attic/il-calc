@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,9 +9,9 @@ namespace ILCalc.Tests
   [TestClass]
   public sealed class ExceptionsTests
   {
-    #region Evaluators Tests
+    #region EvaluatorsTests
 
-#if !SILVERLIGHT && !CF
+#if !CF
 
     [TestMethod]
     public void EvaluatorExceptions()
@@ -298,6 +299,112 @@ namespace ILCalc.Tests
     }
 
     #endregion
+    #region ValueRangeTests
+
+    [TestMethod]
+    public void InvalidRangesTests()
+    {
+      Throws<InvalidRangeException>
+      (
+        // double:
+        () => Validate(Double.NaN, 10, 1),
+        () => Validate(Double.PositiveInfinity, 10, 1),
+        () => Validate(Double.NegativeInfinity, 10, 1),
+        () => Validate(1e+300, 2e+300, 0.0001),
+        () => Validate(1e64, 2e64, 1e-32),
+        () => Validate(10.0, 0.0, 1.0),
+        () => Validate(0.0, 1.0, Double.Epsilon),
+
+        // float:
+        () => Validate(Single.NaN, 10, 1),
+        () => Validate(Single.PositiveInfinity, 10, 1),
+        () => Validate(Single.NegativeInfinity, 10, 1),
+        () => Validate(1e+38f, 2e+38f, 0.0001f),
+        () => Validate(1e38f, 2e38f, 1e-32f),
+        () => Validate(10.0f, 0.0f, 1.0f),
+        () => Validate(0.0f, 1.0f, Single.Epsilon),
+
+        // int32:
+        () => Validate(0, 10, 0),
+        () => Validate(0, 10, -1),
+
+        // int64:
+        () => Validate(0, 10L, 0),
+        () => Validate(0, 10L, -1),
+        () => Validate(0, long.MaxValue, 1),
+
+        // decimal:
+        () => Validate(Decimal.MinValue, 0, -0.001m),
+        () => Validate(0m, Decimal.MaxValue, 0.001m),
+        () => Validate(1e+28m, 2e+28m, 0.000000001m),
+        () => Validate(0m, 100, -1),
+
+        // unknown:
+        () => Validate(new Random(), null, null)
+      );
+    }
+
+    static void Validate<T>(T begin, T end, T step)
+    {
+      ValueRange
+        .Create(begin, end, step)
+        .Validate();
+    }
+
+    #endregion
+    #region VisibilityChecksTests
+
+#if SILVERLIGHT
+
+    [TestMethod]
+    public void VisibilityTests()
+    {
+      var calc = new CalcContext<int>();
+      var thisType = typeof(ExceptionsTests);
+      var internalClass = typeof(InternalClass);
+
+      calc.Functions.Add<Func<int>>("foo", NonPublicInstanceMethod);
+      calc.Functions.Add<Func<int>>("foo2", NonPublicStaticMethod);
+      calc.Functions.Add<Func<int>>("bar", new InternalClass().Bar);
+      calc.Functions.Add<Func<int>>("bar2", InternalClass.Foo);
+
+      Throws<ArgumentException>
+      (
+        () => calc.Functions.AddInstance(thisType
+          .GetMethod("NonPublicInstanceMethod",
+            BindingFlags.NonPublic | BindingFlags.Instance), this),
+        () => calc.Functions.AddStatic(thisType
+          .GetMethod("NonPublicStaticMethod",
+            BindingFlags.NonPublic | BindingFlags.Static)),
+        () => calc.Functions.AddInstance(internalClass
+          .GetMethod("Bar",BindingFlags.Public | BindingFlags.Instance), this),
+        () => calc.Functions.AddStatic(internalClass
+          .GetMethod("Foo", BindingFlags.Public | BindingFlags.Static)),
+        () => calc.CreateInterpret("foo()"),
+        () => calc.CreateInterpret("bar()"),
+        () => calc.CreateInterpret("foo2()"),
+        () => calc.CreateInterpret("bar2()"),
+        () => calc.CreateEvaluator("foo()"),
+        () => calc.CreateEvaluator("bar()"),
+        () => calc.CreateEvaluator("foo2()"),
+        () => calc.CreateEvaluator("bar2()")
+      );
+    }
+
+    private int NonPublicInstanceMethod() { return 0; }
+
+    private static int NonPublicStaticMethod() { return 1; }
+
+    class InternalClass
+    {
+      public int Bar() { return 0; }
+      public static int Foo() { return 1; }
+    }
+
+#endif
+
+    #endregion
+    #region ImportExceptionsTests
 
 #if !CF
 
@@ -314,7 +421,7 @@ namespace ILCalc.Tests
       il.Emit(System.Reflection.Emit.OpCodes.Ret);
 
       var func = (EvalFunc0<double>)
-        method.CreateDelegate(typeof(EvalFunc0<double>));
+                 method.CreateDelegate(typeof(EvalFunc0<double>));
 
       var func1 = typeof(ExceptionsTests).GetMethod("Func1");
 
@@ -330,6 +437,7 @@ namespace ILCalc.Tests
       return 0;
     }
 
+    #endregion
     #region Helpers
 
     delegate void Action();
@@ -351,6 +459,11 @@ namespace ILCalc.Tests
 
         Trace.WriteLine(buf.ToString(), typeof(TException).Name);
         return;
+      }
+      catch
+      {
+        throw new InternalTestFailureException(
+          typeof(TException).Name + " doesn't thrown!");
       }
 
       throw new InternalTestFailureException(
@@ -379,6 +492,11 @@ namespace ILCalc.Tests
 
           Trace.WriteLine(buf.ToString(), typeof(TException).Name);
           continue;
+        }
+        catch
+        {
+          throw new InternalTestFailureException(
+            typeof(TException).Name + " doesn't thrown!");
         }
 
         throw new InternalTestFailureException(
