@@ -4,16 +4,13 @@ using System.Threading;
 
 namespace ILCalc
 {
-  // TODO: rewrite to use range checks elimination
-
   [Serializable]
   sealed partial class FuncCall<T>
   {
     #region Fields
 
-    //TODO: remove it, only MethodInfo + object
     readonly FunctionInfo<T> func;
-    readonly int lastIndex; // TODO: without it?
+    readonly int lastIndex;
 
     readonly object[] fixArgs;
     readonly T[] varArgs;
@@ -51,8 +48,6 @@ namespace ILCalc
     #endregion
     #region Methods
 
-    //TODO: new IsReusable?
-
     public void Invoke(T[] stack, ref int pos)
     {
       Debug.Assert(stack != null);
@@ -60,6 +55,8 @@ namespace ILCalc
 
       if (Monitor.TryEnter(this.syncRoot))
       {
+        Debug.Assert(func is ReflectionMethodInfo<T>);
+
         try
         {
           // fill parameters array:
@@ -81,15 +78,15 @@ namespace ILCalc
           // invoke via reflection:
           Debug.Assert(fixTemp != null);
 
-          stack[++pos] = (T)
-            this.func.Method.Invoke(this.func.Target, fixTemp);
+          stack[++pos] = (T) this.func
+            .Method.Invoke(this.func.Target, fixTemp);
         }
         finally
         {
           Monitor.Exit(this.syncRoot);
         }
       }
-      else
+      else //TODO: test!
       {
         T result = this.func.Invoke(stack, pos, this.argsCount);
 

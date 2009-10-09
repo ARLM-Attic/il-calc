@@ -7,8 +7,7 @@ namespace ILCalc
   using Br = DebuggerBrowsableAttribute;
   using State = DebuggerBrowsableState;
 
-  sealed class AsyncHelper<T>
-    : IAsyncResult, IDisposable
+  sealed class AsyncHelper<T> : IAsyncResult, IDisposable
   {
     #region Fields
 
@@ -19,15 +18,12 @@ namespace ILCalc
     [Br(State.Never)] ManualResetEvent waitHandle;
     [Br(State.Never)] T result;
 
-    //TODO: correct message
     static readonly InvalidOperationException
-      EndedTwice = new InvalidOperationException("twice end");
+      EndedTwice = new InvalidOperationException(
+        "EndInvoke() is already called.");
 
     #endregion
     #region Constructor
-
-    public AsyncHelper(Func<T> task)
-      : this(task, null, null) { }
 
     public AsyncHelper(
       Func<T> task, AsyncCallback callback, object state)
@@ -56,12 +52,16 @@ namespace ILCalc
       get
       {
         lock (this.syncWait)
+        {
           if (this.waitHandle == null)
           {
             this.waitHandle = new ManualResetEvent(false);
             if (this.completed)
+            {
               this.waitHandle.Set();
+            }
           }
+        }
 
         return this.waitHandle;
       }
@@ -95,12 +95,16 @@ namespace ILCalc
         lock (this.syncWait)
         {
           if (this.waitHandle != null)
+          {
             this.waitHandle.Set();
+          }
         }
 
         // invoke the callback:
         if (this.callback != null)
+        {
           this.callback(this);
+        }
       });
     }
 
@@ -129,10 +133,12 @@ namespace ILCalc
     public void Dispose()
     {
       lock (this.syncWait)
+      {
         if (this.waitHandle != null)
         {
           this.waitHandle.Close();
         }
+      }
     }
 
     #endregion

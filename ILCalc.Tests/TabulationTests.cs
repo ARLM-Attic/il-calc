@@ -11,21 +11,27 @@ namespace ILCalc.Tests
 
     readonly TabTester<Double, DoubleRangeSupport> doubleTester;
     readonly TabTester<Int32, Int32RangeSupport> int32Tester;
+    readonly TabTester<Int64, Int64RangeSupport> int64Tester;
 
     public TabulationTests()
     {
       this.doubleTester = new TabTester<double, DoubleRangeSupport>();
-      var ctx = this.doubleTester.Context;
+      var cR8 = this.doubleTester.Context;
 
-      this.int32Tester = new TabTester<int, Int32RangeSupport>();
-      var ct = this.int32Tester.Context;
+      this.int32Tester = new TabTester<Int32, Int32RangeSupport>();
+      var c32 = this.int32Tester.Context;
 
-      ctx.Functions.Add("Sin", Math.Sin);
-      ctx.Functions.Add("Cos", Math.Cos);
-      ctx.Functions.Add("Tan", Math.Tan);
+      this.int64Tester = new TabTester<Int64, Int64RangeSupport>();
+      var c64 = this.int64Tester.Context;
 
-      ct.Functions.Add("Func", (EvalFunc1<int>) Func);
-      ct.Functions.Add("Func", (EvalFunc2<int>) Func);
+      cR8.Functions.Add("Sin", Math.Sin);
+      cR8.Functions.Add("Cos", Math.Cos);
+      cR8.Functions.Add("Tan", Math.Tan);
+
+      c32.Functions.Add("Func", Func1);
+      c32.Functions.Add("Func", Func2);
+      c64.Functions.Add("Func", Func1);
+      c64.Functions.Add("Func", Func2);
     }
 
     #endregion
@@ -362,10 +368,40 @@ namespace ILCalc.Tests
         return new ValueRange<int>(from, to, step);
       }
 
-      public void EqualityAssert
-        (int[] expected, int[] a1, int[] a2, int[] a3)
+      public void EqualityAssert(
+        int[] expected, int[] a1, int[] a2, int[] a3)
       {
         for (int i = 0; i < expected.Length; i++)
+        {
+          Assert.AreEqual(expected[i], a1[i]);
+          Assert.AreEqual(expected[i], a2[i]);
+          Assert.AreEqual(expected[i], a3[i]);
+        }
+      }
+    }
+
+    struct Int64RangeSupport : IRangeSupport<Int64>
+    {
+      static readonly Random Random = new Random();
+
+      public long AddStep(long value, long step)
+      {
+        return value + step;
+      }
+
+      public ValueRange<long> GetRandom()
+      {
+        long from = Random.Next(-100, 100);
+        long to   = Random.Next(10, 20) + from;
+        long step = Random.Next(1, 4);
+
+        return ValueRange.Create(from, to, step);
+      }
+
+      public void EqualityAssert(
+        long[] expected, long[] a1, long[] a2, long[] a3)
+      {
+        for (long i = 0; i < expected.Length; i++)
         {
           Assert.AreEqual(expected[i], a1[i]);
           Assert.AreEqual(expected[i], a2[i]);
@@ -378,18 +414,15 @@ namespace ILCalc.Tests
     #region Helpers
 
     delegate T EvalFunc3<T>(T arg1, T arg2, T arg3);
-
     delegate T EvalFunc4<T>(T arg1, T arg2, T arg3, T arg4);
 
-    public static int Func(int x)
-    {
-      return -x;
-    }
+    public static int Func1(int x) { return -x; }
 
-    public static int Func(int x, int y)
-    {
-      return x + -y;
-    }
+    public static int Func2(int x, int y) { return x + -y; }
+
+    public static long Func1(long x) { return -x; }
+
+    public static long Func2(long x, long y) { return x + -y; }
 
     #endregion
     #region DoubleTests
@@ -435,8 +468,8 @@ namespace ILCalc.Tests
     public void Int32Interpret1DTest()
     {
       int32Tester.InterpretTest1D(
-        "2 + Func(x)",
-        x => 2 + Func(x));
+        "2 + Func(x/2*x)",
+        x => 2 + Func1(x/2*x));
     }
 
     [TestMethod]
@@ -444,7 +477,7 @@ namespace ILCalc.Tests
     {
       int32Tester.InterpretTest2D(
         "2 + Func(x, y)",
-        (x, y) => 2 + Func(x, y));
+        (x, y) => 2 + Func2(x, y));
     }
 
     [TestMethod]
@@ -452,7 +485,7 @@ namespace ILCalc.Tests
     {
       int32Tester.InterpretTest3D(
         "Func(z + Func(x, y))",
-        (x, y, z) => Func(z + Func(x, y)));
+        (x, y, z) => Func1(z + Func2(x, y)));
     }
 
     [TestMethod]
@@ -460,7 +493,42 @@ namespace ILCalc.Tests
     {
       int32Tester.InterpretTest4D(
         "Func(w, z + Func(x, y))",
-        (x, y, z, w) => Func(w, z + Func(x, y)));
+        (x, y, z, w) => Func2(w, z + Func2(x, y)));
+    }
+
+    #endregion
+    #region Int64Tests
+
+    [TestMethod]
+    public void Int64Interpret1DTest()
+    {
+      int64Tester.InterpretTest1D(
+        "2 + Func(x/2*x)",
+        x => 2 + Func1(x/2*x));
+    }
+
+    [TestMethod]
+    public void Int64Interpret2DTest()
+    {
+      int64Tester.InterpretTest2D(
+        "2 + Func(x, y)",
+        (x, y) => 2 + Func2(x, y));
+    }
+
+    [TestMethod]
+    public void Int64Interpret3DTest()
+    {
+      int64Tester.InterpretTest3D(
+        "Func(z + Func(x, y))",
+        (x, y, z) => Func1(z + Func2(x, y)));
+    }
+
+    [TestMethod]
+    public void Int64Interpret4DTest()
+    {
+      int64Tester.InterpretTest4D(
+        "Func(w, z + Func(x, y))",
+        (x, y, z, w) => Func2(w, z + Func2(x, y)));
     }
 
     #endregion

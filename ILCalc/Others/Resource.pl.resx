@@ -195,9 +195,6 @@
   <data name="errMethodNotStatic" xml:space="preserve">
     <value>musi być static.</value>
   </data>
-  <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>parametr #{0} jest Out lub Optional. Takie rodzaje parametrów nie są wspierane.</value>
-  </data>
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Kultura językowa '{0}' jest neutralna. Nie może być użyta do parsowania i formatowania.</value>
   </data>

@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace ILCalc
 {
   using State = DebuggerBrowsableState;
-  using Browsable = DebuggerBrowsableAttribute;
+  using Br = DebuggerBrowsableAttribute;
 
   /// <summary>
   /// Represents the object for evaluating
@@ -21,13 +21,17 @@ namespace ILCalc
   {
     #region Fields
 
-    [Browsable(State.Never)] readonly TabFunc1<T> tabulator1;
-    [Browsable(State.Never)] readonly TabFunc2<T> tabulator2;
-    [Browsable(State.Never)] readonly TabFuncN<T> tabulatorN;
-    [Browsable(State.Never)] readonly Allocator<T> allocator;
-    [Browsable(State.Never)] readonly Delegate asyncTab;
-    [Browsable(State.Never)] readonly string expression;
-    [Browsable(State.Never)] readonly int argsCount;
+    [Br(State.Never)] readonly TabFunc1<T> tabulator1;
+    [Br(State.Never)] readonly TabFunc2<T> tabulator2;
+    [Br(State.Never)] readonly TabFuncN<T> tabulatorN;
+    [Br(State.Never)] readonly Allocator<T> allocator;
+    
+    [Br(State.Never)] readonly string expression;
+    [Br(State.Never)] readonly int argsCount;
+
+#if FULL_FW
+    [Br(State.Never)] readonly Delegate asyncTab;
+#endif
 
     #endregion
     #region Constructors
@@ -42,7 +46,8 @@ namespace ILCalc
     }
 
     internal Tabulator(
-      string expression, Delegate method, int argsCount, Allocator<T> alloc)
+      string expression, Delegate method,
+      int argsCount, Allocator<T> alloc)
       : this(expression, argsCount)
     {
       Debug.Assert(method != null);
@@ -52,9 +57,11 @@ namespace ILCalc
       this.tabulator1 = ThrowMethod1;
       this.tabulator2 = ThrowMethod2;
       this.tabulatorN = (TabFuncN<T>) method;
-      this.asyncTab = (TabFuncN<T>) this.tabulatorN.Invoke;
-
       this.allocator = alloc;
+
+#if FULL_FW
+      this.asyncTab = (TabFuncN<T>) this.tabulatorN.Invoke;
+#endif
     }
 
     internal Tabulator(
@@ -68,7 +75,6 @@ namespace ILCalc
       {
         this.tabulator2 = ThrowMethod2;
         this.tabulator1 = (TabFunc1<T>) method;
-        this.asyncTab = (TabFunc1<T>) this.tabulator1.Invoke; // nice :)
         this.tabulatorN = (a, d) =>
           this.tabulator1((T[]) a, d[0], d[1]);
       }
@@ -76,12 +82,16 @@ namespace ILCalc
       {
         this.tabulator1 = ThrowMethod1;
         this.tabulator2 = (TabFunc2<T>) method;
-        this.asyncTab = (TabFunc2<T>) this.tabulator2.Invoke;
         this.tabulatorN = (a, d) =>
           this.tabulator2((T[][]) a, d[0], d[1], d[2], d[3]);
       }
 
-      this.allocator = ThrowAlloc;
+#if FULL_FW
+      if (argsCount == 1)
+           this.asyncTab = (TabFunc1<T>) this.tabulator1.Invoke;
+      else this.asyncTab = (TabFunc2<T>) this.tabulator2.Invoke;
+#endif
+
     }
 
     #endregion
@@ -90,7 +100,7 @@ namespace ILCalc
     /// <summary>
     /// Gets the argument ranges count, that
     /// this Tabulator implemented for.</summary>
-    [Browsable(State.Never)]
+    [Br(State.Never)]
     public int RangesCount
     {
       get { return this.argsCount; }
@@ -437,27 +447,20 @@ namespace ILCalc
     /// <returns>An <see cref="IAsyncResult"/> that references
     /// the asynchronous tabulation result.</returns>
     public IAsyncResult BeginTabulate(
-      ValueRange<T> range,
-      AsyncCallback callback,
-      object state)
+      ValueRange<T> range, AsyncCallback callback, object state)
     {
       if (this.argsCount != 1) throw InvalidArgs(1);
 
 #if SILVERLIGHT
 
       return new AsyncHelper<T[]>(() => 
-        this.tabulator1(
-          new T[range.ValidCount],
-          range.Step, range.Begin),
+        this.tabulator1(new T[range.ValidCount], range.Step, range.Begin),
         callback, state);
 
 #else
 
-      return ((TabFunc1<T>) this.asyncTab)
-        .BeginInvoke(
-          new T[range.ValidCount],
-          range.Step, range.Begin,
-          callback, state);
+      return ((TabFunc1<T>) this.asyncTab).BeginInvoke(
+        new T[range.ValidCount], range.Step, range.Begin, callback, state);
 
 #endif
     }
@@ -500,23 +503,15 @@ namespace ILCalc
 #if SILVERLIGHT
 
       return new AsyncHelper<T[][]>(() =>
-        this.tabulator2(
-          array,
-          range1.Step,
-          range2.Step,
-          range1.Begin,
-          range2.Begin),
+        this.tabulator2(array, range1.Step,
+          range2.Step, range1.Begin, range2.Begin),
         callback, state);
 
 #else
 
       return ((TabFunc2<T>) this.asyncTab)
-        .BeginInvoke(
-          array,
-          range1.Step,
-          range2.Step,
-          range1.Begin,
-          range2.Begin,
+        .BeginInvoke(array, range1.Step,
+          range2.Step, range1.Begin, range2.Begin,
           callback, state);
 
 #endif
@@ -654,8 +649,8 @@ namespace ILCalc
 
       switch (this.argsCount)
       {
-        case 1:  return ((AsyncHelper<T[]>)   result).EndInvoke();
-        case 2:  return ((AsyncHelper<T[][]>) result).EndInvoke();
+        case 1: return ((AsyncHelper<T[]>)   result).EndInvoke();
+        case 2: return ((AsyncHelper<T[][]>) result).EndInvoke();
         default: return ((AsyncHelper<Array>) result).EndInvoke();
       }
 
@@ -685,15 +680,6 @@ namespace ILCalc
     {
       throw new ArgumentException(string.Format(
         Resource.errWrongRangesCount, 2, this.argsCount));
-    }
-
-    // NOTE: unused?
-    Array ThrowAlloc(int[] length)
-    {
-      throw new ArgumentException(string.Format(
-        Resource.errWrongRangesCount,
-        length.Length,
-        this.argsCount));
     }
 
     Exception InvalidArgs(int actualCount)

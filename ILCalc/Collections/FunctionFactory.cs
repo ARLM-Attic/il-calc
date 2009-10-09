@@ -137,7 +137,7 @@ namespace ILCalc
         return null;
       }
 
-#if !CF2
+#if !CF
 
       // detect DynamicMethod here:
       if (target.Method.GetType() != RuntimeMethodType)
@@ -168,13 +168,14 @@ namespace ILCalc
 
       MethodInfo method = (argsCount < 0) ?
         type.GetMethod(name, Flags) :
-        type.GetMethod(
-          name, Flags, null, MakeArgs(argsCount), null);
+        type.GetMethod(name, Flags,
+          null, MakeArgs(argsCount), null);
 
       if (method == null)
       {
         throw new ArgumentException(
-          string.Format(Resource.errMethodNotFounded, name));
+          string.Format(
+            Resource.errMethodNotFounded, name));
       }
 
       return method;
@@ -218,7 +219,7 @@ namespace ILCalc
         if (p.IsOut || p.IsOptional)
         {
           if (!throwOnFailure) return -1;
-          throw InvalidParameter(method, p);
+          throw InvalidParamType(method, p);
         }
 #endif
       }
@@ -263,18 +264,6 @@ namespace ILCalc
         param.Position,
         param.ParameterType.Name,
         TypeHelper<T>.ValueType.Name);
-    }
-
-    static Exception InvalidParameter(
-      MethodInfo method, ParameterInfo param)
-    {
-      Debug.Assert(method != null);
-      Debug.Assert(param != null);
-
-      return MethodImportFailure(
-        method,
-        Resource.errMethodParamInvalid,
-        param.Position);
     }
 
     static Exception InvalidMethodTarget(

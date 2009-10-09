@@ -151,7 +151,7 @@
     <value>There is overload(s) with {0} argument(s).</value>
   </data>
   <data name="errFunctionNoBrace" xml:space="preserve">
-    <value>Opening brace should be after function name</value>
+    <value>Opening brace should be placed after function name</value>
   </data>
   <data name="errFunctionNotExist" xml:space="preserve">
     <value>Function "{0}" does not exist in the collection.</value>
@@ -201,9 +201,6 @@
   <data name="errMethodNotStatic" xml:space="preserve">
     <value>must be static method.</value>
   </data>
-  <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported.</value>
-  </data>
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Culture '{0}' is neutral culture. It cannot be used for parse and formatting .</value>
   </data>
@@ -214,7 +211,7 @@
     <value>Incorrect number format:</value>
   </data>
   <data name="errNumberOverflow" xml:space="preserve">
-    <value>Number constant overflow:</value>
+    <value>Literal value overflow:</value>
   </data>
   <data name="errOverloadImpossible" xml:space="preserve">
     <value>Function with same parameters ({0}) is already in the list (overload impossible).</value>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
@@ -77,5 +78,10 @@ namespace ILCalc
         CheckVisible(method.DeclaringType);
       }
     }
+  }
+
+  interface IListEnumerable
+  {
+    List<string>.Enumerator GetEnumerator();
   }
 }

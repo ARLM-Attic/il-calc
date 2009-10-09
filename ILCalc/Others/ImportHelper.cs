@@ -32,14 +32,18 @@ namespace ILCalc
     public static ConstantDictionary<T> ResolveConstants<T>()
     {
       var factory = Const.Find<T>();
-      if (factory == null) return null;
+      if (factory == null)
+        return new ConstantDictionary<T>();
+
       return (ConstantDictionary<T>) factory();
     }
 
     public static FunctionCollection<T> ResolveFunctions<T>()
     {
       var factory = Funcs.Find<T>();
-      if (factory == null) return null;
+      if (factory == null)
+        return new FunctionCollection<T>();
+
       return (FunctionCollection<T>) factory();
     }
 
@@ -163,7 +167,7 @@ namespace ILCalc
         { "Max", Math.Max },
         { "Min", Math.Min },
         { "Round", Math.Round },
-#if !CF && !SILVERLIGHT
+#if FULL_FW
         { "Floor", Math.Floor },
         { "Ceil",  Math.Ceiling },
         { "Trunc", Math.Truncate }

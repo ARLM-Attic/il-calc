@@ -10,8 +10,8 @@ namespace ILCalc.Tests
   {
     #region Support
 
-    protected delegate void
-      LiteralGen(StringBuilder buf, IFormatProvider format);
+    protected delegate void LiteralGen(
+      StringBuilder buf, IFormatProvider format);
 
     static readonly SupportCollection<LiteralGen> Support;
 
@@ -19,8 +19,11 @@ namespace ILCalc.Tests
     {
       Support = new SupportCollection<LiteralGen>();
 
-      Support.Add<Double>(DoubleGenerator);
+      Support.Add<Double>((b,f) => RealGenerator(b, f, 250));
+      Support.Add<Single>((b,f) => RealGenerator(b, f, 30));
       Support.Add<Int32>(Int32Generator);
+      Support.Add<Int64>(Int64Generator);
+      Support.Add<Decimal>((b,f) => RealGenerator(b, f, 20));
     }
 
     protected static LiteralGen Resolve<T>()
@@ -35,31 +38,25 @@ namespace ILCalc.Tests
     #endregion
     #region Generators
 
-    public static void DoubleGenerator(
-      StringBuilder buf, IFormatProvider format)
+    public static void RealGenerator(
+      StringBuilder buf, IFormatProvider format, int exp)
     {
-      // pow(int, int)
       int del = 1;
-      for (int i = FromTo(6, 9); i > 0; i--)
-      {
-        del *= 10;
-      }
+      for (int i = FromTo(6, 9); i > 0; i--) del *= 10;
 
       int frac = FromTo(int.MinValue / del, int.MaxValue / del);
 
       if (OneOf(4))
       {
         buf.AppendFormat(
-          format,
-          OneOf(3) ? "{0:E3}" : "{0:G}",
-          frac * Math.Pow(10, FromTo(-250, 250)));
+          format, OneOf(3) ? "{0:E3}" : "{0:G}",
+          frac * Math.Pow(10, FromTo(-exp, exp)));
       }
       else
       {
         if (OneOf(3))
-          buf.AppendFormat(format, "{0:F}", frac);
-        else
-          buf.Append(frac);
+             buf.AppendFormat(format, "{0:F}", frac);
+        else buf.Append(frac);
       }
     }
 
@@ -67,8 +64,7 @@ namespace ILCalc.Tests
       StringBuilder buf, IFormatProvider format)
     {
       int x = Random.Next(int.MinValue, int.MaxValue);
-      if (x == 0)
-        x = 1; // protect from division by zero!
+      if (x == 0) x = 1;
 
       // TODO: binary + octal!
       if (OneOf(4))
@@ -83,6 +79,24 @@ namespace ILCalc.Tests
       {
         buf.Append(x);
       }
+    }
+
+    public static void Int64Generator(
+      StringBuilder buf, IFormatProvider format)
+    {
+      long x = Random.Next(int.MinValue, int.MaxValue);
+          x *= Random.Next(int.MinValue, int.MaxValue);
+      if (x == 0) x = 1;
+
+      if (OneOf(4))
+      {
+#if CF2
+        buf.AppendFormat(CultureInfo.CurrentCulture, "0x{0:X}", x);
+#else
+        buf.AppendFormat("0x{0:X}", x);
+#endif
+      }
+      else buf.Append(x);
     }
 
     #endregion
@@ -175,7 +189,7 @@ namespace ILCalc.Tests
     static void PutOperator(StringBuilder buf)
     {
       buf.Append(
-        OneOf(7) ? '%' : "+-*/^"[FromTo(0, 4)]);
+        OneOf(7) ? '%' : "+-*/^"[FromTo(0, 5)]);
     }
 
     void PutIdentifier(StringBuilder buf)

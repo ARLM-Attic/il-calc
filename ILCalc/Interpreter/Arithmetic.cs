@@ -4,39 +4,94 @@ using ILCalc.Custom;
 
 namespace ILCalc
 {
+  using FactoryCollection = SupportCollection<Delegate>;
+
+  #region Factory Delegates
+
+  delegate QuickInterpret<T> QuickFactory<T>(T[] arguments);
+
+  delegate Interpret<T> InterpFactory<T>(
+    string expr, int args, InterpretCreator<T> creator);
+
+  #endregion
+
   static class Arithmetics
   {
-    #region Resolve
+    #region Initialize
 
-    static readonly SupportCollection<Type> Support;
-    static readonly SupportCollection<Type> Checked;
+    static readonly FactoryCollection
+      QuickSupport, InterpSupport,
+      QuickChecked, InterpChecked;
 
     static Arithmetics()
     {
-      Support = new SupportCollection<Type>();
-      Support.Add<Int32>(typeof(Int32Arithmetic));
-      Support.Add<Int64>(typeof(Int64Arithmetics));
-      Support.Add<Single>(typeof(SingleArithmetic));
-      Support.Add<Double>(typeof(DoubleArithmetic));
-      Support.Add<Decimal>(typeof(DecimalArithmetic));
+      QuickSupport = new FactoryCollection();
+      QuickChecked = new FactoryCollection();
+      InterpSupport = new FactoryCollection();
+      InterpChecked = new FactoryCollection();
 
-      Checked = new SupportCollection<Type>();
-      //Checked.Add<Int32>(typeof(Int32CheckedArithmetic));
+      Register<Int32, Int32Arithmetic>(false);
+      Register<Int64, Int64Arithmetic>(false);
+      Register<Single, SingleArithmetic>(false);
+      Register<Double, DoubleArithmetic>(false);
+      Register<Decimal, DecimalArithmetic>(false);
+
+      Register<Int32, Int32CheckedArithmetic>(true);
+      Register<Int64, Int64CheckedArithmetic>(true);
     }
 
-    public static Type Resolve<T>(bool useChecks)
+    static void Register<T, TSupport>(bool checks)
+      where TSupport : IArithmetic<T>, new()
     {
-      Type arithmetic = useChecks ?
-        Checked.Find<T>() :
-        Support.Find<T>();
+      InterpFactory<T> interpFactory =
+        (s, a, c) => new InterpretImpl<T, TSupport>(s,a,c);
 
-      if (arithmetic == null)
+      QuickFactory<T> quickFactory =
+        args => new QuickInterpretImpl<T, TSupport>(args);
+
+      if (checks)
       {
-        return typeof(UnknownArithmetic<>)
-          .MakeGenericType(typeof(T));
+        QuickChecked.Add<T>(quickFactory);
+        InterpChecked.Add<T>(interpFactory);
+      }
+      else
+      {
+        QuickSupport.Add<T>(quickFactory);
+        InterpSupport.Add<T>(interpFactory);
+      }
+    }
+
+    #endregion
+    #region Resolvers
+
+    public static QuickFactory<T> ResolveQuick<T>(bool checks)
+    {
+      if (checks)
+        return (QuickFactory<T>) QuickChecked.Find<T>();
+
+      var factory = QuickSupport.Find<T>();
+      if (factory == null)
+      {
+        return args =>
+          new QuickInterpretImpl<T, UnknownArithmetic<T>>(args);
       }
 
-      return arithmetic;
+      return (QuickFactory<T>) factory;
+    }
+
+    public static InterpFactory<T> ResolveInterp<T>(bool checks)
+    {
+      if (checks)
+        return (InterpFactory<T>) InterpChecked.Find<T>();
+
+      var factory = InterpSupport.Find<T>();
+      if (factory == null)
+      {
+        return (s, a, c) =>
+          new InterpretImpl<T, UnknownArithmetic<T>>(s,a,c);
+      }
+
+      return (InterpFactory<T>) factory;
     }
 
     #endregion
@@ -54,62 +109,15 @@ namespace ILCalc
       public int Div(int x, int y) { return x / y; }
       public int Mod(int x, int y) { return x % y; }
 
-      //TODO: is this right?
-      //TODO: write test
       public int Pow(int x, int y)
       {
-        if (y < 0) return 0;
-
-        int res = 1;
-        while (y != 0)
-        {
-          if ((y & 1) == 1) res *= x;
-          y >>= 1;
-          x *= x;
-        }
-
-        return res;
+        return MathHelper.Pow(x, y);
       }
 
-      public bool IsEqual(int x, int y)     { return x == y; }
-      public bool IsGreather(int x, int y)  { return x >  y; }
-      public bool IsGrOrEqual(int x, int y) { return x >= y; }
-      public int? IsIntergal(int value)     { return value;  }
+      public int? IsIntergal(int value) { return value;  }
     }
 
-    struct Int32CheckedArithmetic : IArithmetic<Int32>
-    {
-      public int Zero { get { return 0; } }
-      public int One  { get { return 1; } }
-
-      public int Neg(int x) { return -x; }
-      public int Add(int x, int y) { return checked(x + y); }
-      public int Sub(int x, int y) { return checked(x - y); }
-      public int Mul(int x, int y) { return checked(x * y); }
-      public int Div(int x, int y) { return checked(x / y); }
-      public int Mod(int x, int y) { return checked(x % y); }
-
-      public int Pow(int x, int y)
-      {
-        if (y  < 0) return 0;
-        if (y == 0) return 1;
-
-        int t = x;
-        checked //TODO: think
-        {
-          for(int i = 0; i < y; i++) t *= x;
-        }
-
-        return t;
-      }
-
-      public bool IsEqual(int x, int y)     { return x == y; }
-      public bool IsGreather(int x, int y)  { return x >  y; }
-      public bool IsGrOrEqual(int x, int y) { return x >= y; }
-      public int? IsIntergal(int value)     { return value; }
-    }
-
-    struct Int64Arithmetics : IArithmetic<Int64>
+    struct Int64Arithmetic : IArithmetic<Int64>
     {
       public long Zero { get { return 0; } }
       public long One  { get { return 1; } }
@@ -121,31 +129,16 @@ namespace ILCalc
       public long Div(long x, long y) { return x / y; }
       public long Mod(long x, long y) { return x % y; }
 
-      //TODO: test
       public long Pow(long x, long y)
       {
-        if (y < 0) return 0;
-
-        long res = 1;
-        while (y != 0)
-        {
-          if ((y & 1) == 1) res *= x;
-          y >>= 1;
-          x *= x;
-        }
-
-        return res;
+        return MathHelper.Pow(x, y);
       }
-
-      public bool IsEqual(long x, long y)     { return x == y; }
-      public bool IsGreather(long x, long y)  { return x >  y; }
-      public bool IsGrOrEqual(long x, long y) { return x >= y; }
 
       public int? IsIntergal(long value)
       {
-        if (int.MinValue >= value && value <= int.MaxValue)
-          return (int) value;
-        return null;
+        if (int.MinValue < value ||
+            int.MaxValue < value) return null;
+        return (int) value;
       }
     }
 
@@ -160,14 +153,11 @@ namespace ILCalc
       public float Mul(float x, float y) { return x * y; }
       public float Div(float x, float y) { return x / y; }
       public float Mod(float x, float y) { return x % y; }
+
       public float Pow(float x, float y)
       {
         return (float) Math.Pow(x, y);
       }
-
-      public bool IsEqual(float x, float y) { return x == y; }
-      public bool IsGreather(float x, float y) { return x > y; }
-      public bool IsGrOrEqual(float x, float y) { return x >= y; }
 
       public int? IsIntergal(float value)
       {
@@ -188,11 +178,11 @@ namespace ILCalc
       public double Mul(double x, double y) { return x * y; }
       public double Div(double x, double y) { return x / y; }
       public double Mod(double x, double y) { return x % y; }
-      public double Pow(double x, double y) { return Math.Pow(x, y); }
 
-      public bool IsEqual(double x, double y) { return x == y; }
-      public bool IsGreather(double x, double y) { return x > y; }
-      public bool IsGrOrEqual(double x, double y) { return x >= y; }
+      public double Pow(double x, double y)
+      {
+        return Math.Pow(x, y);
+      }
 
       public int? IsIntergal(double value)
       {
@@ -213,20 +203,62 @@ namespace ILCalc
       public decimal Mul(decimal x, decimal y) { return x * y; }
       public decimal Div(decimal x, decimal y) { return x / y; }
       public decimal Mod(decimal x, decimal y) { return x % y; }
+
       public decimal Pow(decimal x, decimal y)
       {
-        return (decimal) Math.Pow((double) x, (double) y);
+        return MathHelper.Pow(x, y);
       }
-
-      public bool IsEqual(decimal x, decimal y)     { return x == y; }
-      public bool IsGreather(decimal x, decimal y)  { return x >  y; }
-      public bool IsGrOrEqual(decimal x, decimal y) { return x >= y; }
 
       public int? IsIntergal(decimal value)
       {
         var integral = (int) value;
         if (value == integral) return integral;
         return null;
+      }
+    }
+
+    struct Int32CheckedArithmetic : IArithmetic<Int32>
+    {
+      public int Zero { get { return 0; } }
+      public int One  { get { return 1; } }
+
+      public int Neg(int x)        { return checked(-x); }
+      public int Add(int x, int y) { return checked(x + y); }
+      public int Sub(int x, int y) { return checked(x - y); }
+      public int Mul(int x, int y) { return checked(x * y); }
+      public int Div(int x, int y) { return checked(x / y); }
+      public int Mod(int x, int y) { return checked(x % y); }
+
+      public int Pow(int x, int y)
+      {
+        return MathHelper.PowChecked(x, y);
+      }
+
+      public int? IsIntergal(int value) { return value; }
+    }
+
+    struct Int64CheckedArithmetic : IArithmetic<Int64>
+    {
+      public long Zero { get { return 0; } }
+      public long One  { get { return 1; } }
+
+      public long Neg(long x)         { return checked(-x); }
+      public long Add(long x, long y) { return checked(x + y); }
+      public long Sub(long x, long y) { return checked(x - y); }
+      public long Mul(long x, long y) { return checked(x * y); }
+      public long Div(long x, long y) { return checked(x / y); }
+      public long Mod(long x, long y) { return checked(x % y); }
+
+      public long Pow(long x, long y)
+      {
+        return MathHelper.PowChecked(x, y);
+      }
+
+      public int? IsIntergal(long value)
+      {
+        if (int.MinValue < value ||
+            int.MaxValue > value) return null;
+        return (int) value;
       }
     }
 
@@ -250,10 +282,6 @@ namespace ILCalc
       public T Div(T x, T y) { throw MakeException("/"); }
       public T Mod(T x, T y) { throw MakeException("%"); }
       public T Pow(T x, T y) { throw MakeException("^"); }
-
-      public bool IsEqual(T x, T y)     { throw MakeException("^"); }
-      public bool IsGreather(T x, T y)  { throw MakeException(">"); }
-      public bool IsGrOrEqual(T x, T y) { throw MakeException(">="); }
 
       public int? IsIntergal(T value) { return null; }
     }

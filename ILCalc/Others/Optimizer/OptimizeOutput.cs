@@ -1,17 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-// TODO: feature x ^  0		=> 1
-// TODO: feature x ^ -2		=> 1 x x * /
-// TODO: feature x *  0		=> 0
-// TODO: feature 2 + x + 2	=> 4 x +
-
 namespace ILCalc
 {
   sealed class OptimizeOutput<T>
-    : BufferOutput<T>,
-      IExpressionOutput<T>
+    : BufferOutput<T>, IExpressionOutput<T>
   {
+    // TODO: deep constant folding
+
     #region Fields
 
     readonly IExpressionOutput<T> output;
@@ -21,16 +17,15 @@ namespace ILCalc
     #endregion
     #region Constructor
 
-    //TODO: checks!
     public OptimizeOutput(
-      IExpressionOutput<T> output, OptimizeModes mode)
+      IExpressionOutput<T> output, OptimizeModes mode, bool checks)
     {
       Debug.Assert(output != null);
 
       this.output = output;
       this.mode = mode;
 
-      this.interp = QuickInterpret<T>.CreateInstance(null);
+      this.interp = QuickInterpret<T>.Create(checks, null);
     }
 
     #endregion
@@ -60,9 +55,9 @@ namespace ILCalc
     #endregion
     #region IExpressionOutput
 
-    public new void PutOperator(int oper)
+    public new void PutOperator(Code oper)
     {
-      Debug.Assert(Code.IsOperator(oper));
+      Debug.Assert(CodeHelper.IsOp(oper));
 
       if (ConstantFolding)
       {
@@ -91,7 +86,6 @@ namespace ILCalc
           if (val.HasValue)
           {
             int value = val.Value;
-            //int value = -1; //GetIntegerValue(LastNumber);
             if (value > 0 && value < 16)
             {
               OptimizePow(value);
@@ -104,7 +98,7 @@ namespace ILCalc
       code.Add(oper);
     }
 
-    public new void PutCall(FunctionInfo<T> func, int argsCount)
+    public new void PutCall(FunctionInfo<T> func, int args)
     {
       if (FuncionFolding)
       {
@@ -126,12 +120,12 @@ namespace ILCalc
 
         if (allArgsKnown)
         {
-          FoldFunction(pos, func, argsCount);
+          FoldFunction(pos, func, args);
           return;
         }
       }
 
-      base.PutCall(func, argsCount);
+      base.PutCall(func, args);
     }
 
     public new void PutExprEnd()
@@ -143,12 +137,6 @@ namespace ILCalc
 
     #endregion
     #region Helpers
-
-//    static int GetIntegerValue(double value)
-//    {
-//      var intVal = (int) value;
-//      return (intVal == value) ? intVal : -1;
-//    }
 
     // ReSharper disable SuggestBaseTypeForParameter
 
@@ -184,7 +172,7 @@ namespace ILCalc
     {
       Debug.Assert(code.Count >= 1);
 
-      int op = code[pos];
+      Code op = code[pos];
       return op == Code.ParamCall
           || op == Code.BeginCall;
     }
@@ -204,7 +192,7 @@ namespace ILCalc
       this.interp.Reset();
     }
 
-    void PerformBinaryOp(int oper)
+    void PerformBinaryOp(Code oper)
     {
       Debug.Assert(this.numbers.Count >= 2);
       Debug.Assert(this.code.Count >= 1);

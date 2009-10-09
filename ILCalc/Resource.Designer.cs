@@ -160,7 +160,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Opening brace should be after function name.
+        ///   Looks up a localized string similar to Opening brace should be placed after function name.
         /// </summary>
         internal static string errFunctionNoBrace {
             get {
@@ -313,15 +313,6 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to parameter #{0} is Out or Optional parameter. This kinds of parameters are not supported..
-        /// </summary>
-        internal static string errMethodParamInvalid {
-            get {
-                return ResourceManager.GetString("errMethodParamInvalid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Culture &apos;{0}&apos; is neutral culture. It cannot be used for parse and formatting ..
         /// </summary>
         internal static string errNeutralCulture {
@@ -349,7 +340,7 @@ namespace ILCalc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Number constant overflow:.
+        ///   Looks up a localized string similar to Literal value overflow:.
         /// </summary>
         internal static string errNumberOverflow {
             get {

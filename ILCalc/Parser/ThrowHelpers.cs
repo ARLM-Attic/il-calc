@@ -10,34 +10,31 @@ namespace ILCalc
     Exception IncorrectConstr(Item prev, Item next, int i)
     {
       int len = i - this.prePos;
-      var buf = new StringBuilder(Resource.errIncorrectConstr);
-
       Debug.Assert(len >= 0);
 
-      buf.Append(" (");
-      buf.Append(prev);
-      buf.Append(")(");
-      buf.Append(next);
-      buf.Append("): \"");
-      buf.Append(this.expr, this.prePos, len);
-      buf.Append("\".");
+      var msg =
+        new StringBuilder(Resource.errIncorrectConstr)
+        .Append(" (").Append(prev).Append(")(")
+        .Append(next).Append("): \"")
+        .Append(this.expr, this.prePos, len)
+        .Append("\".").ToString();
 
       return new SyntaxException(
-        buf.ToString(), this.expr, this.prePos, len);
+        msg, this.expr, this.prePos, len);
     }
 
     Exception BraceDisbalance(int pos, bool mode)
     {
-      string message = mode ?
+      string msg = mode ?
         Resource.errDisbalanceOpen :
         Resource.errDisbalanceClose;
 
-      return new SyntaxException(message, this.expr, pos, 1);
+      return new SyntaxException(msg, this.expr, pos, 1);
     }
 
     Exception IncorrectIden(int i)
     {
-      for (i++; i < this.xlen; i++)
+      for (i++; i < this.expr.Length; i++)
       {
         char c = this.expr[i];
         if (!char.IsLetterOrDigit(c) && c != '_') break;
@@ -47,30 +44,16 @@ namespace ILCalc
         Item.Identifier, Item.Identifier, i);
     }
 
-    //TODO: unused?
-    Exception NumberFormatException(
-      string message, string text, Exception inner)
-    {
-      var buf = new StringBuilder(message);
-
-      buf.Append(" \"");
-      buf.Append(text);
-      buf.Append("\".");
-
-      return new SyntaxException(
-        buf.ToString(), this.expr, this.curPos, text.Length, inner);
-    }
-
     Exception NoOpenBrace(int pos, int len)
     {
-      var buf = new StringBuilder(Resource.errFunctionNoBrace);
+      var msg =
+        new StringBuilder(Resource.errFunctionNoBrace)
+        .Append(" \"")
+        .Append(this.expr, pos, len)
+        .Append("\".")
+        .ToString();
 
-      buf.Append(" \"");
-      buf.Append(this.expr, pos, len);
-      buf.Append("\".");
-
-      return new SyntaxException(
-        buf.ToString(), this.expr, pos, len);
+      return new SyntaxException(msg, this.expr, pos, len);
     }
 
     Exception InvalidSeparator()
@@ -82,21 +65,24 @@ namespace ILCalc
     Exception UnresolvedIdentifier(int shift)
     {
       int end = this.curPos;
-      for (end += shift; end < this.xlen; end++)
+      for (end += shift; end < this.expr.Length; end++)
       {
         char c = this.expr[end];
         if (!Char.IsLetterOrDigit(c) && c != '_') break;
       }
 
-      var buf = new StringBuilder(Resource.errUnresolvedIdentifier);
       int len = end - this.curPos;
 
-      buf.Append(" \"");
-      buf.Append(this.expr, this.curPos, len);
-      buf.Append("\".");
+      var msg =
+        new StringBuilder(
+          Resource.errUnresolvedIdentifier)
+        .Append(" \"")
+        .Append(this.expr, this.curPos, len)
+        .Append("\".")
+        .ToString();
 
       return new SyntaxException(
-        buf.ToString(), this.expr, this.curPos, len);
+        msg, this.expr, this.curPos, len);
     }
 
     Exception UnresolvedSymbol(int i)
@@ -120,22 +106,23 @@ namespace ILCalc
     Exception WrongArgsCount(
       int pos, int len, int args, FunctionGroup<T> group)
     {
-      var buf = new StringBuilder(Resource.sFunction);
-
-      buf.Append(" \"");
-      buf.Append(this.expr, pos, len);
-      buf.Append("\" ");
-      buf.AppendFormat(Resource.errWrongOverload, args);
+      var buf =
+        new StringBuilder(Resource.sFunction)
+        .Append(" \"")
+        .Append(this.expr, pos, len)
+        .Append("\" ")
+        .AppendFormat(Resource.errWrongOverload, args);
 
       // NOTE: improve this?
       // NOTE: may be empty FunctionGroup! Show actual message
       // NOTE: FunctionGroup => IEnumerable<FunctionInfo>
       if (group != null)
       {
-        buf.Append(' ');
-        buf.AppendFormat(
-          Resource.errExistOverload,
-          group.MakeMethodsArgsList());
+        buf
+          .Append(' ')
+          .AppendFormat(
+            Resource.errExistOverload,
+            group.MakeMethodsArgsList());
       }
 
       return new SyntaxException(
@@ -152,7 +139,7 @@ namespace ILCalc
       foreach (Capture match in matches)
       {
         IdenType idenType = IdenType.Argument;
-        foreach (var list in Context.Literals)
+        foreach (var list in this.literals)
         {
           if (idenType == match.Type)
           {
@@ -169,7 +156,9 @@ namespace ILCalc
 
       Debug.Assert(matches.Count == names.Count);
 
-      var buf = new StringBuilder(Resource.errAmbiguousMatch);
+      var buf = new StringBuilder(
+        Resource.errAmbiguousMatch);
+
       for (int i = 0; i < matches.Count; i++)
       {
         string type = string.Empty;
@@ -181,18 +170,21 @@ namespace ILCalc
           case IdenType.Function: type = Resource.sFunction; break;
         }
 
-        buf.Append(' ');
-        buf.Append(type.ToLowerInvariant());
-        buf.Append(" \"");
-        buf.Append(names[i]);
-        buf.Append('\"');
+        buf
+          .Append(' ')
+          .Append(type.ToLowerInvariant())
+          .Append(" \"")
+          .Append(names[i])
+          .Append('\"');
 
         if (i + 1 == matches.Count)
         {
-          buf.Append(' ');
-          buf.Append(Resource.sAnd);
+          buf.Append(' ').Append(Resource.sAnd);
         }
-        else buf.Append(i == matches.Count ? '.' : ',');
+        else
+        {
+          buf.Append(i == matches.Count ? '.' : ',');
+        }
       }
 
       int len = names[0].Length;

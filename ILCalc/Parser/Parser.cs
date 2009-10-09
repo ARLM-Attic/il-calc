@@ -7,9 +7,8 @@ namespace ILCalc
   {
     #region Fields
 
-    int exprDepth;
-    int curPos;
-    int prePos;
+    int exprDepth, curPos, prePos;
+    Stack<Code> curStack;
     T value;
 
     #endregion
@@ -18,32 +17,26 @@ namespace ILCalc
     {
       Item prev = Item.Begin;
       int separators = 0;
-      var operators = new Stack<int>();
+      var operators = new Stack<Code>();
+      this.curStack = operators;
 
-      while (i < this.xlen)
+      while (i < this.expr.Length)
       {
         char c = this.expr[i];
 
-        // NOTE: maybe put in last else?
-        if (Char.IsWhiteSpace(c))
-        {
-          i++;
-          continue;
-        }
+        if (Char.IsWhiteSpace(c)) { i++; continue; }
 
-        //this.curPos = i++;
-        this.curPos = i;
+        this.curPos = i++;
         int val;
 
         // ============================================= NUMBER ==
-        if ((val = Literal.TryParse(i, this)) != -1)
+        if ((val = Literal.TryParse(i-1, this)) != -1)
         {
-          i += val;
+          i += val - 1;
 
           // [ )123 ], [ 123 456 ] or [ pi123 ]
           if (prev >= Item.Number)
           {
-            //ScanNumber(c, ref i);
             throw IncorrectConstr(prev, Item.Number, i);
           }
 
@@ -59,11 +52,11 @@ namespace ILCalc
           if (prev >= Item.Number)
           {
             Flush(operators, Priority[val]);
-            operators.Push(val);
+            operators.Push((Code) val);
           }
 
           // UNARY [-] ===================
-          else if (val == Code.Sub)
+          else if (val == (int) Code.Sub)
           {
             // prev == [+-], [,] or [(]
             operators.Push(Code.Neg);
@@ -72,11 +65,10 @@ namespace ILCalc
           // UNARY [+] ===================
           else
           {
-            //throw IncorrectConstr(prev, Item.Operator, i);
-            throw IncorrectConstr(prev, Item.Operator, i+1);
+            throw IncorrectConstr(prev, Item.Operator, i);
           }
 
-          i++; // <===
+          //i++; // <===
           prev = Item.Operator;
         }
 
@@ -91,15 +83,14 @@ namespace ILCalc
           // [ (, ], [ +, ] or [ ,, ]
           if (prev <= Item.Begin)
           {
-            throw IncorrectConstr(prev, Item.Separator, i+1);
-            //throw IncorrectConstr(prev, Item.Separator, i);
+            throw IncorrectConstr(prev, Item.Separator, i);
           }
 
           Flush(operators);
           Output.PutSeparator();
           separators++;
 
-          i++; // <====
+          //i++; // <====
           prev = Item.Separator;
         }
 
@@ -111,16 +102,16 @@ namespace ILCalc
           {
             if (!Context.ImplicitMul)
             {
-              throw IncorrectConstr(prev, Item.Begin, i+1);
-              //throw IncorrectConstr(prev, Item.Begin, i);
+              throw IncorrectConstr(prev, Item.Begin, i);
             }
 
             Flush(operators, 1);
             operators.Push(Code.Mul); // Insert [*]
           }
 
-          i++; // <======
+          //i++; // <======
           ParseNested(ref i, false);
+          this.curStack = operators;
           prev = Item.End;
         }
 
@@ -131,8 +122,7 @@ namespace ILCalc
           if (prev <= Item.Separator ||
             (!func && prev == Item.Begin))
           {
-            throw IncorrectConstr(prev, Item.End, i+1);
-            //throw IncorrectConstr(prev, Item.End, i);
+            throw IncorrectConstr(prev, Item.End, i);
           }
 
           Flush(operators);
@@ -146,7 +136,7 @@ namespace ILCalc
             separators++;
           }
 
-          i++; // <=====
+          //i++; // <=====
           return separators;
         }
 
@@ -164,8 +154,7 @@ namespace ILCalc
 
             if (!Context.ImplicitMul)
             {
-              //throw IncorrectConstr(prev, Item.Identifier, i);
-              throw IncorrectConstr(prev, Item.Identifier, i+1);
+              throw IncorrectConstr(prev, Item.Identifier, i);
             }
 
             // [ )pi ] or [ 123pi ]
@@ -189,8 +178,7 @@ namespace ILCalc
       // [ +) ], [ ,) ] or [ () ]
       if (prev <= Item.Begin)
       {
-        //throw IncorrectConstr(prev, Item.End, i);
-        throw IncorrectConstr(prev, Item.End, i); //TODO: test for it!
+        throw IncorrectConstr(prev, Item.End, i);
       }
 
       Flush(operators);
@@ -201,7 +189,7 @@ namespace ILCalc
 
     #region Stack Operations
 
-    void Flush(Stack<int> stack)
+    void Flush(Stack<Code> stack)
     {
       while (stack.Count > 0)
       {
@@ -209,10 +197,10 @@ namespace ILCalc
       }
     }
 
-    void Flush(Stack<int> stack, int priority)
+    void Flush(Stack<Code> stack, int priority)
     {
       while (stack.Count > 0 &&
-        priority <= Priority[stack.Peek()])
+        priority <= Priority[(int) stack.Peek()])
       {
         Output.PutOperator(stack.Pop());
       }

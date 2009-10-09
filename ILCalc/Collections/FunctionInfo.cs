@@ -17,7 +17,7 @@ namespace ILCalc
   /// Instance of this class is an immutable.<br/>
   /// Class has no public constructors.</remarks>
   /// <threadsafety instance="true"/>
-  [DebuggerDisplay("{ArgsCount} args", Name = "{Method}")]
+  [DebuggerDisplay("{ArgsCount} args", Name = "{MethodName}")]
   [Serializable]
   public abstract class FunctionInfo<T>
   {
@@ -179,13 +179,13 @@ namespace ILCalc
     #endregion
     #region Properties
 
-    [DebuggerBrowsable(State.Never)]
+    [Br(State.Never)]
     public override MethodInfo Method
     {
       get { return this.method; }
     }
 
-    [DebuggerBrowsable(State.Never)]
+    [Br(State.Never)]
     public override object Target
     {
       get { return this.target; }
@@ -230,7 +230,7 @@ namespace ILCalc
       }
 
       // invoke via reflection
-      try //TODO: is it right?
+      try
       {
         return (T)
           this.method.Invoke(this.target, fixArgs);
@@ -283,7 +283,8 @@ namespace ILCalc
     #endregion
     #region Constructor
 
-    public KnownDelegateInfo(Delegate deleg, MethodInfo method, int argsCount)
+    public KnownDelegateInfo(
+      Delegate deleg, MethodInfo method, int argsCount)
       : base(argsCount, false)
     {
       Debug.Assert(deleg != null);
@@ -298,11 +299,13 @@ namespace ILCalc
 
 #if CF2
 
+    [Br(State.Never)]
     public override MethodInfo Method
     {
       get { return null; }
     }
 
+    [Br(State.Never)]
     public override object Target
     {
       get { return null; }
@@ -310,18 +313,19 @@ namespace ILCalc
 
 #else
 
+    [Br(State.Never)]
     public override MethodInfo Method
     {
       get { return this.method ?? this.deleg.Method; }
     }
 
+    [Br(State.Never)]
     public override object Target
     {
       get
       {
         return this.method == null ?
-          this.deleg.Target :
-          this.deleg;
+          this.deleg.Target : this.deleg;
       }
     }
 

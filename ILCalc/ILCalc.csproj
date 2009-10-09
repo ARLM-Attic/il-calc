@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SERIALIZE ASYNC</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FULL_FW</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -31,14 +31,14 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;SERIALIZE</DefineConstants>
+    <DefineConstants>TRACE;FULL_FW</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\ILCalcX.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Deploy|AnyCPU' ">
     <OutputPath>..\Releases\Deploy\ILCalc %28.NET 2.0%29\</OutputPath>
-    <DefineConstants>TRACE;SERIALIZE</DefineConstants>
+    <DefineConstants>TRACE;FULL_FW</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <Optimize>true</Optimize>
@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcContext.cs" />
-    <Compile Include="Others\CalcContext.Serialize.cs" />
+    <Compile Include="Common\MathHelper.cs" />
     <Compile Include="Collections\ArgumentCollection.cs" />
     <Compile Include="Collections\ConstantDictionary.cs" />
     <Compile Include="Common\ICompiler.cs" />
@@ -104,7 +104,7 @@
     <Compile Include="Parser\Parser.cs" />
     <Compile Include="Parser\ParserMain.cs" />
     <Compile Include="Parser\ScanIdentifier.cs" />
-    <Compile Include="Parser\ScanNumber.cs" />
+    <Compile Include="Parser\ScanLiteral.cs" />
     <Compile Include="Others\SyntaxException.cs" />
     <Compile Include="Parser\ThrowHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-// TODO: fix DebugView
-// TODO: ICollection?
-
 namespace ILCalc
 {
   using State = DebuggerBrowsableState;
@@ -21,6 +18,7 @@ namespace ILCalc
   /// and return value type.</typeparam>
   /// <threadsafety instance="false"/>
   [DebuggerDisplay("{Count} functions")]
+  [DebuggerTypeProxy(typeof(GroupDebugView<>))]
   [Serializable]
   public sealed class FunctionGroup<T>
     : IEnumerable<FunctionInfo<T>>
@@ -273,4 +271,24 @@ namespace ILCalc
 
     #endregion
   }
+
+  #region Debug View
+
+  sealed class GroupDebugView<T>
+  {
+    [DebuggerBrowsable(State.RootHidden)]
+    readonly FunctionInfo<T>[] items;
+
+    public GroupDebugView(FunctionGroup<T> list)
+    {
+      this.items = new FunctionInfo<T>[list.Count];
+      int i = 0;
+      foreach (var f in list)
+      {
+        this.items[i++] = f;
+      }
+    }
+  }
+
+  #endregion
 }

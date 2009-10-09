@@ -6,16 +6,17 @@ namespace ILCalc.Custom
   interface IParserSupport<T>
   {
     string Expression { get; }
+
     int BeginPos { get; }
-    char DecimalDot { get; }
+
+    char DecimalDot { get; } // => DecimalSeparator
     NumberFormatInfo NumberFormat { get; }
 
     T ParsedValue { set; }
+    bool DiscardNegate();
 
     Exception InvalidNumberFormat(
-      string message,
-      string badLiteral,
-      Exception innerException);
+      string message, string literal, Exception exc);
   }
 
   interface ILiteralParser<T>

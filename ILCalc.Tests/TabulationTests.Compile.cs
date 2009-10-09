@@ -147,7 +147,7 @@ namespace ILCalc.Tests
     {
       int32Tester.TabulatorTest1D(
         "2 + Func(x)",
-        x => 2 + Func(x));
+        x => 2 + Func1(x));
     }
 
     [TestMethod]
@@ -155,7 +155,7 @@ namespace ILCalc.Tests
     {
       int32Tester.TabulatorTest2D(
         "2 + Func(x, y)",
-        (x, y) => 2 + Func(x, y));
+        (x, y) => 2 + Func2(x, y));
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ namespace ILCalc.Tests
     {
       int32Tester.TabulatorTest3D(
         "Func(z + Func(x, y))",
-        (x, y, z) => Func(z + Func(x, y)));
+        (x, y, z) => Func1(z + Func2(x, y)));
     }
 
     [TestMethod]
@@ -171,7 +171,7 @@ namespace ILCalc.Tests
     {
       int32Tester.TabulatorTest4D(
         "Func(w, z + Func(x, y))",
-        (x, y, z, w) => Func(w, z + Func(x, y)));
+        (x, y, z, w) => Func2(w, z + Func2(x, y)));
     }
 
     #endregion

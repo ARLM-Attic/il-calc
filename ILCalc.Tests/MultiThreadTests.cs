@@ -18,7 +18,7 @@ namespace ILCalc.Tests
     readonly Interpret<double> syncInterp;
     readonly object syncRoot;
 
-    const string Expression = "(pi*x + 2sin(y)+x-y+2x)^2 + x^3";
+    const string Expression = "Sum(pi*x + 2sin(y)+x; -y+2x; 2)^2 + x^3";
 
     #endregion
     #region Initialize

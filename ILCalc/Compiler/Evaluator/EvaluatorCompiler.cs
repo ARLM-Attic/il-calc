@@ -64,7 +64,7 @@ namespace ILCalc
       ILGenerator il = method.GetILGenerator();
       CodeGen(il);
       il.Emit(OpCodes.Ret);
-
+  
       // DynamicMethodVisualizer.Visualizer.Show(method);
       // ======================================================
 

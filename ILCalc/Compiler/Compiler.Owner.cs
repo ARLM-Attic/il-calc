@@ -21,6 +21,7 @@ namespace ILCalc
     #endregion
     #region Closures
 
+    [Serializable]
     public sealed class Closure
     {
       object[] closure;
@@ -32,6 +33,7 @@ namespace ILCalc
       }
     }
 
+    [Serializable]
     public sealed class Closure<T1, T2>
     {
       readonly T1 obj0;
@@ -44,6 +46,7 @@ namespace ILCalc
       }
     }
 
+    [Serializable]
     public sealed class Closure<T1, T2, T3>
     {
       readonly T1 obj0;

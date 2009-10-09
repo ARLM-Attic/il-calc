@@ -1,10 +1,6 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using ILCalc.Custom;
-#if SILVERLIGHT
-using System.Linq.Expressions;
-#endif
 
 namespace ILCalc
 {
@@ -21,14 +17,8 @@ namespace ILCalc
     #region Constructor
 
     public InterpretImpl(
-      string expression, int argsCount, InterpretCreator<T> creator)
-      : base(expression, argsCount, creator) { }
-
-    public static InterpFactory<T> GetDelegate()
-    {
-      return (expr, args, creator) =>
-        new InterpretImpl<T, TSupport>(expr, args, creator);
-    }
+      string expr, int args, InterpretCreator<T> creator) :
+      base(expr, args, creator) { }
 
     #endregion
     #region Interpreter
@@ -42,8 +32,8 @@ namespace ILCalc
 
       while (true)
       {
-        int op = this.code[c++];
-        if (Code.IsOperator(op))
+        Code op = this.code[c++];
+        if (CodeHelper.IsOp(op))
         {
           T value = stack[i--];
           if (op != Code.Neg)
@@ -73,7 +63,7 @@ namespace ILCalc
         else
         {
           if (op == Code.Argument)
-            stack[++i] = args[this.code[c++]];
+            stack[++i] = args[(int) this.code[c++]];
           else if (op == Code.Delegate0)
             stack[++i] = ((EvalFunc0<T>) this.funcs[f++])();
           else if (op == Code.Delegate1)
@@ -182,60 +172,5 @@ namespace ILCalc
     }
 
     #endregion
-  }
-
-  delegate Interpret<T> InterpFactory<T>(
-      string expr, int args, InterpretCreator<T> creator);
-
-  static class InterpretHelper
-  {
-    static readonly Type
-      InterpType = typeof(InterpretImpl<,>);
-
-#if SILVERLIGHT
-
-    static readonly ParameterExpression Expr =
-      Expression.Parameter(typeof(string), "expr");
-    static readonly ParameterExpression Args =
-      Expression.Parameter(typeof(int), "args");
-
-    public static InterpFactory<T> GetFactory<T>(Type ar)
-    {
-      var ctorTypes = new[]
-      {
-        typeof(string),
-        typeof(int),
-        typeof(InterpretCreator<T>)
-      };
-
-      var ctor = InterpType
-        .MakeGenericType(typeof(T), ar)
-        .GetConstructor(ctorTypes);
-
-      var creatorParam = Expression.Parameter(
-        ctorTypes[2], "creator");
-
-      var func = Expression.Lambda<InterpFactory<T>>(
-        Expression.New(ctor, Expr, Args, creatorParam),
-        Expr, Args, creatorParam);
-
-      return func.Compile();
-    }
-
-#else
-
-    const BindingFlags PublicStatic =
-      BindingFlags.Static | BindingFlags.Public;
-
-    public static InterpFactory<T> GetFactory<T>(Type ar)
-    {
-      return (InterpFactory<T>) InterpType
-        .MakeGenericType(typeof(T), ar)
-        .GetMethod("GetDelegate", PublicStatic)
-        .Invoke(null, null);
-    }
-
-#endif
-
   }
 }

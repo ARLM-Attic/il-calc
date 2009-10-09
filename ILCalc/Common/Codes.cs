@@ -1,34 +1,34 @@
 ﻿namespace ILCalc
 {
-  static class Code //TODO: => enum
+  enum Code
   {
-    public const int Return = int.MaxValue;
+    // operators:
+    Sub = 0, Add = 1,
+    Mul = 2, Div = 3,
+    Mod = 4, Pow = 5,
+    Neg = 6,
 
-    // Operators:
-    public const int Sub = 0;
-    public const int Add = 1;
-    public const int Mul = 2;
-    public const int Div = 3;
-    public const int Mod = 4;
-    public const int Pow = 5;
-    public const int Neg = 6;
+    // elements:
+    Number    = 8,
+    Argument  = 9,
+    Function  = 10,
+    Separator = 11,
+    ParamCall = 12,
+    BeginCall = 13,
 
-    // Elements:
-    public const int Number = 8;
-    public const int Argument = 9;
-    public const int Function = 10;
-    public const int Separator = 11;
-    public const int ParamCall = 12;
-    public const int BeginCall = 13;
+    // for Interpret:
+    Delegate0 = 16,
+    Delegate1 = 17,
+    Delegate2 = 18,
 
-    // For Interpret:
-    public const int Delegate0 = 16;
-    public const int Delegate1 = 17;
-    public const int Delegate2 = 18;
+    Return = int.MaxValue,
+  }
 
-    public static bool IsOperator(int code)
+  static class CodeHelper
+  {
+    public static bool IsOp(Code code)
     {
-      return code < Number;
+      return code < Code.Number;
     }
   }
 }

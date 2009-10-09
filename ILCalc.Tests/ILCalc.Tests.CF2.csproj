@@ -61,6 +61,7 @@
     <Compile Include="EvaluationTests.cs" />
     <Compile Include="ExceptionsTests.cs" />
     <Compile Include="FunctionsTests.cs" />
+    <Compile Include="Helpers\CultureHelper.cs" />
     <Compile Include="Helpers\ExprGenerator.cs" />
     <Compile Include="Helpers\Trace.SL2.cs" />
     <Compile Include="ParsingTests.cs" />

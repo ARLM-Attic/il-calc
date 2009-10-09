@@ -247,30 +247,6 @@ namespace ILCalc.Bench
         });
     }
 
-    public static double Foo(double x)
-    {
-      return -x;
-    }
-
-    delegate double Func(double x);
-
-    public static void PowTests()
-    {
-      var method = typeof(Benchmarks).GetMethod("Foo");
-      var delegt = (Delegate) new Func(Foo);
-
-      Tester.Run("Calls tests", 500000,
-        () => {
-          var result = (double) method.Invoke(null, new object[] { 1.2 });
-          return "Reflection";
-        },
-        () => {
-          var result = (double) delegt.DynamicInvoke(1.2);
-          return "DynamicInvoke";
-        }
-      );
-    }
-
     #endregion
     #region Helper
 

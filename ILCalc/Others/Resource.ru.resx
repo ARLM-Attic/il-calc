@@ -201,9 +201,6 @@
   <data name="errMethodNotStatic" xml:space="preserve">
     <value>должен быть статическим.</value>
   </data>
-  <data name="errMethodParamInvalid" xml:space="preserve">
-    <value>имеет Out- или Optional-параметр #{0}'. Такие типы параметров не поддерживаются.</value>
-  </data>
   <data name="errNeutralCulture" xml:space="preserve">
     <value>Культура '{0}' - нейтральная культура. Она не может быть использована для форматирования и разбора выражения.</value>
   </data>

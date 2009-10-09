@@ -19,7 +19,7 @@ namespace ILCalc
       if (len == 0)
         throw UnresolvedIdentifier(1);
 
-      if (this.curPos + len < this.xlen)
+      if (this.curPos + len < this.expr.Length)
       {
         // if there is a letter or _ after identifier:
         char c = this.expr[this.curPos + len];
@@ -29,8 +29,7 @@ namespace ILCalc
         }
       }
 
-      //i += len - 1; // skip identifier
-      i += len; // skip identifier <=========
+      i += len - 1; // skip identifier
 
       return (matches.Count == 1) ?
         SimpleMatch(matches[0], ref i, len) :
@@ -253,23 +252,24 @@ namespace ILCalc
       return args;
     }
 
-    // TODO: don't like it
+    // NOTE: don't like it
     bool SkipBrace(ref int i)
     {
-      while (i < this.xlen
-          && char.IsWhiteSpace(this.expr[i])) i++;
+      var str = this.expr;
 
-      if (i >= this.xlen) return false;
+      while (i < str.Length &&
+        char.IsWhiteSpace(str[i])) i++;
+
+      if (i >= str.Length) return false;
 
       this.curPos = i;
       this.prePos = this.curPos; // TODO: is it right?
 
-      if (this.expr[i] == '(') { i++; return true; }
+      if (str[i] == '(') { i++; return true; }
       return false;
     }
 
-    // TODO: merge with Parse
-    // TODO: destroy!
+    // TODO: merge with Parse, destroy!
     int ParseNested(ref int i, bool func)
     {
       int beginPos = this.curPos;
@@ -312,14 +312,14 @@ namespace ILCalc
       var matches = new List<Capture>();
 
 #if SILVERLIGHT
-			var compare = Context.IgnoreCase?
-				CompareOptions.IgnoreCase : CompareOptions.None;
+      var compare = Context.IgnoreCase?
+        CompareOptions.IgnoreCase : CompareOptions.None;
 #else
       bool ignCase = Context.IgnoreCase;
 #endif
 
       IdenType idenType = IdenType.Argument;
-      foreach (IListEnumerable list in Context.Literals)
+      foreach (IListEnumerable list in this.literals)
       {
         int id = 0;
         foreach (string name in list)
@@ -355,14 +355,14 @@ namespace ILCalc
         StringComparison.Ordinal;
 
       IdenType idenType = IdenType.Argument;
-      foreach (IListEnumerable list in Context.Literals)
+      foreach (IListEnumerable list in this.literals)
       {
         int id = 0;
         foreach (string name in list)
         {
           int length = name.Length;
-          if (length >= max &&
-            String.Compare(this.expr, this.curPos, name, 0, length, strCmp) == 0)
+          if (length >= max && String.Compare(
+            this.expr, this.curPos, name, 0, length, strCmp) == 0)
           {
             if (length != max) match.Clear();
             match.Add(new Capture(idenType, id));

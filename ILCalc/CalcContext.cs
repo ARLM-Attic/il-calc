@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -7,14 +6,6 @@ namespace ILCalc
 {
   using State = DebuggerBrowsableState;
   using Br = DebuggerBrowsableAttribute;
-
-  // TODO: away from here
-  interface IListEnumerable
-  {
-    List<string>.Enumerator GetEnumerator();
-  }
-
-  // TODO: extract comments from code
 
   /// <summary>
   /// Represents the expression context (arguments,
@@ -46,13 +37,9 @@ namespace ILCalc
     [Br(State.Never)] bool ignoreCase = true;
     [Br(State.Never)] bool checkedMode;
 
-    // Literals lookup list
-    [Br(State.Never), NonSerialized]
-    IListEnumerable[] literalsList;
-    //TODO: move to parser?
-
     // Parser instance
-    [Br(State.Never), NonSerialized]
+    [Br(State.Never)]
+    [NonSerialized]
     Parser<T> parser;
 
     #endregion
@@ -68,12 +55,6 @@ namespace ILCalc
       this.arguments = new ArgumentCollection();
       this.constants = new ConstantDictionary<T>();
       this.functions = new FunctionCollection<T>();
-      this.literalsList = new IListEnumerable[]
-      {
-        this.arguments,
-        this.constants,
-        this.functions
-      };
     }
 
     /// <summary>
@@ -188,18 +169,17 @@ namespace ILCalc
     /// <see cref="OptimizeModes"/> enumeration values
     /// that specify optimization modes for expression.
     /// </summary>
+    /// <remarks>
+    /// Be ready for catching <see cref="OverflowException"/>
+    /// when creating of Evaluator/Interpret
+    /// if <see cref="OverflowCheck"/> are enabled, because
+    /// overflows may be caused at optimization step.</remarks>
     /// <value><see cref="OptimizeModes.None"/>
     /// by default.</value>
     public OptimizeModes Optimization
     {
       get { return this.optimizeMode; }
       set { this.optimizeMode = value; }
-    }
-
-    [Br(State.Never)]
-    internal IListEnumerable[] Literals
-    {
-      get { return this.literalsList; }
     }
 
     #endregion
@@ -231,10 +211,10 @@ namespace ILCalc
       if (arguments.Length != ArgsCount)
         throw WrongArgsCount(arguments.Length, ArgsCount);
 
-      //TODO: support checks
-      var interp = QuickInterpret<T>.CreateInstance(arguments);
-      ParseSimple(expression, interp);
+      var interp = QuickInterpret<T>
+        .Create(OverflowCheck, arguments);
 
+      ParseSimple(expression, interp);
       return interp.Result;
     }
 
@@ -260,9 +240,8 @@ namespace ILCalc
       var creator = new InterpretCreator<T>();
       ParseOptimized(expression, creator);
 
-      return OverflowCheck ?
-        Interpret<T>.CreateChecked(expression, ArgsCount, creator) :
-        Interpret<T>.CreateInstance(expression, ArgsCount, creator);
+      return Interpret<T>.Create(
+        OverflowCheck, expression, ArgsCount, creator);
     }
 
     /// <summary>
@@ -279,7 +258,7 @@ namespace ILCalc
       if (expression == null)
         throw new ArgumentNullException("expression");
 
-      ParseSimple(expression, new NullWriter<T>());
+      ParseSimple(expression, NullWriter<T>.Instance);
     }
 
     #endregion
@@ -294,15 +273,17 @@ namespace ILCalc
     {
       if (culture.IsNeutralCulture)
       {
-        throw new NotSupportedException(string.Format(
-          Resource.errNeutralCulture, culture.Name));
+        throw new NotSupportedException(
+          string.Format(
+            Resource.errNeutralCulture, culture.Name));
       }
     }
 
     static ArgumentException WrongArgsCount(int actual, int expected)
     {
-      return new ArgumentException(string.Format(
-        Resource.errWrongArgsCount, actual, expected));
+      return new ArgumentException(
+        string.Format(
+          Resource.errWrongArgsCount, actual, expected));
     }
 
     void ParseSimple(string expression, IExpressionOutput<T> output)
@@ -328,7 +309,9 @@ namespace ILCalc
       }
       else
       {
-        var optimizer = new OptimizeOutput<T>(output, this.optimizeMode);
+        var optimizer = new OptimizeOutput<T>(
+          output, Optimization, OverflowCheck);
+
         this.parser.Parse(expression, optimizer);
       }
     }

@@ -17,14 +17,13 @@ namespace ILCalc
   /// This class cannot be inherited.</summary>
   /// <typeparam name="T">Functions parameters
   /// and return value type.</typeparam>
-  /// <threadsafety instance="false"/>
+  /// <threadsafety instance="false" static="true"/>
   [DebuggerDisplay("Count = {Count}")]
   [DebuggerTypeProxy(typeof(FunctionDebugView<>))]
   [Serializable]
   public sealed class FunctionCollection<T>
     : IEnumerable<KeyValuePair<string, FunctionGroup<T>>>,
-      IListEnumerable,
-      ICollection
+      IListEnumerable, ICollection
   {
     #region Fields
 
@@ -33,10 +32,6 @@ namespace ILCalc
 
     [DebuggerBrowsable(State.Never)]
     readonly List<FunctionGroup<T>> funcsList;
-
-    [DebuggerBrowsable(State.Never)]
-    static readonly FunctionCollection<T>
-      BuiltIns = ImportHelper.ResolveFunctions<T>();
 
     #endregion
     #region Constructors
@@ -330,13 +325,15 @@ namespace ILCalc
     /// <br/>-or-<br/><see cref="FunctionInfo{T}"/> with the
     /// same name and same arguments count already exist
     /// in the collection (overload impossible).</exception>
-    public void Add<TDelegate>(string name, TDelegate target)
+    public void AddDel<TDelegate>(string name, TDelegate target)
     {
-      var delType = typeof(TDelegate);
-      if (!typeof(Delegate).IsAssignableFrom(delType))
+      Type type = typeof(TDelegate);
+      if (!typeof(Delegate).IsAssignableFrom(type))
       {
         throw new ArgumentException();
       }
+
+      Validator.CheckVisible(type);
 
       AddFunc(name, FunctionFactory<T>
         .FromDelegate((Delegate) (object) target, true));
@@ -576,29 +573,6 @@ namespace ILCalc
     #region Import
 
     /// <summary>
-    /// Imports standart built-in functions from the <c>System.Math</c>
-    /// type to the <see cref="FunctionCollection{T}"/>.</summary>
-    /// <remarks>Currently this method imports this methods:<br/>
-    /// Abs, Sin, Cos, Tan, Sinh, Cosh, Tanh, Acos, Asin, Atan, Atan2,
-    /// Ceil, Floor, Round, Trunc (not available in CF/Silverlight),
-    /// Log, Log10, Min, Max, Exp, Pow and Sqrt.</remarks>
-    /// <exception cref="ArgumentException">Some of
-    /// importing methods has the same name and the same
-    /// arguments count as the function that is already
-    /// in the collection (overload impossible).</exception>
-    public void ImportBuiltIn()
-    {
-      if (BuiltIns != null)
-      {
-        foreach (var pair in BuiltIns)
-        foreach (var func in pair.Value)
-        {
-          Add(pair.Key, func);
-        }
-      }
-    }
-
-    /// <summary>
     /// Imports all public static methods
     /// of the specified type that is suitable to be added
     /// into the <see cref="FunctionCollection{T}"/>.</summary>
@@ -823,7 +797,6 @@ namespace ILCalc
       this.funcsList.Clear();
     }
 
-    // TODO: maybe implement? =)
     void ICollection.CopyTo(Array array, int index)
     {
       throw new NotSupportedException();
@@ -915,6 +888,63 @@ namespace ILCalc
     List<string>.Enumerator IListEnumerable.GetEnumerator()
     {
       return this.namesList.GetEnumerator();
+    }
+
+    #endregion
+    #region ImportBuiltIns
+
+    [DebuggerBrowsable(State.Never)]
+    static readonly FunctionCollection<T>
+      BuiltIns = ImportHelper.ResolveFunctions<T>();
+
+    [DebuggerBrowsable(State.Never)]
+    static readonly object SyncRoot = new object();
+
+    /// <summary>
+    /// Imports standart built-in functions from the <c>System.Math</c>
+    /// type to the <see cref="FunctionCollection{T}"/>.</summary>
+    /// <remarks>Currently this method imports this methods:<br/>
+    /// Abs, Sin, Cos, Tan, Sinh, Cosh, Tanh, Acos, Asin, Atan, Atan2,
+    /// Ceil, Floor, Round, Trunc (not available in CF/Silverlight),
+    /// Log, Log10, Min, Max, Exp, Pow and Sqrt.</remarks>
+    /// <exception cref="ArgumentException">Some of
+    /// importing methods has the same name and the same
+    /// arguments count as the function that is already
+    /// in the collection (overload impossible).</exception>
+    public void ImportBuiltIn()
+    {
+      if (BuiltIns != null)
+      lock(SyncRoot)
+      {
+        foreach (var pair in BuiltIns)
+        foreach (var func in pair.Value)
+        {
+          Add(pair.Key, func);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Set the custom collection as built-ins imports for the
+    /// FunctionCollection of type <typeparamref name="T"/>.</summary>
+    /// <param name="collection">Collection to set.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="collection"/> is null.</exception>
+    public static void SetBuiltIns(FunctionCollection<T> collection)
+    {
+      if (collection == null)
+        throw new ArgumentNullException("collection");
+
+      lock(SyncRoot)
+      {
+        BuiltIns.Clear();
+
+        foreach (var pair in collection)
+        foreach (var func in pair.Value)
+        {
+          BuiltIns.Add(pair.Key, func);
+        }
+      }
     }
 
     #endregion

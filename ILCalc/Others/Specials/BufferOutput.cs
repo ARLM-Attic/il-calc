@@ -5,24 +5,23 @@ using System.Diagnostics;
 namespace ILCalc
 {
   [Serializable]
-  class BufferOutput<T> : IExpressionOutput<T>
+  abstract class BufferOutput<T> : IExpressionOutput<T>
   {
     #region Fields
 
     protected readonly List<FunctionInfo<T>> functions;
     protected readonly List<T> numbers;
-    protected readonly List<int> code;
+    protected readonly List<Code> code;
     protected readonly List<int> data;
 
     #endregion
     #region Constructor
 
-    //TODO: abstract class?
-    public BufferOutput()
+    protected BufferOutput()
     {
       this.functions = new List<FunctionInfo<T>>(2);
       this.numbers = new List<T>(4);
-      this.code = new List<int>(8);
+      this.code = new List<Code>(8);
       this.data = new List<int>(2);
     }
 
@@ -35,9 +34,9 @@ namespace ILCalc
       this.numbers.Add(value);
     }
 
-    public void PutOperator(int oper)
+    public void PutOperator(Code oper)
     {
-      Debug.Assert(Code.IsOperator(oper));
+      Debug.Assert(CodeHelper.IsOp(oper));
 
       this.code.Add(oper);
     }
@@ -60,13 +59,13 @@ namespace ILCalc
       this.code.Add(Code.BeginCall);
     }
 
-    public void PutCall(FunctionInfo<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int args)
     {
       Debug.Assert(func != null);
-      Debug.Assert(argsCount >= 0);
+      Debug.Assert(args >= 0);
 
       this.code.Add(Code.Function);
-      this.data.Add(argsCount); // NOTE: not needed for compiler?
+      this.data.Add(args);
       this.functions.Add(func);
     }
 
@@ -78,7 +77,6 @@ namespace ILCalc
     #endregion
     #region Methods
 
-    // TODO: move to OptimizeOutput?
     public void WriteTo(IExpressionOutput<T> output)
     {
       int i = 0, n = 0,
@@ -86,20 +84,16 @@ namespace ILCalc
 
       while (true)
       {
-        int op = this.code[i++];
+        Code op = this.code[i++];
 
-        if (Code.IsOperator(op))      output.PutOperator(op);
+        if (CodeHelper.IsOp(op))      output.PutOperator(op);
         else if (op == Code.Number)   output.PutConstant(this.numbers[n++]);
         else if (op == Code.Argument) output.PutArgument(this.data[d++]);
-        else if (op == Code.Function)
-          output.PutCall(this.functions[f++], this.data[d++]);
+        else if (op == Code.Function) output.PutCall(
+          this.functions[f++], this.data[d++]);
         else if (op == Code.Separator) output.PutSeparator();
         else if (op == Code.BeginCall) output.PutBeginCall();
-        else
-        {
-          output.PutExprEnd();
-          break;
-        }
+        else { output.PutExprEnd(); break; }
       }
     }
 

@@ -10,9 +10,6 @@
     T Mul(T x, T y); T Div(T x, T y);
     T Mod(T x, T y); T Pow(T x, T y);
 
-    bool IsEqual(T x, T y);
-    bool IsGreather(T x, T y);
-    bool IsGrOrEqual(T x, T y);
     int? IsIntergal(T value);
   }
 

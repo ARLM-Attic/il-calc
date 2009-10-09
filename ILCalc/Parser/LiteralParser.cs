@@ -19,8 +19,9 @@ namespace ILCalc
       Support.Add<Single>(realParser);
       Support.Add<Decimal>(realParser);
 
-      Support.Add<Int32>(new Int32LiteralParser());
-      Support.Add<Int64>(new Int64LiteralParser());
+      var integralParser = new IntegralLiteralParser();
+      Support.Add<Int32>(integralParser);
+      Support.Add<Int64>(integralParser);
     }
 
     public static ILiteralParser<T> Resolve<T>()
@@ -45,17 +46,14 @@ namespace ILCalc
         ILiteralParser<Single>,
         ILiteralParser<Decimal>
     {
-      delegate T Parser<T>(string s, NumberStyles style);
+      #region ILiterlParser
 
       public int TryParse(int i, IParserSupport<float> p)
       {
         string expr = p.Expression;
 
-        if ((expr[i] < '0' || expr[i] > '9') &&
-             expr[i] != p.DecimalDot)
-        {
-          return -1;
-        }
+        if ((expr[i] < '0' || expr[i] > '9')
+          && expr[i] != p.DecimalDot) return -1;
 
         return Parse(i, p, Single.Parse);
       }
@@ -64,37 +62,50 @@ namespace ILCalc
       {
         string expr = p.Expression;
 
-        if ((expr[i] < '0' || expr[i] > '9') &&
-             expr[i] != p.DecimalDot)
-        {
-          return -1;
-        }
+        if ((expr[i] < '0' || expr[i] > '9')
+          && expr[i] != p.DecimalDot) return -1;
 
         return Parse(i, p, Double.Parse);
       }
 
-      //TODO: does decimal support e+32?
       public int TryParse(int i, IParserSupport<decimal> p)
       {
         string expr = p.Expression;
 
-        if ((expr[i] < '0' || expr[i] > '9') &&
-             expr[i] != p.DecimalDot)
-        {
-          return -1;
-        }
+        if ((expr[i] < '0' || expr[i] > '9')
+          && expr[i] != p.DecimalDot) return -1;
 
         return Parse(i, p, Decimal.Parse);
       }
 
+      #endregion
+      #region CommonPart
+
       static int Parse<T>(int i, IParserSupport<T> p, Parser<T> parser)
       {
-        string str = ScanNumber(i, p);
+        var str = ScanNumber(i, p);
+        if (str == null) return -1;
+
+        bool neg = p.DiscardNegate();
+
         try
         {
-          p.ParsedValue = parser(str,
-            NumberStyles.AllowDecimalPoint |
-            NumberStyles.AllowExponent);
+          if (neg)
+          {
+            p.ParsedValue = parser(
+              p.NumberFormat.NegativeSign + str,
+              NumberStyles.AllowLeadingSign  |
+              NumberStyles.AllowDecimalPoint |
+              NumberStyles.AllowExponent,
+              p.NumberFormat);
+          }
+          else
+          {
+            p.ParsedValue = parser(str,
+              NumberStyles.AllowDecimalPoint |
+              NumberStyles.AllowExponent,
+              p.NumberFormat);
+          }
 
           return str.Length;
         }
@@ -122,10 +133,14 @@ namespace ILCalc
           // skip digits and decimal point:
           for (; i < expr.Length; i++)
           {
-            if (expr[i] >= '0' && expr[i]<= '9') continue;
+            if (expr[i] >= '0' && expr[i] <= '9') continue;
             if (expr[i] == p.DecimalDot) i++;
             break;
           }
+        }
+        else
+        {
+          if (!IsDigit(expr, ++i)) return null;
         }
 
         // skip digits:
@@ -155,157 +170,83 @@ namespace ILCalc
           }
         }
 
-        return expr.Substring(
-          p.BeginPos, i - p.BeginPos);
+        return expr.Substring(p.BeginPos, i - p.BeginPos);
       }
+
+      #endregion
     }
 
-    sealed class Int32LiteralParser : ILiteralParser<Int32>
+    sealed class IntegralLiteralParser
+      : ILiteralParser<Int32>,
+        ILiteralParser<Int64>
     {
+      #region ILiteralParser
+
       public int TryParse(int i, IParserSupport<int> p)
       {
         string expr = p.Expression;
 
-        if (expr[i] < '0' || expr[i] > '9')
-        {
-          return -1;
-        }
+        if (expr[i] < '0' || expr[i] > '9') return -1;
 
-        // hex/bin literal support:
-        if (expr[i] == '0' && i+1 < expr.Length)
-        {
-          i++;
-          char c = expr[i++];
-          if (c == 'x' || c == 'X') return ScanInt32Hex(p, i, expr);
-          if (c == 'b' || c == 'B') return ScanInt32Bin(p, i, expr);
-
-          p.ParsedValue = 0;
-          return 1;
-        }
-
-        // skip digits
-        while (IsDigit(expr, i)) i++;
-
-        // Try to parse: =============
-
-        // extract number substring
-        string str = expr.Substring(p.BeginPos, i - p.BeginPos);
-        try
-        {
-          p.ParsedValue = Int32.Parse(
-            str,
-            NumberStyles.AllowDecimalPoint |
-            NumberStyles.AllowExponent);
-
-          return str.Length;
-        }
-        catch (FormatException e)
-        {
-          throw p.InvalidNumberFormat(
-            Resource.errNumberFormat, str, e);
-        }
-        catch (OverflowException e)
-        {
-          throw p.InvalidNumberFormat(
-            Resource.errNumberOverflow, str, e);
-        }
+        return Parse(i, p, Int32.Parse, ScanInt32Hex, ScanInt32Bin);
       }
 
-      // TODO: generalize
-      static int ScanInt32Hex(
-        IParserSupport<int> p, int i, string expr)
-      {
-        int begin = i, value = 0;
-        for (; i < expr.Length; i++)
-        {
-          int hex = HexDigit(expr[i]);
-          if (hex < 0) break;
-
-          value *= 0x10;
-          value += hex;
-        }
-
-        int len = i - begin;
-        if (len == 0) { p.ParsedValue = 0; return 1; }
-        if (len > 8)
-        {
-          string str = expr.Substring(p.BeginPos, i - p.BeginPos);
-          throw p.InvalidNumberFormat(
-            Resource.errNumberOverflow, str, null);
-        }
-
-        p.ParsedValue = value;
-        return len + 2;
-      }
-
-      static int ScanInt32Bin(
-        IParserSupport<int> p, int i, string expr)
-      {
-        int begin = i, value = 0;
-        for (; i < expr.Length; i++)
-        {
-          if (expr[i] == '0')
-          {
-            value <<= 1;
-          }
-          else if (expr[i] == '1')
-          {
-            value <<= 1;
-            value |= 1;
-          }
-          else break;
-        }
-
-        int len = i - begin;
-        if (len == 0) { p.ParsedValue = 0; return 1; }
-        if (len > 32)
-        {
-          string str = expr.Substring(p.BeginPos, i - p.BeginPos);
-          throw p.InvalidNumberFormat(
-            Resource.errNumberOverflow, str, null);
-        }
-
-        p.ParsedValue = value;
-        return len + 2;
-      }
-    }
-
-    sealed class Int64LiteralParser : ILiteralParser<Int64>
-    {
       public int TryParse(int i, IParserSupport<long> p)
       {
         string expr = p.Expression;
 
-        if (expr[i] < '0' || expr[i] > '9')
-        {
-          return -1;
-        }
+        if (expr[i] < '0' || expr[i] > '9') return -1;
+
+        return Parse(i, p, Int64.Parse, ScanInt64Hex, ScanInt64Bin);
+      }
+
+      #endregion
+      #region CommonPart
+
+      static int Parse<T>(
+        int i, IParserSupport<T> p, Parser<T> parser,
+        HexBinScan<T> hex, HexBinScan<T> bin)
+      {
+        string expr = p.Expression;
+
+        if (expr[i] < '0' || expr[i] > '9') return -1;
 
         // hex/bin literal support:
         if (expr[i] == '0' && i+1 < expr.Length)
         {
           i++;
           char c = expr[i++];
-          if (c == 'x' || c == 'X') return ScanInt64Hex(p, i, expr);
-          if (c == 'b' || c == 'B') return ScanInt64Bin(p, i, expr);
+          if (c == 'x' || c == 'X') return hex(i, p);
+          if (c == 'b' || c == 'B') return bin(i, p);
 
-          p.ParsedValue = 0;
+          p.ParsedValue = default(T);
           return 1;
         }
 
-        // skip digits
+        // skip digits and parse:
         while (IsDigit(expr, i)) i++;
 
-        // Try to parse: =============
+        string str = Substring(i, p);
+        bool neg = p.DiscardNegate();
 
-        // extract number substring
-        string str = expr.Substring(p.BeginPos, i - p.BeginPos);
         try
         {
-          p.ParsedValue = Int64.Parse(
-            str,
-            NumberStyles.AllowDecimalPoint |
-            NumberStyles.AllowExponent);
+          if (neg)
+          {
+            p.ParsedValue = parser(
+              p.NumberFormat.NegativeSign + str,
+              NumberStyles.AllowLeadingSign  |
+              NumberStyles.AllowDecimalPoint |
+              NumberStyles.AllowExponent,
+              p.NumberFormat);
+          }
+          else
+          {
+            p.ParsedValue = parser(str,
+              NumberStyles.AllowDecimalPoint |
+              NumberStyles.AllowExponent,
+              p.NumberFormat);
+          }
 
           return str.Length;
         }
@@ -321,65 +262,106 @@ namespace ILCalc
         }
       }
 
-      // TODO: generalize
-      static int ScanInt64Hex(
-        IParserSupport<long> p, int i, string expr)
+      #endregion
+      #region HexBinParser
+
+      static int ScanInt32Hex(int i, IParserSupport<int> p)
       {
+        return ScanHexBin(i, p, 8,
+          (char c, ref int x) =>
+        {
+          int digit = HexDigit(c);
+          if (digit < 0) return false;
+
+          x *= 0x10;
+          x += digit;
+          return true;
+        });
+      }
+
+      static int ScanInt32Bin(int i, IParserSupport<int> p)
+      {
+        return ScanHexBin(i, p, 32,
+          (char c, ref int x) =>
+        {
+          if (c == '0') { x <<= 1; return true; }
+          if (c == '1') { x <<= 1; x |= 1; return true; }
+          return false;
+        });
+      }
+
+      static int ScanInt64Hex(int i, IParserSupport<long> p)
+      {
+        return ScanHexBin(i, p, 16,
+          (char c, ref long x) =>
+        {
+          int digit = HexDigit(c);
+          if (digit < 0) return false;
+
+          x *= 0x10;
+          x += digit;
+          return true;
+        });
+      }
+
+      static int ScanInt64Bin(int i, IParserSupport<long> p)
+      {
+        return ScanHexBin(i, p, 64,
+          (char c, ref long x) =>
+        {
+          if (c == '0') { x <<= 1; return true; }
+          if (c == '1') { x <<= 1; x |= 1; return true; }
+          return false;
+        });
+      }
+
+      delegate int HexBinScan<T>(int i, IParserSupport<T> p);
+      delegate bool HexBinParser<T>(char c, ref T value);
+
+      static int ScanHexBin<T>(int i,
+        IParserSupport<T> p, int maxDigits,
+        HexBinParser<T> parser)
+      {
+        string expr = p.Expression;
+
+        T value = default(T);
         int begin = i;
-        long value = 0;
         for (; i < expr.Length; i++)
         {
-          int hex = HexDigit(expr[i]);
-          if (hex < 0) break;
-
-          value *= 0x10;
-          value += hex;
+          if (!parser(expr[i], ref value)) break;
         }
 
         int len = i - begin;
-        if (len == 0) { p.ParsedValue = 0; return 1; }
-        if (len > 16)
+        if (len == 0)
         {
-          string str = expr.Substring(p.BeginPos, i - p.BeginPos);
+          p.ParsedValue = value;
+          return 1;
+        }
+
+        if (len > maxDigits)
+        {
           throw p.InvalidNumberFormat(
-            Resource.errNumberOverflow, str, null);
+            Resource.errNumberOverflow,
+            Substring(i, p), null);
         }
 
         p.ParsedValue = value;
         return len + 2;
       }
 
-      static int ScanInt64Bin(
-        IParserSupport<long> p, int i, string expr)
+      static int HexDigit(char c)
       {
-        int begin = i;
-        long value = 0;
-        for (; i < expr.Length; i++)
+        if (c >= '0')
         {
-          if (expr[i] == '0')
-          {
-            value <<= 1;
-          }
-          else if (expr[i] == '1')
-          {
-            value <<= 1;
-            value |= 1;
-          }
-          else break;
+          if (c <= '9') return c - '0';
+          if (c >= 'a' && c <= 'f') return c-'\x57';
+          if (c >= 'A' && c <= 'F') return c-'\x37';
         }
 
-        int len = i - begin;
-        if (len == 0) { p.ParsedValue = 0; return 1; }
-        if (len > 32)
-        {
-          string str = expr.Substring(p.BeginPos, i - p.BeginPos);
-          throw p.InvalidNumberFormat(
-            Resource.errNumberOverflow, str, null);
-        }
-
-        p.ParsedValue = value;
-        return len + 2;
+        return -1;
       }
+
+      #endregion
     }
 
     sealed class UnknownLiteralParser<T> : ILiteralParser<T>
@@ -393,16 +375,13 @@ namespace ILCalc
     #endregion
     #region Common
 
-    static int HexDigit(char c)
-    {
-      if (c >= '0')
-      {
-        if (c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return c-'\x57';
-        if (c >= 'A' && c <= 'F') return c-'\x37';
-      }
+    delegate T Parser<T>(
+      string s, NumberStyles style, IFormatProvider format);
 
-      return -1;
+    static string Substring<T>(int i, IParserSupport<T> p)
+    {
+      return p.Expression.Substring(
+        p.BeginPos, i - p.BeginPos);
     }
 
     static bool IsDigit(string s, int i)

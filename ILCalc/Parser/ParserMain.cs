@@ -1,40 +1,41 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+﻿using System.Diagnostics;
 using ILCalc.Custom;
 
 namespace ILCalc
 {
-  // TODO: Trigger to use|not use output
-
   sealed partial class Parser<T>
   {
     #region Fields
 
     readonly CalcContext<T> context;
+    readonly IListEnumerable[] literals;
+
     IExpressionOutput<T> output;
-
     string expr;
-    int xlen;
 
-    char dotSymbol;
-    char sepSymbol;
-
-    NumberFormatInfo numFormat;
-
-    static readonly
-      ILiteralParser<T> Literal = LiteralParser.Resolve<T>();
+    static readonly ILiteralParser<T>
+      Literal = LiteralParser.Resolve<T>();
 
     #endregion
-    #region Methods
+    #region Constructor
 
     public Parser(CalcContext<T> context)
     {
       Debug.Assert(context != null);
 
       this.context = context;
+      this.literals = new IListEnumerable[]
+      {
+        context.Arguments,
+        context.Constants,
+        context.Functions
+      };
+
       InitCulture();
     }
+
+    #endregion
+    #region Properties
 
     CalcContext<T> Context
     {
@@ -53,7 +54,7 @@ namespace ILCalc
       Debug.Assert(exprOutput != null);
 
       this.expr = expression;
-      this.xlen = expression.Length;
+      //this.xlen = expression.Length;
       this.output = exprOutput;
       this.exprDepth = 0;
       this.prePos = 0;
@@ -61,34 +62,6 @@ namespace ILCalc
 
       int i = 0;
       Parse(ref i, false);
-    }
-
-    public void InitCulture()
-    {
-      CultureInfo culture = Context.Culture;
-      if (culture == null)
-      {
-        this.dotSymbol = '.';
-        this.sepSymbol = ',';
-        this.numFormat = new NumberFormatInfo();
-      }
-      else
-      {
-        try
-        {
-          this.dotSymbol =
-            culture.NumberFormat.NumberDecimalSeparator[0];
-          this.sepSymbol =
-            culture.TextInfo.ListSeparator[0];
-        }
-        catch (IndexOutOfRangeException)
-        {
-          throw new ArgumentException(
-            Resource.errCultureExtract);
-        }
-
-        this.numFormat = culture.NumberFormat;
-      }
     }
 
     #endregion
@@ -99,12 +72,12 @@ namespace ILCalc
     /////////////////////////////////////////
     enum Item
     {
-      Operator = 0,
-      Separator = 1,
-      Begin = 2,
-      Number = 3,
-      End = 4,
-      Identifier = 5
+      Operator   = 0,
+      Separator  = 1,
+      Begin      = 2,
+      Number     = 3,
+      End        = 4,
+      Identifier = 5,
     }
 
     const string Operators = "-+*/%^";

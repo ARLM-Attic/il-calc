@@ -9,17 +9,13 @@ namespace ILCalc.Bench
       Tester.BenchmarkOutput += Console.WriteLine;
 
       if (!ShowMenu(
-             Benchmarks.InitializeTest,
-             Benchmarks.EvaluateOnceTest,
-             Benchmarks.ParseAndCompileTest,
-             Benchmarks.ManyEvaluationsTest,
-             Benchmarks.ILCalcOptimizerTest,
-             Benchmarks.TabulationTest,
-             Benchmarks.PowTests
-             ))
-      {
-        return;
-      }
+        Benchmarks.InitializeTest,
+        Benchmarks.EvaluateOnceTest,
+        Benchmarks.ParseAndCompileTest,
+        Benchmarks.ManyEvaluationsTest,
+        Benchmarks.ILCalcOptimizerTest,
+        Benchmarks.TabulationTest
+      )) return;
     }
 
     #region Main Menu

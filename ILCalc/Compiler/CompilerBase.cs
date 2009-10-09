@@ -9,20 +9,22 @@ namespace ILCalc
 {
   // TODO: Reuse BufferWriter if Compiler + Optimizer
 
-  abstract class CompilerBase<T>
-    : BufferOutput<T>,
-      IExpressionOutput<T>
+  abstract class CompilerBase<T> : BufferOutput<T>,
+                              IExpressionOutput<T>
   {
     #region Fields
 
     readonly List<FuncCall> calls;
     readonly bool emitChecks;
-
-    int targetsCount;
     Type ownerType;
 
-    protected static readonly ICompiler<T>
-      Generic = CompilerSupport.Resolve<T>();
+    protected static readonly ICompiler<T> Generic =
+      CompilerSupport.Resolve<T>();
+
+    static readonly bool SupportLiterals =
+      CompilerSupport.SupportLiterals(Generic);
+
+    readonly List<object> closure = new List<object>();
 
     #endregion
     #region Constructor
@@ -41,29 +43,40 @@ namespace ILCalc
       get { return this.ownerType; }
     }
 
+    private int TargetsCount
+    {
+      get { return this.closure.Count; }
+    }
+
     #endregion
     #region CodeGen
 
     protected void CodeGen(ILGenerator il)
     {
-      int n = 0, d = 0, c = 0, id = 0;
+      int n = 0, d = 0, c = 0;
       Stack<FuncCall> stack = null;
       FuncCall call = null;
 
-      // TODO: length-based?
       for (int i = 0; ; i++)
       {
-        int op = this.code[i];
+        Code op = this.code[i];
 
-        if (Code.IsOperator(op))
+        if (CodeHelper.IsOp(op))
         {
           if (this.emitChecks)
-               Generic.CheckedOp(il, op);
-          else Generic.Operation(il, op);
+               Generic.CheckedOp(il, (int) op);
+          else Generic.Operation(il, (int) op);
         }
         else if (op == Code.Number) // ================================
         {
-          Generic.LoadConst(il, this.numbers[n++]);
+          if (SupportLiterals)
+          {
+            Generic.LoadConst(il, this.numbers[n++]);
+          }
+          else
+          {
+            EmitLoadObj(il, this.data[d++]);
+          }
         }
         else if (op == Code.Argument) // ==============================
         {
@@ -71,7 +84,7 @@ namespace ILCalc
         }
         else if (op == Code.Separator) // =============================
         {
-          // separator needed only for params calls
+          // separator needed only for params calls:
           Debug.Assert(call != null);
           if (call.VarCount >= 0)
           {
@@ -83,15 +96,14 @@ namespace ILCalc
           EmitFunctionCall(il, call);
 
           // parent call info:
-          if (stack == null ||
-              stack.Count == 0) call = null;
+          if (stack == null || stack.Count == 0) call = null;
           else call = stack.Pop();
         }
         else if (op == Code.BeginCall) // =============================
         {
           if (call != null)
           {
-            // allocate if needed
+            // allocate if needed:
             if (stack == null) stack = new Stack<FuncCall>();
             stack.Push(call);
           }
@@ -105,9 +117,9 @@ namespace ILCalc
               TypeHelper<T>.ArrayType);
           }
 
-          if (call.Target != null)
+          if (call.TargetID >= 0)
           {
-            EmitLoadObj(il, call.Target, id++);
+            EmitLoadObj(il, call.TargetID);
           }
 
           if (call.Current == 0 && call.VarCount > 0)
@@ -125,23 +137,23 @@ namespace ILCalc
     #endregion
     #region Emitters
 
-    protected abstract void EmitLoadArg(ILGenerator il, int index);
+    protected abstract
+      void EmitLoadArg(ILGenerator il, int index);
 
-    void EmitLoadObj(ILGenerator il, object obj, int index)
+    void EmitLoadObj(ILGenerator il, int index)
     {
       Debug.Assert(il != null);
-      Debug.Assert(obj != null);
-      Debug.Assert(index < this.targetsCount);
+      Debug.Assert(index < TargetsCount);
 
       // loads this
       il.Emit(OpCodes.Ldarg_0);
 
-      if (this.targetsCount == 1)
+      if (TargetsCount == 1)
       {
         // if expr constains only one target,
         // this target will be this
       }
-      else if (this.targetsCount <= 3)
+      else if (TargetsCount <= 3)
       {
         Debug.Assert(this.ownerType != null);
 
@@ -161,7 +173,7 @@ namespace ILCalc
         il_EmitLoadI4(il, index);
         il.Emit(OpCodes.Ldelem_Ref);
 
-        Type targetType = obj.GetType();
+        Type targetType = this.closure[index].GetType();
 
         if (targetType.IsValueType)
              il.Emit(OpCodes.Unbox_Any, targetType);
@@ -189,12 +201,11 @@ namespace ILCalc
 
     static void EmitFunctionCall(ILGenerator il, FuncCall call)
     {
-      Debug.Assert(il != null);
+      Debug.Assert(il   != null);
+      Debug.Assert(call != null);
 
       if (call.VarCount >= 0)
       {
-        Debug.Assert(call != null);
-
         if (call.VarCount > 0)
         {
           il_EmitSaveElem(il);
@@ -203,13 +214,20 @@ namespace ILCalc
         else
         {
           il_EmitLoadI4(il, 0);
-          il.Emit(OpCodes.Newarr, TypeHelper<T>.ValueType);
+          il.Emit(
+            OpCodes.Newarr,
+            TypeHelper<T>.ValueType);
         }
       }
 
-      il.Emit(
-        call.Target == null ? OpCodes.Call : OpCodes.Callvirt,
-        call.Method);
+      if (call.TargetID < 0)
+      {
+        il.Emit(OpCodes.Call, call.Method);
+      }
+      else
+      {
+        il.Emit(OpCodes.Callvirt, call.Method);
+      }
     }
 
     static void EmitParamArr(ILGenerator il, FuncCall call)
@@ -228,28 +246,16 @@ namespace ILCalc
     {
       Debug.Assert(index >= 0);
 
-      if (this.targetsCount > 0) index++;
+      if (TargetsCount > 0) index++;
 
       if (index <= 3)
            il.Emit(OpArgsLoad[index]);
       else il.Emit(OpCodes.Ldarg_S, (byte) index);
     }
 
-    protected static void il_EmitLoadI4(ILGenerator il, int value)
+    public static void il_EmitLoadI4(ILGenerator il, int value)
     {
-      if (value < sbyte.MinValue ||
-          value > sbyte.MaxValue)
-      {
-        il.Emit(OpCodes.Ldc_I4, value);
-      }
-      else if (value < -1 || value > 8)
-      {
-        il.Emit(OpCodes.Ldc_I4_S, (byte) value);
-      }
-      else
-      {
-        il.Emit(OpLoadConst[value+1]);
-      }
+      CompilerSupport.il_EmitLoadI4(il, value);
     }
 
     protected static void il_EmitLoadElem(ILGenerator il)
@@ -291,8 +297,7 @@ namespace ILCalc
       }
       else if(type.IsValueType)
       {
-        il.Emit(OpCodes.Stobj,
-          TypeHelper<T>.ValueType);
+        il.Emit(OpCodes.Stobj, TypeHelper<T>.ValueType);
       }
     }
 
@@ -308,7 +313,7 @@ namespace ILCalc
       private int current;
 
       public int VarCount { get; private set; }
-      public object Target { get; private set; } // TODO: replace with bool!
+      public int TargetID { get; private set; }
       public MethodInfo Method { get; private set; }
       public LocalBuilder Local { get; set; }
 
@@ -317,10 +322,11 @@ namespace ILCalc
       #endregion
       #region Constructor
 
-      public FuncCall(FunctionInfo<T> func, int argsCount)
+      public FuncCall(
+        FunctionInfo<T> func, int argsCount, int targetId)
       {
         Method = func.Method;
-        Target = func.Target;
+        TargetID = targetId;
 
         if (func.HasParamArray)
         {
@@ -348,7 +354,22 @@ namespace ILCalc
     #endregion
     #region IExpressionOutput
 
-    public new void PutCall(FunctionInfo<T> func, int argzCount)
+    public new void PutConstant(T value)
+    {
+      if (SupportLiterals)
+      {
+        base.PutConstant(value);
+      }
+      else
+      {
+        int id = PutClosure(value);
+        this.code.Add(Code.Number);
+        this.data.Add(id);
+      }
+    }
+
+    public new void PutCall(
+      FunctionInfo<T> func, int argz)
     {
       Validator.CheckVisible(func.Method);
 
@@ -358,15 +379,16 @@ namespace ILCalc
         Debug.Assert(i >= 0);
       }
 
-      this.calls[i] = new FuncCall(func, argzCount);
-      this.code.Add(Code.Function);
-
+      int targetId = -1;
       if (func.Target != null)
       {
-        this.targetsCount++;
+        targetId = PutClosure(func.Target);
       }
 
-      // NOTE: do not call base impl!
+      this.calls[i] = new FuncCall(func, argz, targetId);
+      this.code.Add(Code.Function);
+
+      // DO NOT call base impl!
     }
 
     public new void PutBeginCall()
@@ -378,21 +400,31 @@ namespace ILCalc
     #endregion
     #region Helpers
 
-    object CreateOwner()
+    int PutClosure(object target)
     {
-      Debug.Assert(this.targetsCount > 0);
-
-      var c = new object[this.targetsCount];
-      int i = 0;
-
-      foreach(var f in this.calls)
+      int targetId = -1;
+      for (int j = 0; j < this.closure.Count; j++)
       {
-        if (f.Target != null)
+        if (ReferenceEquals(this.closure[j], target))
         {
-          c[i++] = f.Target;
+          targetId = j;
         }
       }
 
+      if (targetId < 0)
+      {
+        targetId = this.closure.Count;
+        this.closure.Add(target);
+      }
+
+      return targetId;
+    }
+
+    object CreateOwner()
+    {
+      Debug.Assert(TargetsCount > 0);
+
+      var c = this.closure.ToArray();
       switch (c.Length)
       {
         case 1:
@@ -422,17 +454,17 @@ namespace ILCalc
       }
     }
 
-    protected object OwnerFixup(ref Type[] argsTypes)
+    protected object OwnerFixup(ref Type[] args)
     {
-      if (this.targetsCount > 0)
+      if (TargetsCount > 0)
       {
         object owner = CreateOwner();
 
-        var ownerArgs = new Type[argsTypes.Length + 1];
-        Array.Copy(argsTypes, 0, ownerArgs, 1, argsTypes.Length);
+        var ownerArgs = new Type[args.Length + 1];
+        Array.Copy(args, 0, ownerArgs, 1, args.Length);
 
         ownerArgs[0] = OwnerType;
-        argsTypes = ownerArgs;
+        args = ownerArgs;
 
         return owner;
       }
@@ -452,30 +484,12 @@ namespace ILCalc
     #endregion
     #region StaticData
 
-    // OpCodes =====================================
-
-    // arguments:
     static readonly OpCode[] OpArgsLoad =
     {
       OpCodes.Ldarg_0,
       OpCodes.Ldarg_1,
       OpCodes.Ldarg_2,
       OpCodes.Ldarg_3
-    };
-
-    // int32 constants:
-    static readonly OpCode[] OpLoadConst =
-    {
-      OpCodes.Ldc_I4_M1,
-      OpCodes.Ldc_I4_0,
-      OpCodes.Ldc_I4_1,
-      OpCodes.Ldc_I4_2,
-      OpCodes.Ldc_I4_3,
-      OpCodes.Ldc_I4_4,
-      OpCodes.Ldc_I4_5,
-      OpCodes.Ldc_I4_6,
-      OpCodes.Ldc_I4_7,
-      OpCodes.Ldc_I4_8
     };
 
     #endregion

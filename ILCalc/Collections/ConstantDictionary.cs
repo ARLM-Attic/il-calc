@@ -17,7 +17,7 @@ namespace ILCalc
   /// <typeparam name="T">
   /// The type of the constant values
   /// in the dictionary.</typeparam>
-  /// <threadsafety instance="false"/>
+  /// <threadsafety instance="false" static="true"/>
   [DebuggerDisplay("Count = {Count}")]
   [DebuggerTypeProxy(typeof(ConstantsDebugView<>))]
   [Serializable]
@@ -33,10 +33,6 @@ namespace ILCalc
 
     [DebuggerBrowsable(State.Never)]
     readonly List<T> valuesList;
-
-    [DebuggerBrowsable(State.Never)]
-    static readonly ConstantDictionary<T>
-      BuiltIns = ImportHelper.ResolveConstants<T>();
 
     #endregion
     #region Constructors
@@ -432,20 +428,6 @@ namespace ILCalc
     }
 
     /// <summary>
-    /// Imports standart builtin constants into 
-    /// this <see cref="ConstantDictionary{T}"/>.</summary>
-    /// <exception cref="ArgumentException">
-    /// Some of names is already exist in the dictionary.
-    /// </exception>
-    public void ImportBuiltIn()
-    {
-      if (BuiltIns != null)
-      {
-        AddRange(BuiltIns);
-      }
-    }
-
-    /// <summary>
     /// Imports all public static fields and
     /// constants of the specified type into this
     /// <see cref="ConstantDictionary{T}"/>.</summary>
@@ -545,7 +527,6 @@ namespace ILCalc
       foreach (FieldInfo field in type.GetFields(flags))
       {
         // look for "const T" fields:
-        // TODO: test it!
         if (field.FieldType == TypeHelper<T>.ValueType &&
            (field.IsLiteral ||
            (field.IsInitOnly && field.IsStatic)))
@@ -561,6 +542,49 @@ namespace ILCalc
     List<string>.Enumerator IListEnumerable.GetEnumerator()
     {
       return this.namesList.GetEnumerator();
+    }
+
+    #endregion
+    #region ImportBuiltIn
+
+    [DebuggerBrowsable(State.Never)]
+    static readonly ConstantDictionary<T>
+      BuiltIns = ImportHelper.ResolveConstants<T>();
+
+    [DebuggerBrowsable(State.Never)]
+    static readonly object SyncRoot = new object();
+
+    /// <summary>
+    /// Imports standart builtin constants into 
+    /// this <see cref="ConstantDictionary{T}"/>.</summary>
+    /// <exception cref="ArgumentException">
+    /// Some of names is already exist in the dictionary.
+    /// </exception>
+    public void ImportBuiltIn()
+    {
+      if (BuiltIns != null)
+      lock(SyncRoot)
+      {
+        AddRange(BuiltIns);
+      }
+    }
+
+    /// <summary>
+    /// Set the custom dictionary as built-ins imports for the
+    /// ConstantDictionary of type <typeparamref name="T"/>.</summary>
+    /// <param name="dictionary">Dictionary to set.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="dictionary"/> is null.</exception>
+    public static void SetBuiltIns(ConstantDictionary<T> dictionary)
+    {
+      if (dictionary == null)
+        throw new ArgumentNullException("dictionary");
+
+      lock(SyncRoot)
+      {
+        BuiltIns.Clear();
+        BuiltIns.AddRange(dictionary);
+      }
     }
 
     #endregion
@@ -591,7 +615,7 @@ namespace ILCalc
       // ReSharper disable UnaccessedField.Local
 
       [DebuggerBrowsable(State.Never)] public string Name;
-      [DebuggerBrowsable(State.Never)] public T Value;
+      [DebuggerBrowsable(State.RootHidden)] public T Value;
 
       // ReSharper restore UnaccessedField.Local
     }

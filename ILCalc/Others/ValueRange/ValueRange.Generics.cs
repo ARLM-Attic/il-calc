@@ -243,10 +243,9 @@ namespace ILCalc
         return (r.End - r.Begin) / count;
       }
 
+      // TODO: is this correct for decimal?
       public int GetCount(ValueRange<decimal> r)
       {
-        // TODO: is this correct for decimal?
-
         decimal len = r.End - r.Begin;
         int rcount = (int) (len / r.Step) + 1;
 

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if !CF
+using System.Reflection;
+using System.Reflection.Emit;
+#endif
 
 namespace ILCalc.Tests
 {
@@ -363,10 +366,10 @@ namespace ILCalc.Tests
       var thisType = typeof(ExceptionsTests);
       var internalClass = typeof(InternalClass);
 
-      calc.Functions.Add<Func<int>>("foo", NonPublicInstanceMethod);
-      calc.Functions.Add<Func<int>>("foo2", NonPublicStaticMethod);
-      calc.Functions.Add<Func<int>>("bar", new InternalClass().Bar);
-      calc.Functions.Add<Func<int>>("bar2", InternalClass.Foo);
+      calc.Functions.AddDel<Func<int>>("foo", NonPublicInstanceMethod);
+      calc.Functions.AddDel<Func<int>>("foo2", NonPublicStaticMethod);
+      calc.Functions.AddDel<Func<int>>("bar", new InternalClass().Bar);
+      calc.Functions.AddDel<Func<int>>("bar2", InternalClass.Foo);
 
       Throws<ArgumentException>
       (
@@ -421,7 +424,7 @@ namespace ILCalc.Tests
       il.Emit(System.Reflection.Emit.OpCodes.Ret);
 
       var func = (EvalFunc0<double>)
-                 method.CreateDelegate(typeof(EvalFunc0<double>));
+        method.CreateDelegate(typeof(EvalFunc0<double>));
 
       var func1 = typeof(ExceptionsTests).GetMethod("Func1");
 
@@ -430,45 +433,126 @@ namespace ILCalc.Tests
         () => collection.AddInstance(func1, this));
     }
 
-#endif
-
     public static double Func1()
     {
       return 0;
     }
 
+#endif
+
+    #endregion
+    #region FunctionCollectionTests
+
+    [TestMethod]
+    public void FunctionCollectionTests()
+    {
+      var funcs = new FunctionCollection<int>();
+      var type = typeof(ExceptionsTests);
+      var foo1 = type.GetMethod("Foo1");
+      var foo2 = type.GetMethod("Foo2");
+
+      Throws<ArgumentNullException>(
+#if !CF2
+        () => funcs.Add<EvalFunc0<int>>(null),
+        () => funcs.Add((EvalFunc0<int>) null),
+        () => funcs.Add((EvalFunc1<int>) null),
+        () => funcs.Add((EvalFunc2<int>) null),
+        () => funcs.Add((EvalFuncN<int>) null),
+#endif
+        () => funcs.AddDel<EvalFunc0<int>>(null, null),
+        () => funcs.Add(null, () => 1),
+        () => funcs.Add(null, x => x),
+        () => funcs.Add(null, (x,y) => x),
+        () => funcs.Add(null, xs => xs.Length),
+
+        () => funcs.AddInstance(null, this),
+        () => funcs.AddInstance(foo1, null),
+
+        () => funcs.AddInstance(null, null, this),
+        () => funcs.AddInstance(null, foo1, null),
+        () => funcs.AddInstance("sds", null, this),
+        () => funcs.AddInstance("sds", foo1, null),
+
+        () => funcs.AddStatic(null),
+        () => funcs.AddStatic(null, foo1),
+        () => funcs.AddStatic("sd", null)
+      );
+
+      EvalFunc1<int> multicast = z => z + 1;
+      multicast += z => z - 1;
+
+#if !CF
+      var dyn = new DynamicMethod("dyn", typeof(int), Type.EmptyTypes);
+      var il = dyn.GetILGenerator();
+      il.Emit(OpCodes.Ldc_I4_0);
+      il.Emit(OpCodes.Ret);
+
+      var dynDeleg = (EvalFunc0<int>)
+        dyn.CreateDelegate(typeof(EvalFunc0<int>));
+
+      funcs.Add(dynDeleg);
+      funcs.AddDel("abc", dynDeleg);
+#endif
+
+      Throws<ArgumentException>(
+        () => funcs.AddStatic(foo2),
+        () => funcs.AddStatic("sdsd", foo2),
+        () => funcs.AddInstance(foo1, this),
+        () => funcs.AddInstance("sds", foo1, this),
+
+        // not assignable target
+        () => funcs.AddInstance("sds", foo2, "xxx"),
+        () => funcs.AddInstance(foo1, "xxx"),
+        
+        // multicast delegates
+        () => funcs.Add("multi", multicast),
+        () => funcs.AddDel("multi", multicast),
+
+#if !CF
+        // dynamic method
+        () => funcs.AddStatic(dynDeleg.Method),
+#endif
+        // non applicable
+        () => funcs.AddStatic("bar1", type.GetMethod("Bar1")),
+        () => funcs.AddStatic("bar2", type.GetMethod("Bar2")),
+        () => funcs.AddStatic("bar3", type.GetMethod("Bar3")),
+        () => funcs.AddStatic("bar4", type.GetMethod("Bar4")),
+        () => funcs.AddStatic("bar5", type.GetMethod("Bar5")),
+
+        () => funcs.Import("Foo3", typeof(ExceptionsTests), 3)
+      );
+
+      funcs.Import("Foo1", typeof(ExceptionsTests));
+      funcs.Remove("Foo1");
+      funcs.Import("Foo1", typeof(ExceptionsTests), 0);
+
+      Throws<ArgumentNullException>(
+        () => funcs.Import((Type[]) null),
+        () => funcs.Import(new Type[]{ null }),
+        () => funcs.Import(null, type, 0),
+        () => funcs.Import("sd", null, 0),
+        () => funcs.Import((string) null, type),
+        () => funcs.Import("sd", null)
+        );
+
+      Throws<ArgumentOutOfRangeException>(
+        () => funcs.Import("foo1", type, -1)
+        );
+    }
+
+    public static void Bar1() { }
+    public static int Bar2(int x, double y) { return 0; }
+    public static int Bar3(ref int y, int x) { return 0; }
+    public static int Bar4(out int y, int x) { y = 2; return 0; }
+    public static int Bar5(ref double[] args) { return 0; }
+
+    public static int Foo1() { return 0; }
+    public int Foo2() { return 0; }
+
     #endregion
     #region Helpers
 
     delegate void Action();
-
-    static void Throws<TException>(Action action)
-      where TException : Exception
-    {
-      try
-      {
-        action();
-      }
-      catch (TException e)
-      {
-        var buf = new StringBuilder();
-
-        buf.Append('\'');
-        buf.Append(e.Message);
-        buf.Append("'.");
-
-        Trace.WriteLine(buf.ToString(), typeof(TException).Name);
-        return;
-      }
-      catch
-      {
-        throw new InternalTestFailureException(
-          typeof(TException).Name + " doesn't thrown!");
-      }
-
-      throw new InternalTestFailureException(
-        typeof(TException).Name + " doesn't thrown!");
-    }
 
     static void Throws<TException>(params Action[] actions)
       where TException : Exception
@@ -495,9 +579,13 @@ namespace ILCalc.Tests
         }
         catch
         {
+          action();
+
           throw new InternalTestFailureException(
             typeof(TException).Name + " doesn't thrown!");
         }
+
+        action();
 
         throw new InternalTestFailureException(
           typeof(TException).Name + " doesn't thrown!");

@@ -3,15 +3,14 @@ using System.Diagnostics;
 
 namespace ILCalc
 {
-  sealed class InterpretCreator<T>
-    : IExpressionOutput<T>
+  sealed class InterpretCreator<T> : IExpressionOutput<T>
   {
     #region Fields
 
     int npos, cpos, fpos;
 
     T[] nums;
-    int[] codes;
+    Code[] codes;
     object[] funcs;
 
     static readonly object[]
@@ -24,7 +23,7 @@ namespace ILCalc
 
     public InterpretCreator()
     {
-      this.codes = new int[8];
+      this.codes = new Code[8];
       this.funcs = EmptyFuncs;
       this.nums = new T[4];
     }
@@ -32,7 +31,7 @@ namespace ILCalc
     #endregion
     #region Properties
 
-    public int[] Codes
+    public Code[] Codes
     {
       get { return this.codes; }
     }
@@ -76,7 +75,7 @@ namespace ILCalc
     {
       Debug.Assert(id >= 0);
       AddCode(Code.Argument);
-      AddCode(id);
+      AddCode((Code) id);
 
       if (++this.stackSize > this.stackMax)
       {
@@ -84,9 +83,9 @@ namespace ILCalc
       }
     }
 
-    public void PutOperator(int oper)
+    public void PutOperator(Code oper)
     {
-      Debug.Assert(Code.IsOperator(oper));
+      Debug.Assert(CodeHelper.IsOp(oper));
       AddCode(oper);
 
       if (oper != Code.Neg)
@@ -98,18 +97,18 @@ namespace ILCalc
     public void PutSeparator() { }
     public void PutBeginCall() { }
 
-    public void PutCall(FunctionInfo<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int args)
     {
       Debug.Assert(func != null);
-      Debug.Assert(argsCount >= 0);
+      Debug.Assert(args >= 0);
 
       Delegate deleg = func.MakeDelegate();
 
       if (deleg == null)
       {
-        AddFunc(func, argsCount);
+        AddFunc(func, args);
         AddCode(Code.Function);
-        RecalcStackSize(argsCount);
+        RecalcStackSize(args);
         return;
       }
 
@@ -136,7 +135,7 @@ namespace ILCalc
     #endregion
     #region Helpers
 
-    void AddCode(int code)
+    void AddCode(Code code)
     {
       if (this.cpos == this.codes.Length)
       {
@@ -200,12 +199,12 @@ namespace ILCalc
     }
 
     #endregion
-    #region Static Data
-
-    static readonly Type EvalType0 = typeof(EvalFunc0<T>);
-    static readonly Type EvalType1 = typeof(EvalFunc1<T>);
-    static readonly Type EvalType2 = typeof(EvalFunc2<T>);
-
-    #endregion
+//    #region Static Data
+//
+//    static readonly Type EvalType0 = typeof(EvalFunc0<T>);
+//    static readonly Type EvalType1 = typeof(EvalFunc1<T>);
+//    static readonly Type EvalType2 = typeof(EvalFunc2<T>);
+//
+//    #endregion
   }
 }

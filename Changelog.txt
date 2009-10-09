@@ -1,3 +1,25 @@
+v0.9.7.5 ================================================
+
+	* Generics: much better implementation.
+	* Generics: no more Expression<> use in Silverlight.
+	* Generics: support for checked operations with Int32 / Int64.
+	* Checking: now performing when optimizing if enabled.
+	* Compiler: support for compiling Decimal expressions.
+	* Compiler: reusing equal references for owners.
+	* Compiler: loading constants of non built-in types.
+	* Parser: finally support for negative literals =).
+	* Collections: ability to set custom collectin for ImportBuiltIn().
+	* FunctionCollection: Add<TDelegate> renamed => AddDel<TDelegate>.
+	* Solution: better debugger views, fix some mistakes.
+	* Solution: new unit tests pack and better code coverage.
+	* Solution: many of refactoring and small fixes.
+	* Parsing: support for cultures with the same symbol
+	           for decimal and function arguments separator.
+	* Bugfix: wrong parsing of real literals with decimal separator.
+	* Bugfix: Silverlight build fails while compiling
+	          expressions of Single type with power operator.
+	* Bugfix: wrong parsing binary int64 literals.
+
 v0.9.7.3 beta ===========================================
 
 	* Silverlight: compiler (Evaluator) is now supported!

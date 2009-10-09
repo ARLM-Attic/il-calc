@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ILCalc.Tests
@@ -120,7 +121,7 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region LiteralParseTests
+    #region LiteralParseTest
 
     [TestMethod]
     public void Int32LiteralsParseTest()
@@ -151,7 +152,7 @@ namespace ILCalc.Tests
     }
 
     #endregion
-    #region IdentifiersTests
+    #region IdentifiersTest
 
     [TestMethod]
     public void IdentifiersTest()
@@ -207,7 +208,170 @@ namespace ILCalc.Tests
     }
 
     #endregion
+    #region LiteralsParseTests
+
+    [TestMethod]
+    public void IntegralLiteralsTest()
+    {
+      var c32 = new CalcContext<Int32>();
+      var c64 = new CalcContext<Int64>();
+
+      Action<int> check32 = x =>
+      {
+        Assert.AreEqual(c32.Evaluate(x.ToString()), x);
+        Assert.AreEqual(c32.Evaluate("0x" + x.ToString("x")), x);
+        Assert.AreEqual(c32.Evaluate(ToBin(x)), x);
+      };
+
+      Action<long> check64 = x =>
+      {
+        Assert.AreEqual(c64.Evaluate(x.ToString()), x);
+        Assert.AreEqual(c64.Evaluate("0x" + x.ToString("x")), x);
+        Assert.AreEqual(c64.Evaluate(ToBin(x)), x);
+      };
+
+      FromTo(int.MinValue, int.MinValue + 10, check32);
+      FromTo(int.MaxValue - 10, int.MaxValue, check32);
+      FromTo(-1000, 1000, check32);
+      check32(int.MaxValue);
+
+      FromTo(long.MinValue, long.MinValue + 10, check64);
+      FromTo(long.MaxValue - 10, long.MaxValue, check64);
+      FromTo(-1000, 1000, check64);
+      check64(long.MaxValue);
+
+      const long OvMax32 = int.MaxValue + 1L;
+      const long OvMin32 = int.MinValue - 1L;
+      const decimal OvMax64 = long.MaxValue + 1M;
+      const decimal OvMin64 = long.MinValue - 1M;
+
+      Throws<SyntaxException>(
+        () => c32.Evaluate(OvMax32.ToString()),
+        () => c32.Evaluate(OvMin32.ToString()),
+        () => c32.Evaluate(string.Format("0x{0:X}", OvMax32 * 2)),
+        () => c32.Evaluate(string.Format("0x{0:X}", OvMin32 * 2)),
+        () => c32.Evaluate(ToBin(OvMax32)),
+        () => c32.Evaluate(ToBin(OvMin32)),
+        () => c64.Evaluate(OvMax64.ToString()),
+        () => c64.Evaluate(OvMin64.ToString())
+        );
+    }
+
+    [TestMethod]
+    public void RealLiteralsTest()
+    {
+      var c8 = new CalcContext<Double>();
+      var c4 = new CalcContext<Single>();
+
+      Action<double> test8 = x =>
+        Assert.AreEqual(c8.Evaluate(x.ToString("r")), x);
+      Action<float> test4 = x =>
+        Assert.AreEqual(c4.Evaluate(x.ToString("r")), x);
+
+      test4(Single.MaxValue);
+      test4(Single.MaxValue);
+      test4(Single.Epsilon);
+
+      test8(Double.MinValue);
+      test8(Double.MaxValue);
+      test8(Double.Epsilon);
+    }
+
+    #endregion
+    #region CultureTests
+
+    [TestMethod]
+    public void CultureTests()
+    {
+      foreach(var culture in
+#if FULL_FW
+        CultureInfo.GetCultures(
+          CultureTypes.SpecificCultures))
+#else
+        CultureHelper.GetCultures())
+#endif
+      {
+        TestHelperReal<Double>(culture);
+        TestHelperReal<Single>(culture);
+        TestHelperReal<Decimal>(culture);
+
+        TestHelperIntegral<Int32>(culture);
+        TestHelperIntegral<Int64>(culture);
+      }
+    }
+
+    static void TestHelperReal<T>(CultureInfo culture)
+    {
+      var calc = new CalcContext<T>();
+      calc.Functions.Add("f", TwoArgsFunc);
+      calc.Culture = culture;
+
+      string expr = string.Format(
+        "- 0{0}123 + -f(--45{0}67{1}f(78{0}9{1} 123))",
+        culture.NumberFormat.NumberDecimalSeparator,
+        culture.TextInfo.ListSeparator);
+
+      calc.Validate(expr);
+    }
+
+    static void TestHelperIntegral<T>(CultureInfo culture)
+    {
+      var calc = new CalcContext<T>();
+      calc.Functions.Add("f", TwoArgsFunc);
+      calc.Culture = culture;
+
+      string expr = string.Format(
+        "-123 + -f(--4567{0}f(789{0} 123))",
+        culture.TextInfo.ListSeparator);
+
+      calc.Validate(expr);
+    }
+
+    public static T TwoArgsFunc<T>(T a, T b)
+    {
+      return default(T);
+    }
+
+    #endregion
     #region Helpers
+
+    static void FromTo(
+      int from, int to, Action<int> check)
+    {
+      for (int x = from; x < to; x++) check(x);
+    }
+
+    static void FromTo(
+      long from, long to, Action<long> check)
+    {
+      for (long x = from; x < to; x++) check(x);
+    }
+
+    static string ToBin(int x)
+    {
+      if (x == 0) return "0b0";
+
+      var buf = new StringBuilder("0b", 34);
+      for (int i = 31; i >= 0; i--)
+      {
+        buf.Append((x >> i) & 1);
+      }
+
+      return buf.ToString();
+    }
+
+    static string ToBin(long x)
+    {
+      if (x == 0) return "0b0";
+
+      var buf = new StringBuilder("0b", 66);
+      for (int i = 63; i >= 0; i--)
+      {
+        buf.Append((x >> i) & 1);
+      }
+
+      return buf.ToString();
+    }
 
     void TestGood(string expr)
     {
@@ -216,10 +380,7 @@ namespace ILCalc.Tests
 
     void TestErr(string expr, int pos, int len)
     {
-      try
-      {
-        Calc.Validate(expr);
-      }
+      try { Calc.Validate(expr); }
       catch (SyntaxException e)
       {
         Assert.AreEqual(e.Position, pos);
@@ -227,13 +388,11 @@ namespace ILCalc.Tests
       }
     }
 
-    static void TestErr(Action<string> action,
+    static void TestErr(
+      Action<string> action,
       string expr, int pos, int len)
     {
-      try
-      {
-        action(expr);
-      }
+      try { action(expr); }
       catch (SyntaxException e)
       {
         Assert.AreEqual(e.Position, pos);
@@ -250,10 +409,8 @@ namespace ILCalc.Tests
     private void AssertFail(string expr, int pos, int len)
     {
       Debug.Assert(expr != null);
-      try
-      {
-        CalcI4.Evaluate(expr);
-      }
+
+      try { CalcI4.Evaluate(expr); }
       catch(SyntaxException e)
       {
         Assert.AreEqual(e.Position, pos);
@@ -262,6 +419,37 @@ namespace ILCalc.Tests
       }
 
       throw new AssertFailedException("Action doesn't throw!");
+    }
+
+    delegate void Action();
+
+    static void Throws<TException>(params Action[] actions)
+      where TException : Exception
+    {
+      if (actions == null)
+        throw new ArgumentNullException("actions");
+
+      foreach (var action in actions)
+      {
+        try { action(); }
+        catch (TException e)
+        {
+          var msg = new StringBuilder()
+            .Append('\'').Append(e.Message)
+            .Append("'.").ToString();
+
+          Trace.WriteLine(msg, typeof(TException).Name);
+          continue;
+        }
+        catch
+        {
+          throw new InternalTestFailureException(
+            typeof(TException).Name + " doesn't thrown!");
+        }
+
+        throw new InternalTestFailureException(
+          typeof(TException).Name + " doesn't thrown!");
+      }
     }
 
     #endregion

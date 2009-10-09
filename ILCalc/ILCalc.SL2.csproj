@@ -95,6 +95,7 @@
     <Compile Include="Common\IEvaluator.cs" />
     <Compile Include="Common\IExpressionOutput.cs" />
     <Compile Include="Common\ILiteralParser.cs" />
+    <Compile Include="Common\MathHelper.cs" />
     <Compile Include="Common\TypeHelper.cs" />
     <Compile Include="Compiler\CalcContext.Methods.cs" />
     <Compile Include="Compiler\Compiler.Generics.cs" />
@@ -135,9 +136,7 @@
     <Compile Include="Parser\ScanIdentifier.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Parser\ScanNumber.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Parser\ScanLiteral.cs" />
     <Compile Include="Parser\ThrowHelpers.cs">
       <SubType>Code</SubType>
     </Compile>

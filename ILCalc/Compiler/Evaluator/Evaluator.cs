@@ -5,9 +5,7 @@ namespace ILCalc
 {
   using State = DebuggerBrowsableState;
 
-  // TODO: Serialization! 
-  // bool IsSerializible { get; }
-  // BufferWriter data;
+  // TODO: Serialization?
 
   /// <summary>
   /// Represents the object for the compiled expression evaluation.<br/>
@@ -21,8 +19,7 @@ namespace ILCalc
   /// Not available in the .NET CF / Silverlight versions.</remarks>
   /// <threadsafety instance="true"/>
   [DebuggerDisplay("{ToString()} ({ArgumentsCount} argument(s))")]
-  public sealed class Evaluator<T>
-    : IEvaluator<T>
+  public sealed class Evaluator<T> : IEvaluator<T>
   {
     #region Fields
 

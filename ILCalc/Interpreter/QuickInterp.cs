@@ -3,8 +3,7 @@ using System.Diagnostics;
 
 namespace ILCalc
 {
-  abstract class QuickInterpret<T>
-    : IExpressionOutput<T>
+  abstract class QuickInterpret<T> : IExpressionOutput<T>
   {
     #region Fields
 
@@ -71,14 +70,14 @@ namespace ILCalc
     public void PutBeginCall() { }
     public void PutSeparator() { }
 
-    public void PutCall(FunctionInfo<T> func, int argsCount)
+    public void PutCall(FunctionInfo<T> func, int args)
     {
-      Debug.Assert(this.pos + 1 >= argsCount);
+      Debug.Assert(this.pos + 1 >= args);
 
-      T result = func.Invoke(this.stack, this.pos, argsCount);
-      this.pos -= argsCount;
+      T result = func.Invoke(this.stack, this.pos, args);
+      this.pos -= args;
 
-      if (argsCount > 0)
+      if (args > 0)
       {
         this.stack[++this.pos] = result;
       }
@@ -87,34 +86,25 @@ namespace ILCalc
 
     public void PutExprEnd() { }
 
-    public abstract void PutOperator(int oper);
+    public abstract void PutOperator(Code oper);
 
     public abstract int? IsIntegral(T value);
 
     #endregion
     #region Creation
 
-    internal static readonly QInterpFactory<T> CreateInstance;
-    internal static readonly QInterpFactory<T> CreateChecked;
+    public static QuickInterpret<T> Create(bool checks, T[] args)
+    {
+      return checks ? Checked(args) : Normal(args);
+    }
+
+    static readonly QuickFactory<T> Normal, Checked;
 
     static QuickInterpret()
     {
-      Type ar = Arithmetics.Resolve<T>(true);
-      if (ar != null)
-        CreateChecked = QuickInterpretHelper.GetFactory<T>(ar);
-
-      ar = Arithmetics.Resolve<T>(false);
-      if (ar == null)
-      {
-        // TODO: good message
-        throw new NotSupportedException(
-          "Type " + typeof(T) + " is not supported.");
-      }
-
-      CreateInstance = QuickInterpretHelper.GetFactory<T>(ar);
-
-      if (CreateChecked == null)
-        CreateChecked = CreateInstance;
+      Normal = Arithmetics.ResolveQuick<T>(false);
+      Checked = Arithmetics
+        .ResolveQuick<T>(true) ?? Normal;
     }
 
     #endregion
