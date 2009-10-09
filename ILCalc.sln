@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Changelog.txt = Changelog.txt
 		ILCalc.testrunconfig = ILCalc.testrunconfig
+		ILCalc1.vsmdi = ILCalc1.vsmdi
 		License.txt = License.txt
 		ReadMe.txt = ReadMe.txt
 		TODO List.txt = TODO List.txt
@@ -39,6 +40,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILCalc.Tests.CF2", "ILCalc.Tests\ILCalc.Tests.CF2.csproj", "{77752BBD-9A2A-4691-9901-0927F8F9F76B}"
 EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = ILCalc1.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Deploy|Any CPU = Deploy|Any CPU
