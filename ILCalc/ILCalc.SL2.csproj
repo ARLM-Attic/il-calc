@@ -118,6 +118,11 @@
     <Compile Include="Others\ImportHelper.cs" />
     <Compile Include="Others\Optimizer\OptimizeModes.cs" />
     <Compile Include="Others\Optimizer\OptimizeOutput.cs" />
+    <Compile Include="Others\Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Others\Specials\BufferOutput.cs" />
     <Compile Include="Others\Specials\NullOutput.cs" />
     <Compile Include="Others\SupportCollection.cs" />
@@ -141,21 +146,21 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CalcKey.snk" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Others\Resource.pl.resx" />
-    <EmbeddedResource Include="Others\Resource.ru.resx" />
-    <EmbeddedResource Include="Resource.resx">
+    <EmbeddedResource Include="Others\Resource.pl.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Others\Resource.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Others\Resource.ru.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight\v2.0\Microsoft.Silverlight.CSharp.targets" />

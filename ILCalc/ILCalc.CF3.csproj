@@ -19,8 +19,7 @@
     <FormFactorID>
     </FormFactorID>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>CalcKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -107,6 +106,11 @@
     <Compile Include="Others\ImportHelper.cs" />
     <Compile Include="Others\Optimizer\OptimizeModes.cs" />
     <Compile Include="Others\Optimizer\OptimizeOutput.cs" />
+    <Compile Include="Others\Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Others\Specials\BufferOutput.cs" />
     <Compile Include="Others\Specials\NullOutput.cs" />
     <Compile Include="Others\SupportCollection.cs" />
@@ -130,18 +134,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource.Designer.cs">
-      <DependentUpon>Resource.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Others\Resource.pl.resx" />
-    <EmbeddedResource Include="Others\Resource.ru.resx" />
-    <EmbeddedResource Include="Resource.resx">
+    <EmbeddedResource Include="Others\Resource.pl.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Others\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Others\Resource.ru.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

@@ -71,6 +71,11 @@
     <Compile Include="Interpreter\Interpret\InterpretImpl.cs" />
     <Compile Include="Interpreter\QuickInterpImpl.cs" />
     <Compile Include="Others\ImportHelper.cs" />
+    <Compile Include="Others\Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Others\Validator.cs" />
     <Compile Include="Compiler\Evaluator\Evaluator.cs" />
     <Compile Include="Common\IEvaluator.cs" />
@@ -108,22 +113,22 @@
     <Compile Include="Others\SyntaxException.cs" />
     <Compile Include="Parser\ThrowHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CalcKey.snk" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Others\Resource.pl.resx" />
-    <EmbeddedResource Include="Resource.resx">
+    <EmbeddedResource Include="Others\Resource.pl.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Others\Resource.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Others\Resource.ru.resx" />
+    <EmbeddedResource Include="Others\Resource.ru.resx">
+      <CustomToolNamespace>ILCalc</CustomToolNamespace>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -741,7 +741,7 @@ namespace ILCalc.Tests
             T res1N = c.CreateInterpret(expr).Evaluate(x);
             T res2N = c.Evaluate(expr, x);
 
-            c.Optimization = OptimizeModes.PerformAll;
+            c.Optimization = OptimizeModes.ConstantFolding | OptimizeModes.FunctionFolding;
 
             T res1O = c.CreateInterpret(expr).Evaluate(x);
             T res2O = c.Evaluate(expr, x);
